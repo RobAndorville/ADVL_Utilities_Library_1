@@ -1,0 +1,29 @@
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.vbproj.GenerateResource.Cache
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\bin\Debug\ADVL_System_Utilities.pdb
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\bin\Debug\ADVL_System_Utilities.xml
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmAddProject.resources
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmAppInfo.resources
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmMessages.resources
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmNewProject.resources
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmProject.resources
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.Resources.resources
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.dll
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.xml
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.pdb
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.vbprojResolveAssemblyReference.cache
+D:\My Documents\Visual Studio 2013\Projects\Signalworks 2013\Libraries\ADVL_Utilities\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmZipSelectFile.resources
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\bin\Debug\ADVL_System_Utilities.pdb
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\bin\Debug\ADVL_System_Utilities.xml
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.vbprojResolveAssemblyReference.cache
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmAddProject.resources
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmAppInfo.resources
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmMessages.resources
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmNewProject.resources
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmProject.resources
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.frmZipSelectFile.resources
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.Resources.resources
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.vbproj.GenerateResource.Cache
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.dll
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.xml
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\obj\Debug\ADVL_System_Utilities.pdb
+C:\Users\Robert\Documents\Visual Studio 2015\Projects\ADVL_Utilities_Library\ADVL_Utilities\bin\Debug\ADVL_System_Utilities.dll

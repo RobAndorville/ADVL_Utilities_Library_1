@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ADVL_System_Utilities.ZipComp" Collapsed="true">
+    <Position X="3.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EwAAhAAAAAAAASIJIAAAgQAEBCYEAABAARAAKIQIAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.XSequence" Collapsed="true">
+    <Position X="10.75" Y="3.5" Width="1.5" />
+    <NestedTypes>
+      <Struct Name="ADVL_System_Utilities.XSequence.strucSequenceStatus" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="ADVL_System_Utilities.XSequence.strucPropSeq" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="ADVL_System_Utilities.XSequence.strucLoopInfo" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAAIgAAhDAAAAAAKAACIAwQIAEgAwUA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.XMessage" Collapsed="true">
+    <Position X="9" Y="3.5" Width="1.5" />
+    <NestedTypes>
+      <Struct Name="ADVL_System_Utilities.XMessage.strucSequenceStatus" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="ADVL_System_Utilities.XMessage.strucPropSeq" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="ADVL_System_Utilities.XMessage.strucLoopInfo" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAAIAAAhDAAAAAAKAACIAwQIAEgAwUI=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.FileLocation" Collapsed="true">
+    <Position X="7.25" Y="1.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="ADVL_System_Utilities.FileLocation.Types" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAQABAAAAAAAAAAAAAABEAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.Project" Collapsed="true">
+    <Position X="7.25" Y="2.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="ADVL_System_Utilities.Project.Types" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>IQAkoACAYAEHAEwMgAIAEAGUCCACAEITkAAAIgCkgME=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.ProjectSummary" Collapsed="true">
+    <Position X="9" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAACAAAUEAFAAAAAAAAAAAAAQAAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.DataFileInfo" Collapsed="true">
+    <Position X="3.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAAAAAAAAAAACAIAAAAAAAAAAAAAAAAACAGA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.Message" Collapsed="true">
+    <Position X="3.75" Y="2.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="ADVL_System_Utilities.Message.FontList" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAIIAAAAgAAMAAAAAAAAIAAIAAgEAAAAgAAAAAQIAFA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.ApplicationSummary" Collapsed="true">
+    <Position X="5.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAIAAAAAAAQAAEgAAAQAAAAAACAAAQAAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.LibrarySummary" Collapsed="true">
+    <Position X="9" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAIAAAAAEAAAAEgAAAQAAAAAACAAAQAAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.ClassSummary" Collapsed="true">
+    <Position X="9" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.ModificationSummary" Collapsed="true">
+    <Position X="5.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAAEAAAAAAAAAAAACAAAAAAAACAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.ApplicationInfo" Collapsed="true">
+    <Position X="3.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IQCAICCBAACBQAgEhAAAAAAACAAAAgAdgAAAKCCACEQ=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.Version" Collapsed="true">
+    <Position X="7.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAiAAAAAAAAAAAAAAAQAAAAAAEAAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.Author" Collapsed="true">
+    <Position X="7.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAACAEAAAAAAAAAAAAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.FileAssociation" Collapsed="true">
+    <Position X="5.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAIAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.Copyright" Collapsed="true">
+    <Position X="10.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAIAAAAAAgAAAAAACAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.License" Collapsed="true">
+    <Position X="10.75" Y="1.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="ADVL_System_Utilities.License.Types" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SystemUtilities.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAgAAACAAAAAAAQAAAAAAAAIIAAAAAgIAAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.SourceCode" Collapsed="true">
+    <Position X="10.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAEAAAACSAAQgAAAAAAAAAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.Usage" Collapsed="true">
+    <Position X="5.75" Y="4.25" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAABBAIIAAAAAAAAAAAABAAQABEQAAAAAAAAAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ADVL_System_Utilities.Trademark" Collapsed="true">
+    <Position X="3.75" Y="3.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAADAAAAIAAAAACAAAEA=</HashCode>
+      <FileName>SystemUtilities.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
