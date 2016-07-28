@@ -9,6 +9,7 @@
 
 # Old file versions
 *.old
+*.Old
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
