@@ -28,7 +28,7 @@ It contains classes to manage projects, compress data, and run XMessage instruct
 
 **ZipComp** - used to compress files into and extract files from a zip file.
 
-**XSequence** - runs XSequence files. (An XSequence is an AL-H7™ Information Vector Sequence stored in an XML format. An Information Vector contains an Information value and a Location value. An Information Vector Sequence can be used to store processing steps, data sets and mathematical expressions.)
+**XSequence** - runs XSequence files. (An XSequence is an AL-H7™ Information Vector Sequence stored in an XML format. An Information Vector contains an Information value and a Location value. An Information Vector Sequence can be used to store processing steps, data sets or mathematical expressions.)
 
 **XMessage** - runs XMessage instructions. (An XMessage is a simplified XSequence used to exchange information between applications.)
 
