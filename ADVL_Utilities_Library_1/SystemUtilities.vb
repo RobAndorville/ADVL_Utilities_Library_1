@@ -4821,7 +4821,8 @@ Public Class Copyright '--------------------------------------------------------
         End Get
         Set(value As String)
             _ownerName = value
-            _notice = "© " & _ownerName & " " & _publicationYear
+            '_notice = "© " & _ownerName & " " & _publicationYear
+            _notice = "© " & _publicationYear & " " & _ownerName
         End Set
     End Property
 
@@ -4835,7 +4836,8 @@ Public Class Copyright '--------------------------------------------------------
         End Get
         Set(value As String)
             _publicationYear = value
-            _notice = "© " & _ownerName & " " & _publicationYear
+            '_notice = "© " & _ownerName & " " & _publicationYear
+            _notice = "© " & _publicationYear & " " & _ownerName
         End Set
     End Property
 
