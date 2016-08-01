@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class frmAddProject
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,11 +20,13 @@ Partial Class frmAddProject
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.  
     'Do not modify it using the code editor.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
         Me.btnExit = New System.Windows.Forms.Button()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.txtComments = New System.Windows.Forms.TextBox()
+        Me.Label13 = New System.Windows.Forms.Label()
         Me.txtApplicationName = New System.Windows.Forms.TextBox()
         Me.Label11 = New System.Windows.Forms.Label()
         Me.txtDataLocnPath = New System.Windows.Forms.TextBox()
@@ -57,9 +59,6 @@ Partial Class frmAddProject
         Me.ProgressBar2 = New System.Windows.Forms.ProgressBar()
         Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
         Me.Label12 = New System.Windows.Forms.Label()
-        Me.Label13 = New System.Windows.Forms.Label()
-        Me.txtComments = New System.Windows.Forms.TextBox()
-        Me.btnTestXmlUpdate = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -105,6 +104,24 @@ Partial Class frmAddProject
         Me.GroupBox1.TabIndex = 25
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Project:"
+        '
+        'txtComments
+        '
+        Me.txtComments.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtComments.Location = New System.Drawing.Point(438, 100)
+        Me.txtComments.Name = "txtComments"
+        Me.txtComments.Size = New System.Drawing.Size(322, 20)
+        Me.txtComments.TabIndex = 25
+        '
+        'Label13
+        '
+        Me.Label13.AutoSize = True
+        Me.Label13.Location = New System.Drawing.Point(373, 103)
+        Me.Label13.Name = "Label13"
+        Me.Label13.Size = New System.Drawing.Size(59, 13)
+        Me.Label13.TabIndex = 24
+        Me.Label13.Text = "Comments:"
         '
         'txtApplicationName
         '
@@ -370,39 +387,11 @@ Partial Class frmAddProject
         Me.Label12.TabIndex = 39
         Me.Label12.Text = "Searching ..."
         '
-        'Label13
-        '
-        Me.Label13.AutoSize = True
-        Me.Label13.Location = New System.Drawing.Point(373, 103)
-        Me.Label13.Name = "Label13"
-        Me.Label13.Size = New System.Drawing.Size(59, 13)
-        Me.Label13.TabIndex = 24
-        Me.Label13.Text = "Comments:"
-        '
-        'txtComments
-        '
-        Me.txtComments.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtComments.Location = New System.Drawing.Point(438, 100)
-        Me.txtComments.Name = "txtComments"
-        Me.txtComments.Size = New System.Drawing.Size(322, 20)
-        Me.txtComments.TabIndex = 25
-        '
-        'btnTestXmlUpdate
-        '
-        Me.btnTestXmlUpdate.Location = New System.Drawing.Point(275, 12)
-        Me.btnTestXmlUpdate.Name = "btnTestXmlUpdate"
-        Me.btnTestXmlUpdate.Size = New System.Drawing.Size(169, 22)
-        Me.btnTestXmlUpdate.TabIndex = 40
-        Me.btnTestXmlUpdate.Text = "Test XML Update"
-        Me.btnTestXmlUpdate.UseVisualStyleBackColor = True
-        '
         'frmAddProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(790, 515)
-        Me.Controls.Add(Me.btnTestXmlUpdate)
         Me.Controls.Add(Me.Label12)
         Me.Controls.Add(Me.ProgressBar2)
         Me.Controls.Add(Me.ProgressBar1)
@@ -459,5 +448,4 @@ Partial Class frmAddProject
     Friend WithEvents Label12 As System.Windows.Forms.Label
     Friend WithEvents txtComments As System.Windows.Forms.TextBox
     Friend WithEvents Label13 As System.Windows.Forms.Label
-    Friend WithEvents btnTestXmlUpdate As System.Windows.Forms.Button
 End Class

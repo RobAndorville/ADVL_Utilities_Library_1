@@ -493,41 +493,42 @@ Public Class frmAddProject
 
 #End Region
 
- 
-   
-    Private Sub btnTestXmlUpdate_Click(sender As Object, e As EventArgs) Handles btnTestXmlUpdate.Click
-        'Test XML update code:
 
-        'Read the ADVL_Project_Info.xml file
+    'btnTestXmlUpdate removed 30Jul16. This was used for testing code.
 
-        If ListBox1.Text.EndsWith("ADVL_Project_Info.xml") Then
-            'Directory project.
-            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ListBox1.Text)
-            Dim OldSettingsPath As String = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-            Dim NewSettingsPath As String = System.IO.Path.GetDirectoryName(ListBox1.Text)
+    'Private Sub btnTestXmlUpdate_Click(sender As Object, e As EventArgs) Handles btnTestXmlUpdate.Click
+    '    'Test XML update code:
 
-            RaiseEvent Message("Project type: " & ProjectInfoXDoc.<Project>.<Type>.Value & vbCrLf)
-            RaiseEvent Message("Old settings path: " & OldSettingsPath & vbCrLf)
-            RaiseEvent Message("New settings path: " & NewSettingsPath & vbCrLf & vbCrLf)
+    '    'Read the ADVL_Project_Info.xml file
 
-        ElseIf ListBox1.Text.EndsWith(".AdvlProject") Then
-            'Archive project.
-            Dim Zip As New ZipComp
-            Zip.ArchivePath = ListBox1.Text
-            If Zip.ArchiveExists Then
-                If Zip.EntryExists("ADVL_Project_Info.xml") Then
-                    Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("ADVL_Project_Info.xml"))
-                    Dim OldSettingsPath As String = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-                    Dim OldSettingsDir As String = System.IO.Path.GetDirectoryName(OldSettingsPath)
-                    Dim OldSettingsArchiveName As String = System.IO.Path.GetFileName(OldSettingsPath)
+    '    If ListBox1.Text.EndsWith("ADVL_Project_Info.xml") Then
+    '        'Directory project.
+    '        Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ListBox1.Text)
+    '        Dim OldSettingsPath As String = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+    '        Dim NewSettingsPath As String = System.IO.Path.GetDirectoryName(ListBox1.Text)
 
-                    RaiseEvent Message("Project type: " & ProjectInfoXDoc.<Project>.<Type>.Value & vbCrLf)
-                    RaiseEvent Message("Old settings path: " & OldSettingsPath & vbCrLf)
-                    RaiseEvent Message("New settings path: " & ListBox1.Text & vbCrLf & vbCrLf)
+    '        RaiseEvent Message("Project type: " & ProjectInfoXDoc.<Project>.<Type>.Value & vbCrLf)
+    '        RaiseEvent Message("Old settings path: " & OldSettingsPath & vbCrLf)
+    '        RaiseEvent Message("New settings path: " & NewSettingsPath & vbCrLf & vbCrLf)
 
-                End If
-            End If
-        End If
-    End Sub
+    '    ElseIf ListBox1.Text.EndsWith(".AdvlProject") Then
+    '        'Archive project.
+    '        Dim Zip As New ZipComp
+    '        Zip.ArchivePath = ListBox1.Text
+    '        If Zip.ArchiveExists Then
+    '            If Zip.EntryExists("ADVL_Project_Info.xml") Then
+    '                Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("ADVL_Project_Info.xml"))
+    '                Dim OldSettingsPath As String = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+    '                Dim OldSettingsDir As String = System.IO.Path.GetDirectoryName(OldSettingsPath)
+    '                Dim OldSettingsArchiveName As String = System.IO.Path.GetFileName(OldSettingsPath)
+
+    '                RaiseEvent Message("Project type: " & ProjectInfoXDoc.<Project>.<Type>.Value & vbCrLf)
+    '                RaiseEvent Message("Old settings path: " & OldSettingsPath & vbCrLf)
+    '                RaiseEvent Message("New settings path: " & ListBox1.Text & vbCrLf & vbCrLf)
+
+    '            End If
+    '        End If
+    '    End If
+    'End Sub
 
 End Class
