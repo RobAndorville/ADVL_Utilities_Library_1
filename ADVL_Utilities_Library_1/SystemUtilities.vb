@@ -1935,11 +1935,21 @@ Public Class FileLocation '-----------------------------------------------------
 
         Select Case Type
             Case Types.Directory
-                XmlDoc.Save(Path & "\" & DataName)
+                If System.IO.Directory.Exists(Path) Then
+                    XmlDoc.Save(Path & "\" & DataName)
+                Else
+
+                End If
+
             Case Types.Archive
-                Dim Zip As New ZipComp
-                Zip.ArchivePath = Path
-                Zip.AddText(DataName, XmlDoc.ToString)
+                If System.IO.File.Exists(Path) Then
+                    Dim Zip As New ZipComp
+                    Zip.ArchivePath = Path
+                    Zip.AddText(DataName, XmlDoc.ToString)
+                Else
+                    RaiseEvent ErrorMessage("Specified archive not found: " & Path & vbCrLf)
+                End If
+
         End Select
     End Sub
 
@@ -1958,6 +1968,13 @@ Public Class FileLocation '-----------------------------------------------------
 
 
 #End Region 'Location Methods ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Region "Location Events" '--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    Event ErrorMessage(ByVal Message As String)
+    Event Message(ByVal Message As String)
+
+#End Region 'Location Events ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 End Class 'Location --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2181,7 +2198,7 @@ Public Class Project '----------------------------------------------------------
     Public Sub ReadLastProjectInfo()
         'Read the Last Project Information.
 
-        If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info.xml") Then
+        If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info.xml") Then 'Read Last Project information
             Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Last_Project_Info.xml")
             Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
                 Case "Directory"
@@ -2193,17 +2210,59 @@ Public Class Project '----------------------------------------------------------
             End Select
             SettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
             Usage.SaveLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-        Else
+
+            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
+            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+
+        Else 'Open Default project
             'OpenDefaultProject()
             'Select default project
             If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
+                ''Check if the DeFault project has the correct paths. UPDATE: THIS CHECK IS EASIER TO DO WHEN READING THE ADVL_Project_Info.xml FILE.
+                ''These can be incorrect if the Default project has been moved.
+                'If System.IO.Directory.Exists(ApplicationDir & "\" & "DefaultProject\ADVL_Project_Info.xml") Then
+                '    Dim DefaultProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "DefaultProject\ADVL_Project_Info.xml")
+                '    'Check if the default project Settings info is correct:
+                '    Dim SettingsError As Boolean = False
+                '    If DefaultProjectInfoXDoc.<Project>.<Name>.Value <> "Default" Then
+                '        SettingsError = True
+                '        RaiseEvent ErrorMessage("The Default project is not named 'Default'." & vbCrLf)
+                '    End If
+                '    If DefaultProjectInfoXDoc.<Project>.<Type>.Value <> "None" Then
+                '        SettingsError = True
+                '        RaiseEvent ErrorMessage("The Default project Type is not 'None'." & vbCrLf)
+                '    End If
+                '    If DefaultProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value <> "Directory" Then
+                '        SettingsError = True
+                '        RaiseEvent ErrorMessage("The Default project Settings Location Type is not 'Directory'." & vbCrLf)
+                '    End If
+                '    If DefaultProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value <> ApplicationDir & "\" & "Default_Project" Then
+                '        SettingsError = True
+                '        RaiseEvent ErrorMessage("The Default project Settings Location Path is not " & ApplicationDir & "\" & "Default_Project" & vbCrLf)
+                '    End If
+                '    If DefaultProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value <> "Directory" Then
+                '        SettingsError = True
+                '        RaiseEvent ErrorMessage("The Default project Data Location Type is not 'Directory'." & vbCrLf)
+                '    End If
+                '    If DefaultProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value <> ApplicationDir & "\" & "Default_Project" Then
+                '        SettingsError = True
+                '        RaiseEvent ErrorMessage("The Default project Data Location Path is not " & ApplicationDir & "\" & "Default_Project" & vbCrLf)
+                '    End If
+
+                'Else
+                '        RaiseEvent ErrorMessage("The Default project does not contain an ADVL_Project_Info.xml file." & vbCrLf)
+                '    End If
             Else
                 CreateDefaultProject()
             End If
+            'Set setting to Default Project:
             SettingsLocn.Type = FileLocation.Types.Directory
             Usage.SaveLocn.Type = FileLocation.Types.Directory
             SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
             Usage.SaveLocn.Path = ApplicationDir & "\" & "Default_Project"
+            Name = "Default"
+            Description = "Default project. Data and settings are stored in the Application Directory."
+            Type = Types.None
         End If
 
     End Sub
@@ -2223,18 +2282,32 @@ Public Class Project '----------------------------------------------------------
             ReadXmlSettings("ADVL_Project_Info.xml", ProjectInfoXDoc)
 
             'Read the project Name:
+            'Dim SavedName As String = ""
             If ProjectInfoXDoc.<Project>.<Name>.Value = Nothing Then
                 Name = ""
+                'SavedName = ""
             Else
                 Name = ProjectInfoXDoc.<Project>.<Name>.Value
+                'SavedName = ProjectInfoXDoc.<Project>.<Name>.Value
             End If
 
+            'If SavedName <> Name Then
+            '    RaiseEvent ErrorMessage("The last used project name (" & Name & ") is different from the name in the Project Info file (" & SavedName & ")." & vbCrLf)
+            'End If
+
             'Read the project Description
+            'Dim SavedDescription As String = ""
             If ProjectInfoXDoc.<Project>.<Description>.Value = Nothing Then
                 Description = ""
+                'SavedDescription = ""
             Else
                 Description = ProjectInfoXDoc.<Project>.<Description>.Value
+                'SavedDescription = ProjectInfoXDoc.<Project>.<Description>.Value
             End If
+
+            'If SavedDescription <> Description Then
+            '    RaiseEvent ErrorMessage("The last used project description (" & Description & ") is different from the description in the Project Info file (" & SavedDescription & ")." & vbCrLf)
+            'End If
 
             'Read the project Creation Date:
             If ProjectInfoXDoc.<Project>.<CreationDate>.Value = Nothing Then
@@ -2301,21 +2374,47 @@ Public Class Project '----------------------------------------------------------
 
             End If
 
+            'If the Default project is selected, change the Type to None:
+            If Name = "Default" Then
+                If Type = Types.None Then
+                    'Correct Type for th eDefault project.
+                Else
+                    RaiseEvent ErrorMessage("The Default project is selected. The saved project type was: " & Type.ToString & " The project type has been changed to 'None'" & vbCrLf)
+                    Type = Types.None
+                End If
+            End If
+
+            'Read the Saved SettingsLocn.Type but dont overwite the current value.
+            Dim SavedSettingsLocn As New FileLocation
+
             If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value = Nothing Then
-                SettingsLocn.Type = FileLocation.Types.Directory
+                'SettingsLocn.Type = FileLocation.Types.Directory 
             Else
                 Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
                     Case "Directory"
-                        SettingsLocn.Type = FileLocation.Types.Directory
+                        'SettingsLocn.Type = FileLocation.Types.Directory
+                        SavedSettingsLocn.Type = FileLocation.Types.Directory
                     Case "Archive"
-                        SettingsLocn.Type = FileLocation.Types.Archive
+                        'SettingsLocn.Type = FileLocation.Types.Archive
+                        SavedSettingsLocn.Type = FileLocation.Types.Archive
                 End Select
             End If
 
+            If SavedSettingsLocn.Type <> SettingsLocn.Type Then
+                RaiseEvent ErrorMessage("The last used project SettingsLocn.Type (" & SettingsLocn.Type.ToString & ") is different from the type in the Project Info file (" & SavedSettingsLocn.Type.ToString & ")." & vbCrLf)
+            End If
+
+            'Read the Saved SettingsLocn.Path but dont overwite the current value.
             If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value = Nothing Then
-                SettingsLocn.Path = ApplicationDir
+                'SettingsLocn.Path = ApplicationDir
             Else
-                SettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+                'SettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+                SavedSettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+            End If
+
+
+            If SavedSettingsLocn.Path <> SettingsLocn.Path Then
+                RaiseEvent ErrorMessage("The last used project SettingsLocn.Path (" & SettingsLocn.Path & ") is different from the path in the Project Info file (" & SavedSettingsLocn.Path & ")." & vbCrLf)
             End If
 
             If ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value = Nothing Then
@@ -2332,6 +2431,23 @@ Public Class Project '----------------------------------------------------------
                 DataLocn.Path = ApplicationDir
             Else
                 DataLocn.Path = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
+            End If
+
+            'If the Default project is being used, change the DataLocn.Type to Directory and DataLocn.Path to Application
+            If Name = "Default" Then
+                If DataLocn.Type = FileLocation.Types.Directory Then
+                    'Correct DataLocn.Type for the Default project read.
+                Else
+                    RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Type was: " & DataLocn.Type.ToString & " The project DataLocn.Type has been changed to 'Directory'" & vbCrLf)
+                    DataLocn.Type = FileLocation.Types.Directory
+                End If
+                If DataLocn.Path = ApplicationDir & "\" & "Default_Project" Then
+                    'Correct DataLocn.Path for the Default project read.
+                Else
+                    RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Path was: " & DataLocn.Path & " The project DataLocn.Type has been changed to " & ApplicationDir & "\" & "Default_Project" & vbCrLf)
+                    DataLocn.Path = ApplicationDir & "\" & "Default_Project"
+                End If
+
             End If
 
             'Read the Application Summary
@@ -2771,15 +2887,12 @@ Public Class Project '----------------------------------------------------------
 
             'Set the project properties --------------------------------------------------------------
             Name = "Default"
-            Type = Types.Directory
+            'Type = Types.Directory
+            Type = Types.None
             Description = "Default project. Data and settings are stored in the Application Directory."
-            Author.Name = "Signalworks Pty Ltd"
-            Author.Description = "Signalworks Pty Ltd" & vbCrLf & _
-                "Australian Proprietary Company" & vbCrLf & _
-                "ABN 26 066 681 598" & vbCrLf & _
-                "Registration Date 05/10/1994"
-
-            Author.Contact = "http://www.andorville.com.au/"
+            Author.Name = ""
+            Author.Description = ""
+            Author.Contact = ""
             Type = ADVL_Utilities_Library_1.Project.Types.None
             'Project.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")
             'Project.LastUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
@@ -2959,6 +3072,7 @@ Public Class Project '----------------------------------------------------------
 
     Public Sub OpenDefaultProject()
         'Open the default project.
+        RaiseEvent ProjectChanging()
         If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then 'Open the default project.
             SettingsLocn.Type = FileLocation.Types.Directory
             SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
@@ -2971,6 +3085,10 @@ Public Class Project '----------------------------------------------------------
             ReadProjectInfoFile()
             RaiseEvent ProjectSelected()
         End If
+    End Sub
+
+    Private Sub ProjectForm_OpenDefaultProject() Handles ProjectForm.OpenDefaultProject
+        OpenDefaultProject()
     End Sub
 
 #End Region 'Project Methods -----------------------------------------------------------------------------------------------------------------------------------------------------------------

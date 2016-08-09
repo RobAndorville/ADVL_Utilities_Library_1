@@ -22,6 +22,7 @@ Partial Class frmProject
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Me.btnExit = New System.Windows.Forms.Button()
         Me.btnSelect = New System.Windows.Forms.Button()
         Me.btnNew = New System.Windows.Forms.Button()
@@ -30,6 +31,8 @@ Partial Class frmProject
         Me.btnSaveAs = New System.Windows.Forms.Button()
         Me.DataGridView1 = New System.Windows.Forms.DataGridView()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.txtComments = New System.Windows.Forms.TextBox()
+        Me.Label6 = New System.Windows.Forms.Label()
         Me.txtApplicationName = New System.Windows.Forms.TextBox()
         Me.Label11 = New System.Windows.Forms.Label()
         Me.txtSettingsLocnPath = New System.Windows.Forms.TextBox()
@@ -46,8 +49,8 @@ Partial Class frmProject
         Me.Label3 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.Label6 = New System.Windows.Forms.Label()
-        Me.txtComments = New System.Windows.Forms.TextBox()
+        Me.btnSelectDefault = New System.Windows.Forms.Button()
+        Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
@@ -69,6 +72,7 @@ Partial Class frmProject
         Me.btnSelect.Size = New System.Drawing.Size(64, 22)
         Me.btnSelect.TabIndex = 18
         Me.btnSelect.Text = "Select"
+        Me.ToolTip1.SetToolTip(Me.btnSelect, "Select the project highlighed below")
         Me.btnSelect.UseVisualStyleBackColor = True
         '
         'btnNew
@@ -78,6 +82,7 @@ Partial Class frmProject
         Me.btnNew.Size = New System.Drawing.Size(64, 22)
         Me.btnNew.TabIndex = 19
         Me.btnNew.Text = "New"
+        Me.ToolTip1.SetToolTip(Me.btnNew, "Create a new project")
         Me.btnNew.UseVisualStyleBackColor = True
         '
         'btnAdd
@@ -87,6 +92,7 @@ Partial Class frmProject
         Me.btnAdd.Size = New System.Drawing.Size(62, 22)
         Me.btnAdd.TabIndex = 20
         Me.btnAdd.Text = "Add"
+        Me.ToolTip1.SetToolTip(Me.btnAdd, "Add an existing project to the list")
         Me.btnAdd.UseVisualStyleBackColor = True
         '
         'btnRemove
@@ -96,6 +102,7 @@ Partial Class frmProject
         Me.btnRemove.Size = New System.Drawing.Size(66, 22)
         Me.btnRemove.TabIndex = 21
         Me.btnRemove.Text = "Remove"
+        Me.ToolTip1.SetToolTip(Me.btnRemove, "Remove the highlighted project from the list")
         Me.btnRemove.UseVisualStyleBackColor = True
         '
         'btnSaveAs
@@ -146,6 +153,24 @@ Partial Class frmProject
         Me.GroupBox1.TabIndex = 24
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Project:"
+        '
+        'txtComments
+        '
+        Me.txtComments.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtComments.Location = New System.Drawing.Point(489, 100)
+        Me.txtComments.Name = "txtComments"
+        Me.txtComments.Size = New System.Drawing.Size(272, 20)
+        Me.txtComments.TabIndex = 25
+        '
+        'Label6
+        '
+        Me.Label6.AutoSize = True
+        Me.Label6.Location = New System.Drawing.Point(424, 103)
+        Me.Label6.Name = "Label6"
+        Me.Label6.Size = New System.Drawing.Size(59, 13)
+        Me.Label6.TabIndex = 24
+        Me.Label6.Text = "Comments:"
         '
         'txtApplicationName
         '
@@ -287,29 +312,22 @@ Partial Class frmProject
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "Name:"
         '
-        'Label6
+        'btnSelectDefault
         '
-        Me.Label6.AutoSize = True
-        Me.Label6.Location = New System.Drawing.Point(424, 103)
-        Me.Label6.Name = "Label6"
-        Me.Label6.Size = New System.Drawing.Size(59, 13)
-        Me.Label6.TabIndex = 24
-        Me.Label6.Text = "Comments:"
-        '
-        'txtComments
-        '
-        Me.txtComments.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtComments.Location = New System.Drawing.Point(489, 100)
-        Me.txtComments.Name = "txtComments"
-        Me.txtComments.Size = New System.Drawing.Size(272, 20)
-        Me.txtComments.TabIndex = 25
+        Me.btnSelectDefault.Location = New System.Drawing.Point(364, 12)
+        Me.btnSelectDefault.Name = "btnSelectDefault"
+        Me.btnSelectDefault.Size = New System.Drawing.Size(85, 22)
+        Me.btnSelectDefault.TabIndex = 25
+        Me.btnSelectDefault.Text = "Select Default"
+        Me.ToolTip1.SetToolTip(Me.btnSelectDefault, "Select the default project")
+        Me.btnSelectDefault.UseVisualStyleBackColor = True
         '
         'frmProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(792, 512)
+        Me.Controls.Add(Me.btnSelectDefault)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.DataGridView1)
         Me.Controls.Add(Me.btnSaveAs)
@@ -352,4 +370,6 @@ Partial Class frmProject
     Friend WithEvents Label11 As System.Windows.Forms.Label
     Friend WithEvents txtComments As System.Windows.Forms.TextBox
     Friend WithEvents Label6 As System.Windows.Forms.Label
+    Friend WithEvents ToolTip1 As Windows.Forms.ToolTip
+    Friend WithEvents btnSelectDefault As Windows.Forms.Button
 End Class

@@ -5,7 +5,7 @@
 
     'Dim ProjectInfo As New ADVL_Utilities.ProjectInfo 'This object stores information about the selected project.
     'Dim Project As New ADVL_Utilities.Project 'This object stores information about the selected project.
-    Dim ProjectSummary As New ProjectSummary 'A project summary is provided for each project inthe Project List.
+    Dim ProjectSummary As New ProjectSummary 'A project summary is provided for each project in the Project List.
     'Dim NewProjectSummary As New ProjectSummary
 
     Public ApplicationSummary As New ApplicationSummary 'The Application Summary is updated by the Project class that calls the Project Form. This summary is needed when a new project is created.
@@ -547,6 +547,29 @@
         End If
     End Sub
 
+    Private Sub btnSelectDefault_Click(sender As Object, e As EventArgs) Handles btnSelectDefault.Click
+        'Select the Default project.
+
+        'The Default project is a directory project named 'Default_Project' in the Application Directory.
+
+        'Check if the Default_Project exists:
+        'CreateDefaultProject
+
+        'If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
+        '    'The Default_Project exists
+        '    'Check if it is on the list:
+
+        'Else
+        '    'Default_Project does not exist.
+        '    RaiseEvent CreateDefaultProject() 'Create the Default_Project.
+        '    ReadProjectList() 'Re-read the project list. The Default_Project should now be listed.
+        'End If
+
+        RaiseEvent OpenDefaultProject()
+
+
+    End Sub
+
 
 
 #End Region 'Form Methods -------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -557,6 +580,9 @@
     Public Event ProjectSelected(ByRef ProjectSummary As ProjectSummary) 'Raise an event passing the selected project information.
     Public Event ErrorMessage(ByVal Message As String) 'Send an error message.
     Public Event Message(ByVal Message As String) 'Send a message.
+    'Public Event CreateDefaultProject() '
+    Public Event OpenDefaultProject() 'Raise an event to open the Default_Project .
+
 
 #End Region 'Events -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
