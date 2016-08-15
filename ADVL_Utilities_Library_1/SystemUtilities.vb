@@ -22,7 +22,6 @@ Imports System.IO.Compression
 'Note: to access .ZipFile, use Project \ Add Reference \ Assemblies \  Framework \ System.IO.Compression.FileSystem
 'Note: To access FontStyle, use Project \ Add Reference \ Assemblies \  Framework \ System.Drawing
 
-
 'The ZipComp class is used to compress files into and extract files from a zip file.
 Public Class ZipComp '------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -31,8 +30,6 @@ Public Class ZipComp '----------------------------------------------------------
     Public WithEvents SelectFileForm As frmZipSelectFile 'Used to select a project.
 
 #End Region 'Variable Declarations -----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
     'PROPERTIES:
     'ArchivePath
@@ -451,7 +448,7 @@ Public Class ZipComp '----------------------------------------------------------
         End If
     End Sub
 
-  
+
 
     Private Sub SelectFileForm_FileSelected(FileName As String) Handles SelectFileForm.FileSelected
         RaiseEvent FileSelected(FileName)
@@ -477,10 +474,7 @@ Public Class ZipComp '----------------------------------------------------------
 
 #End Region 'Events -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  
-   
-   
-End Class '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+End Class 'ZipComp ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -1132,7 +1126,7 @@ Public Class XSequence '--------------------------------------------------------
 
 #End Region
 
-End Class '-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+End Class 'XSequence -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 'The XMessage class is used to read an XML Message (XMessage).
@@ -1777,102 +1771,8 @@ Public Class XMessage '---------------------------------------------------------
 
 #End Region 'Events
 
+End Class 'XMessage -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-End Class '-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-''The Project class stores project information for an Andorville Labs application.
-'Public Class clsProjectInfo
-
-'    'PROPERTIES:
-'    'Name
-'    'Description
-'    'Type
-'    'Path
-'    'CreationDate
-'    'LastUsed
-
-'    Public Enum ProjectType
-'        None      'All files are stored in the Application Directory.
-'        Directory 'All files are stored in the Project Directory.
-'        File      'All files are stored in the Project File.
-'        Hybrid    'Settings data is stored in the Project Directory. Data files are stored in one or more Project Files.
-'    End Enum
-
-'#Region " Project Properties - Properties used to store project information."
-
-'    Private _name As String = "" 'The name of the current project.
-'    Property Name As String
-'        Get
-'            Return _name
-'        End Get
-'        Set(value As String)
-'            _name = value
-'        End Set
-'    End Property
-
-'    Private _description As String = "" 'A description of the current project.
-'    Property Description As String
-'        Get
-'            Return _description
-'        End Get
-'        Set(value As String)
-'            _description = value
-'        End Set
-'    End Property
-
-'    Private _type As ProjectType = ProjectType.None 'The type of project (None, Directory, File, Hybrid).
-'    Property Type As ProjectType
-'        Get
-'            Return _type
-'        End Get
-'        Set(value As ProjectType)
-'            _type = value
-'        End Set
-'    End Property
-
-'    Private _path As String = "" 'The path of the current project directory or project file.
-'    Property Path As String
-'        Get
-'            Return _path
-'        End Get
-'        Set(value As String)
-'            _path = value
-'        End Set
-'    End Property
-
-'    Private _creationDate As DateTime 'The creation date of the current project.
-'    Property CreationDate As DateTime
-'        Get
-'            Return _creationDate
-'        End Get
-'        Set(value As DateTime)
-'            _creationDate = value
-'        End Set
-'    End Property
-
-'    Private _lastUsed As DateTime 'The date that the current project was last used.
-'    Property LastUsed As DateTime
-'        Get
-'            Return _lastUsed
-'        End Get
-'        Set(value As DateTime)
-'            _lastUsed = value
-'        End Set
-'    End Property
-
-'#End Region
-
-
-'End Class
-
-'The Location class is used to store a location where settings or data can be stored. A location can be a directory or an archive file.
-'Public Class clsLocation 'If class is named clsLocation the Type value has the form: clsLocation.LocationType.Directory
-'                         With the class renamed Location and the Enum renamed enumType, the Type values have the form: Location.Types.Directory
-
-
-'The Location class consists of properties and methods to store data in a location, which is either a directory or archive file.
-'Public Class Location '----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Public Class FileLocation '----------------------------------------------------------------------------------------------------------------------------------------------------------------------
     'A location is the path to a Directory or Archive used to store data.
@@ -1978,102 +1878,9 @@ Public Class FileLocation '-----------------------------------------------------
 
 End Class 'Location --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-'Public Class ProjectInfo '--------------------------------------------------------------------------------------------------------------------------------------------------------------------
-'    'The ProjectInfo class is used to store information about a project.
-'    'This is the same as the Project class but without the ProjectForm and the Project Methods.
-
-'    Public SettingsLocn As New Location 'This is a directory or archive where settings are stored.
-'    Public DataLocn As New Location 'This is a directory or archive where data is stored.
-'    Public Author As New Author 'Information about the project author.
-
-'    Public Enum Types
-'        None      'All files are stored in the Application Directory.
-'        Directory 'All files are stored in the Project Directory.
-'        'File      'All files are stored in the Project File.
-'        Archive      'All files are stored in the Project Archive.
-'        Hybrid    'Settings data is stored in the Project Directory. Data files are stored in one or more Project Files.
-'    End Enum
-
-'#Region " Project Properties - Properties used to store project information."
-
-'    'Private _applicationDir As String = "" 'The path to the directory used to store application data.
-'    'Public Property ApplicationDir As String
-'    '    Get
-'    '        Return _applicationDir
-'    '    End Get
-'    '    Set(ByVal value As String)
-'    '        _applicationDir = value
-'    '    End Set
-'    'End Property
-
-'    Private _name As String = "" 'The name of the current project.
-'    Property Name As String
-'        Get
-'            Return _name
-'        End Get
-'        Set(value As String)
-'            _name = value
-'        End Set
-'    End Property
-
-'    Private _description As String = "" 'A description of the current project.
-'    Property Description As String
-'        Get
-'            Return _description
-'        End Get
-'        Set(value As String)
-'            _description = value
-'        End Set
-'    End Property
-
-'    'Private _author As String = ""
-'    'Property Author As String
-'    '    Get
-'    '        Return _author
-'    '    End Get
-'    '    Set(value As String)
-'    '        _author = value
-'    '    End Set
-'    'End Property
-
-'    Private _type As Types = Types.None 'The type of project (None, Directory, File, Hybrid).
-'    Property Type As Types
-'        Get
-'            Return _type
-'        End Get
-'        Set(value As Types)
-'            _type = value
-'        End Set
-'    End Property
-
-'    Private _creationDate As DateTime = "1-Jan-2000 12:00:00" 'The creation date of the current project.
-'    Property CreationDate As DateTime
-'        Get
-'            Return _creationDate
-'        End Get
-'        Set(value As DateTime)
-'            _creationDate = value
-'        End Set
-'    End Property
-
-'    Private _lastUsed As DateTime = "1-Jan-2000 12:00:00" 'The date that the current project was last used.
-'    Property LastUsed As DateTime
-'        Get
-'            Return _lastUsed
-'        End Get
-'        Set(value As DateTime)
-'            _lastUsed = value
-'        End Set
-'    End Property
-
-'#End Region 'Project Properties
-
-'End Class 'ProjectInfo------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 'The Project class contains properties and methods used to manage an Andorville (TM) Application Project.
 Public Class Project '------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 #Region " Variable declarations - All the variables used in this class." '-------------------------------------------------------------------------------------------------------------------
 
@@ -2215,43 +2022,8 @@ Public Class Project '----------------------------------------------------------
             Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
 
         Else 'Open Default project
-            'OpenDefaultProject()
-            'Select default project
             If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
-                ''Check if the DeFault project has the correct paths. UPDATE: THIS CHECK IS EASIER TO DO WHEN READING THE ADVL_Project_Info.xml FILE.
-                ''These can be incorrect if the Default project has been moved.
-                'If System.IO.Directory.Exists(ApplicationDir & "\" & "DefaultProject\ADVL_Project_Info.xml") Then
-                '    Dim DefaultProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "DefaultProject\ADVL_Project_Info.xml")
-                '    'Check if the default project Settings info is correct:
-                '    Dim SettingsError As Boolean = False
-                '    If DefaultProjectInfoXDoc.<Project>.<Name>.Value <> "Default" Then
-                '        SettingsError = True
-                '        RaiseEvent ErrorMessage("The Default project is not named 'Default'." & vbCrLf)
-                '    End If
-                '    If DefaultProjectInfoXDoc.<Project>.<Type>.Value <> "None" Then
-                '        SettingsError = True
-                '        RaiseEvent ErrorMessage("The Default project Type is not 'None'." & vbCrLf)
-                '    End If
-                '    If DefaultProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value <> "Directory" Then
-                '        SettingsError = True
-                '        RaiseEvent ErrorMessage("The Default project Settings Location Type is not 'Directory'." & vbCrLf)
-                '    End If
-                '    If DefaultProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value <> ApplicationDir & "\" & "Default_Project" Then
-                '        SettingsError = True
-                '        RaiseEvent ErrorMessage("The Default project Settings Location Path is not " & ApplicationDir & "\" & "Default_Project" & vbCrLf)
-                '    End If
-                '    If DefaultProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value <> "Directory" Then
-                '        SettingsError = True
-                '        RaiseEvent ErrorMessage("The Default project Data Location Type is not 'Directory'." & vbCrLf)
-                '    End If
-                '    If DefaultProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value <> ApplicationDir & "\" & "Default_Project" Then
-                '        SettingsError = True
-                '        RaiseEvent ErrorMessage("The Default project Data Location Path is not " & ApplicationDir & "\" & "Default_Project" & vbCrLf)
-                '    End If
 
-                'Else
-                '        RaiseEvent ErrorMessage("The Default project does not contain an ADVL_Project_Info.xml file." & vbCrLf)
-                '    End If
             Else
                 CreateDefaultProject()
             End If
@@ -2261,7 +2033,7 @@ Public Class Project '----------------------------------------------------------
             SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
             Usage.SaveLocn.Path = ApplicationDir & "\" & "Default_Project"
             Name = "Default"
-            Description = "Default project. Data and settings are stored in the Application Directory."
+            Description = "Default project. Data and settings are stored in the Default_Project directory in the Application Directory."
             Type = Types.None
         End If
 
@@ -2277,9 +2049,19 @@ Public Class Project '----------------------------------------------------------
         'This file is located in the project Settings Location.
         'The project settings location is initially obtained from the current project file or from the project list.
 
+        'UPDATE 13AUG16
+        'SettingsLocn and DataLocn is the same as the Project Directory location or the Project Archive location.
+        'These are now left blank in the ADVL_Project_Info.xml file.
+        'DataLocn has a value only for Hybrid projects.
+        'Future project types may use these location settings or add new location settings.
+
         If SettingsFileExists("ADVL_Project_Info.xml") Then
             Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
             ReadXmlSettings("ADVL_Project_Info.xml", ProjectInfoXDoc)
+
+            'NOTE: saved values (SavedSettingsLocn etc) stored the values recorded in the ADVL_Project_Info.xml file.
+            'These were used to handle the case where the project directory or archive has been moved and the saved values need to be updated.
+            'These values are no longer stored for Directory and Archive project types. (The values are the same as the location of the Directory or Archive file.)
 
             'Read the project Name:
             'Dim SavedName As String = ""
@@ -2355,7 +2137,6 @@ Public Class Project '----------------------------------------------------------
                 Author.Contact = ProjectInfoXDoc.<Project>.<Author>.<Contact>.Value
             End If
 
-
             'Read the project Type
             If ProjectInfoXDoc.<Project>.<Type>.Value = Nothing Then
                 'Author = ""
@@ -2364,91 +2145,107 @@ Public Class Project '----------------------------------------------------------
                 Select Case ProjectInfoXDoc.<Project>.<Type>.Value
                     Case "None"
                         Type = Types.None
+                        DataLocn.Type = SettingsLocn.Type
+                        DataLocn.Path = SettingsLocn.Path
                     Case "Directory"
                         Type = Types.Directory
+                        DataLocn.Type = SettingsLocn.Type
+                        DataLocn.Path = SettingsLocn.Path
                     Case "Archive"
                         Type = Types.Archive
+                        DataLocn.Type = SettingsLocn.Type
+                        DataLocn.Path = SettingsLocn.Path
                     Case "Hybrid"
                         Type = Types.Hybrid
+                        Select Case ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value
+                            Case "Directory"
+                                DataLocn.Type = FileLocation.Types.Directory
+                            Case "Archive"
+                                DataLocn.Type = FileLocation.Types.Archive
+                        End Select
+                        DataLocn.Path = DataLocn.Path = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
                 End Select
 
             End If
 
-            'If the Default project is selected, change the Type to None:
-            If Name = "Default" Then
-                If Type = Types.None Then
-                    'Correct Type for th eDefault project.
-                Else
-                    RaiseEvent ErrorMessage("The Default project is selected. The saved project type was: " & Type.ToString & " The project type has been changed to 'None'" & vbCrLf)
-                    Type = Types.None
-                End If
-            End If
+            ''If the Default project is selected, the Type should be "None". Change the Type to "None" if required:
+            'If Name = "Default" Then
+            '    If Type = Types.None Then
+            '        'Correct Type for the Default project.
+            '    Else
+            '        RaiseEvent ErrorMessage("The Default project is selected. The saved project type was: " & Type.ToString & " The project type has been changed to 'None'" & vbCrLf)
+            '        Type = Types.None
+            '    End If
+            'End If
 
-            'Read the Saved SettingsLocn.Type but dont overwite the current value.
-            Dim SavedSettingsLocn As New FileLocation
+            ''Read the Saved SettingsLocn.Type but dont overwite the current value.
+            'Dim SavedSettingsLocn As New FileLocation
 
-            If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value = Nothing Then
-                'SettingsLocn.Type = FileLocation.Types.Directory 
-            Else
-                Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
-                    Case "Directory"
-                        'SettingsLocn.Type = FileLocation.Types.Directory
-                        SavedSettingsLocn.Type = FileLocation.Types.Directory
-                    Case "Archive"
-                        'SettingsLocn.Type = FileLocation.Types.Archive
-                        SavedSettingsLocn.Type = FileLocation.Types.Archive
-                End Select
-            End If
+            'If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value = Nothing Then
+            '    'SettingsLocn.Type = FileLocation.Types.Directory 
+            'Else
+            '    Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
+            '        Case "Directory"
+            '            'SettingsLocn.Type = FileLocation.Types.Directory
+            '            SavedSettingsLocn.Type = FileLocation.Types.Directory
+            '        Case "Archive"
+            '            'SettingsLocn.Type = FileLocation.Types.Archive
+            '            SavedSettingsLocn.Type = FileLocation.Types.Archive
+            '    End Select
+            'End If
 
-            If SavedSettingsLocn.Type <> SettingsLocn.Type Then
-                RaiseEvent ErrorMessage("The last used project SettingsLocn.Type (" & SettingsLocn.Type.ToString & ") is different from the type in the Project Info file (" & SavedSettingsLocn.Type.ToString & ")." & vbCrLf)
-            End If
+            'If SavedSettingsLocn.Type <> SettingsLocn.Type Then
+            '    RaiseEvent ErrorMessage("The last used project SettingsLocn.Type (" & SettingsLocn.Type.ToString & ") is different from the type in the Project Info file (" & SavedSettingsLocn.Type.ToString & ")." & vbCrLf)
+            'End If
 
-            'Read the Saved SettingsLocn.Path but dont overwite the current value.
-            If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value = Nothing Then
-                'SettingsLocn.Path = ApplicationDir
-            Else
-                'SettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-                SavedSettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-            End If
+            ''Read the Saved SettingsLocn.Path but dont overwite the current value.
+            'If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value = Nothing Then
+            '    'SettingsLocn.Path = ApplicationDir
+            'Else
+            '    'SettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+            '    SavedSettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+            'End If
 
 
-            If SavedSettingsLocn.Path <> SettingsLocn.Path Then
-                RaiseEvent ErrorMessage("The last used project SettingsLocn.Path (" & SettingsLocn.Path & ") is different from the path in the Project Info file (" & SavedSettingsLocn.Path & ")." & vbCrLf)
-            End If
+            'If SavedSettingsLocn.Path <> SettingsLocn.Path Then
+            '    RaiseEvent ErrorMessage("The last used project SettingsLocn.Path (" & SettingsLocn.Path & ") is different from the path in the Project Info file (" & SavedSettingsLocn.Path & ")." & vbCrLf)
+            'End If
 
-            If ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value = Nothing Then
-                DataLocn.Type = FileLocation.Types.Directory
-            Else
-                Select Case ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value
-                    Case "Directory"
-                        DataLocn.Type = FileLocation.Types.Directory
-                    Case "Archive"
-                        DataLocn.Type = FileLocation.Types.Archive
-                End Select
-            End If
-            If ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value = Nothing Then
-                DataLocn.Path = ApplicationDir
-            Else
-                DataLocn.Path = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
-            End If
+            'If ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value = Nothing Then
+            '    DataLocn.Type = FileLocation.Types.Directory
+            'Else
+            '    Select Case ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value
+            '        Case "Directory"
+            '            DataLocn.Type = FileLocation.Types.Directory
+            '        Case "Archive"
+            '            DataLocn.Type = FileLocation.Types.Archive
+            '    End Select
+            'End If
+            'If ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value = Nothing Then
+            '    DataLocn.Path = ApplicationDir
+            'Else
+            '    DataLocn.Path = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
+            'End If
 
-            'If the Default project is being used, change the DataLocn.Type to Directory and DataLocn.Path to Application
-            If Name = "Default" Then
-                If DataLocn.Type = FileLocation.Types.Directory Then
-                    'Correct DataLocn.Type for the Default project read.
-                Else
-                    RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Type was: " & DataLocn.Type.ToString & " The project DataLocn.Type has been changed to 'Directory'" & vbCrLf)
-                    DataLocn.Type = FileLocation.Types.Directory
-                End If
-                If DataLocn.Path = ApplicationDir & "\" & "Default_Project" Then
-                    'Correct DataLocn.Path for the Default project read.
-                Else
-                    RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Path was: " & DataLocn.Path & " The project DataLocn.Type has been changed to " & ApplicationDir & "\" & "Default_Project" & vbCrLf)
-                    DataLocn.Path = ApplicationDir & "\" & "Default_Project"
-                End If
+            ''If the Default project is being used, change the DataLocn.Type to Directory and DataLocn.Path to Application
+            'If Name = "Default" Then
+            '    If DataLocn.Type = FileLocation.Types.Directory Then
+            '        'Correct DataLocn.Type for the Default project read.
+            '    Else
+            '        RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Type was: " & DataLocn.Type.ToString & " The project DataLocn.Type has been changed to 'Directory'" & vbCrLf)
+            '        DataLocn.Type = FileLocation.Types.Directory
+            '    End If
+            '    If DataLocn.Path = ApplicationDir & "\" & "Default_Project" Then
+            '        'Correct DataLocn.Path for the Default project read.
+            '    Else
+            '        RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Path was: " & DataLocn.Path & " The project DataLocn.Type has been changed to " & ApplicationDir & "\" & "Default_Project" & vbCrLf)
+            '        DataLocn.Path = ApplicationDir & "\" & "Default_Project"
+            '    End If
+            'End If
 
-            End If
+
+
+
 
             'Read the Application Summary
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value = Nothing Then
@@ -2515,36 +2312,77 @@ Public Class Project '----------------------------------------------------------
         'Write the project settings to the project information file.
         'This file is written to the Settings Location.
 
+        'UPDATE 13AUG16
+        'SettingsLocn and DataLocn is the same as the Project Directory location or the Project Archive location.
+        'These are now left blank in the ADVL_Project_Info.xml file.
+        'DataLocn has a value only for Hybrid projects.
+        'Future project types may use these location settings or add new location settings.
+
+        Dim SettingsLocationType As String
+        Dim SettingsLocationPath As String
+        Dim DataLocationType As String
+        Dim DataLocationPath As String
+
         Dim ProjectType As String
         Select Case Type
             Case Types.None
                 ProjectType = "None"
+                SettingsLocationType = ""
+                SettingsLocationPath = ""
+                DataLocationType = ""
+                DataLocationPath = ""
+
             Case Types.Directory
                 ProjectType = "Directory"
+                SettingsLocationType = ""
+                SettingsLocationPath = ""
+                DataLocationType = ""
+                DataLocationPath = ""
+
             Case Types.Archive
                 ProjectType = "Archive"
+                SettingsLocationType = ""
+                SettingsLocationPath = ""
+                DataLocationType = ""
+                DataLocationPath = ""
+
             Case Types.Hybrid
                 ProjectType = "Hybrid"
-        End Select
-
-        Dim SettingsLocationType As String
-        Select Case SettingsLocn.Type
-            Case FileLocation.Types.Directory
-                SettingsLocationType = "Directory"
-            Case FileLocation.Types.Archive
-                SettingsLocationType = "Archive"
-        End Select
-
-        Dim DataLocationType As String
-        Select Case DataLocn.Type
-            Case FileLocation.Types.Directory
-                DataLocationType = "Directory"
-            Case FileLocation.Types.Archive
+                SettingsLocationType = ""
+                SettingsLocationPath = ""
                 DataLocationType = "Archive"
+                DataLocationPath = DataLocn.Path
+
         End Select
+
+        'Dim SettingsLocationType As String
+        'Select Case SettingsLocn.Type
+        '    Case FileLocation.Types.Directory
+        '        SettingsLocationType = "Directory"
+        '    Case FileLocation.Types.Archive
+        '        SettingsLocationType = "Archive"
+        'End Select
+
+        'Dim DataLocationType As String
+        'Select Case DataLocn.Type
+        '    Case FileLocation.Types.Directory
+        '        DataLocationType = "Directory"
+        '    Case FileLocation.Types.Archive
+        '        DataLocationType = "Archive"
+        'End Select
 
         'This line was changed in the next section:
         '<CreationDate><%= Format(Usage.FirstUsed, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+
+        'These lines were changed in the next section:
+        '<SettingsLocation>
+        '    <Type><%= SettingsLocationType %></Type>
+        '    <Path><%= SettingsLocn.Path %></Path>
+        '</SettingsLocation>
+        '<DataLocation>
+        '    <Type><%= DataLocationType %></Type>
+        '    <Path><%= DataLocn.Path %></Path>
+        '</DataLocation>
 
         Dim ProjectInfoXDoc = <?xml version="1.0" encoding="utf-8"?>
                               <!---->
@@ -2568,11 +2406,11 @@ Public Class Project '----------------------------------------------------------
                                   </Author>
                                   <SettingsLocation>
                                       <Type><%= SettingsLocationType %></Type>
-                                      <Path><%= SettingsLocn.Path %></Path>
+                                      <Path><%= SettingsLocationPath %></Path>
                                   </SettingsLocation>
                                   <DataLocation>
                                       <Type><%= DataLocationType %></Type>
-                                      <Path><%= DataLocn.Path %></Path>
+                                      <Path><%= DataLocationPath %></Path>
                                   </DataLocation>
                                   <ApplicationSummary>
                                       <Name><%= ApplicationSummary.Name %></Name>
@@ -2856,12 +2694,14 @@ Public Class Project '----------------------------------------------------------
         End If
     End Sub
 
-    Private Sub ProjectForm_ErrorMessage(Message As String) Handles ProjectForm.ErrorMessage
-        RaiseEvent ErrorMessage(Message)
+    'Private Sub ProjectForm_ErrorMessage(Message As String) Handles ProjectForm.ErrorMessage
+    Private Sub ProjectForm_ErrorMessage(Msg As String) Handles ProjectForm.ErrorMessage
+        RaiseEvent ErrorMessage(Msg)
     End Sub
 
-    Private Sub ProjectForm_Message(Message As String) Handles ProjectForm.Message
-        RaiseEvent Message(Message)
+    'Private Sub ProjectForm_Message(Message As String) Handles ProjectForm.Message
+    Private Sub ProjectForm_Message(Msg As String) Handles ProjectForm.Message
+        RaiseEvent Message(Msg)
     End Sub
 
     Private Sub ProjectForm_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles ProjectForm.FormClosed
@@ -2870,11 +2710,14 @@ Public Class Project '----------------------------------------------------------
 
     Private Sub ProjectForm_ProjectSelected(ByRef ProjectSummary As ProjectSummary) Handles ProjectForm.ProjectSelected
         'A project has been selected.
-        RaiseEvent ProjectChanging()
+        'RaiseEvent ProjectChanging()
+        RaiseEvent Closing() 'This event indicates that the current project is closing.
         SettingsLocn.Path = ProjectSummary.SettingsLocnPath
         SettingsLocn.Type = ProjectSummary.SettingsLocnType
         ReadProjectInfoFile()
-        RaiseEvent ProjectSelected()
+        'RaiseEvent ProjectSelected()
+        RaiseEvent Selected()
+
     End Sub
 
     Public Sub CreateDefaultProject()
@@ -3072,18 +2915,22 @@ Public Class Project '----------------------------------------------------------
 
     Public Sub OpenDefaultProject()
         'Open the default project.
-        RaiseEvent ProjectChanging()
+        'RaiseEvent ProjectChanging()
+        RaiseEvent Closing() 'This event indicates that the current project is closing.
+
         If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then 'Open the default project.
             SettingsLocn.Type = FileLocation.Types.Directory
             SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
             ReadProjectInfoFile()
-            RaiseEvent ProjectSelected()
+            'RaiseEvent ProjectSelected()
+            RaiseEvent Selected()
         Else 'Create the default project and open it.
             CreateDefaultProject()
             SettingsLocn.Type = FileLocation.Types.Directory
             SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
             ReadProjectInfoFile()
-            RaiseEvent ProjectSelected()
+            'RaiseEvent ProjectSelected()
+            RaiseEvent Selected()
         End If
     End Sub
 
@@ -3096,10 +2943,14 @@ Public Class Project '----------------------------------------------------------
 
 #Region "Project Events" '--------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    Event ErrorMessage(ByVal Message As String)
-    Event Message(ByVal Message As String)
-    Event ProjectChanging() 'The project is changing. This event tells the Main form to save the old project parameters.
-    Event ProjectSelected() 'A project has been selected
+    'Event ErrorMessage(ByVal Message As String)
+    Event ErrorMessage(ByVal Msg As String)
+    'Event Message(ByVal Message As String)
+    Event Message(ByVal Msg As String)
+    'Event ProjectChanging() 'The project is changing. This event tells the Main form to save the old project parameters.
+    Event Closing() 'This event indicates that the current project is closing. The parameters of the current project should be saved.
+    'Event ProjectSelected() 'A project has been selected
+    Event Selected() 'This event indicates that a new project has been selected. 
 
 #End Region 'Project Events ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

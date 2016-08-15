@@ -131,7 +131,8 @@
                        </FormSettings>
 
         'Dim SettingsName As String = "FormSettings_" & Me.Text & ".xml"
-        Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
+        'Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
+        Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
         SettingsLocn.SaveXmlData(SettingsFileName, Settings)
 
     End Sub
@@ -140,7 +141,8 @@
         'Read the form settings from an XML document.
 
         'Dim SettingsName As String = "FormSettings_" & Me.Text & ".xml"
-        Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
+        'Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
+        Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
 
         'If SettingsLocn.FileExists(SettingsName) Then
         Dim Settings As System.Xml.Linq.XDocument
