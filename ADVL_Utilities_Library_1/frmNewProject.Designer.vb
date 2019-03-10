@@ -59,6 +59,7 @@ Partial Class frmNewProject
         Me.txtDataName = New System.Windows.Forms.TextBox()
         Me.Label15 = New System.Windows.Forms.Label()
         Me.Label16 = New System.Windows.Forms.Label()
+        Me.TabPage6 = New System.Windows.Forms.TabPage()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
         Me.Label12 = New System.Windows.Forms.Label()
@@ -195,7 +196,7 @@ Partial Class frmNewProject
         Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
         Me.TabPage2.Size = New System.Drawing.Size(616, 220)
         Me.TabPage2.TabIndex = 1
-        Me.TabPage2.Text = "Project File"
+        Me.TabPage2.Text = "Project Archive"
         Me.TabPage2.UseVisualStyleBackColor = True
         '
         'Label17
@@ -211,9 +212,9 @@ Partial Class frmNewProject
         '
         Me.txtProjectFileName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtProjectFileName.Location = New System.Drawing.Point(100, 60)
+        Me.txtProjectFileName.Location = New System.Drawing.Point(122, 60)
         Me.txtProjectFileName.Name = "txtProjectFileName"
-        Me.txtProjectFileName.Size = New System.Drawing.Size(510, 20)
+        Me.txtProjectFileName.Size = New System.Drawing.Size(488, 20)
         Me.txtProjectFileName.TabIndex = 39
         '
         'Label5
@@ -221,9 +222,9 @@ Partial Class frmNewProject
         Me.Label5.AutoSize = True
         Me.Label5.Location = New System.Drawing.Point(6, 63)
         Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(88, 13)
+        Me.Label5.Size = New System.Drawing.Size(110, 13)
         Me.Label5.TabIndex = 38
-        Me.Label5.Text = "Project file name:"
+        Me.Label5.Text = "Project archive name:"
         '
         'btnFindProjFileDir
         '
@@ -270,6 +271,7 @@ Partial Class frmNewProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.TabControl2.Controls.Add(Me.TabPage4)
         Me.TabControl2.Controls.Add(Me.TabPage5)
+        Me.TabControl2.Controls.Add(Me.TabPage6)
         Me.TabControl2.Location = New System.Drawing.Point(3, 3)
         Me.TabControl2.Name = "TabControl2"
         Me.TabControl2.SelectedIndex = 0
@@ -355,7 +357,7 @@ Partial Class frmNewProject
         Me.TabPage5.Padding = New System.Windows.Forms.Padding(3)
         Me.TabPage5.Size = New System.Drawing.Size(602, 188)
         Me.TabPage5.TabIndex = 1
-        Me.TabPage5.Text = "Data File"
+        Me.TabPage5.Text = "Data"
         Me.TabPage5.UseVisualStyleBackColor = True
         '
         'chkProjectDir
@@ -460,6 +462,15 @@ Partial Class frmNewProject
         Me.Label16.TabIndex = 40
         Me.Label16.Text = "Data Name:"
         '
+        'TabPage6
+        '
+        Me.TabPage6.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage6.Name = "TabPage6"
+        Me.TabPage6.Size = New System.Drawing.Size(602, 188)
+        Me.TabPage6.TabIndex = 2
+        Me.TabPage6.Text = "Settings"
+        Me.TabPage6.UseVisualStyleBackColor = True
+        '
         'GroupBox1
         '
         Me.GroupBox1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
@@ -555,7 +566,7 @@ Partial Class frmNewProject
         'rbHybrid
         '
         Me.rbHybrid.AutoSize = True
-        Me.rbHybrid.Location = New System.Drawing.Point(282, 102)
+        Me.rbHybrid.Location = New System.Drawing.Point(302, 102)
         Me.rbHybrid.Name = "rbHybrid"
         Me.rbHybrid.Size = New System.Drawing.Size(55, 17)
         Me.rbHybrid.TabIndex = 34
@@ -569,10 +580,10 @@ Partial Class frmNewProject
         Me.rbProjectFile.AutoSize = True
         Me.rbProjectFile.Location = New System.Drawing.Point(199, 102)
         Me.rbProjectFile.Name = "rbProjectFile"
-        Me.rbProjectFile.Size = New System.Drawing.Size(77, 17)
+        Me.rbProjectFile.Size = New System.Drawing.Size(97, 17)
         Me.rbProjectFile.TabIndex = 33
         Me.rbProjectFile.TabStop = True
-        Me.rbProjectFile.Text = "Project File"
+        Me.rbProjectFile.Text = "Project Archive"
         Me.ToolTip1.SetToolTip(Me.rbProjectFile, "Store all settings and data in a single project file")
         Me.rbProjectFile.UseVisualStyleBackColor = True
         '
@@ -717,4 +728,5 @@ Partial Class frmNewProject
     Friend WithEvents Label17 As System.Windows.Forms.Label
     Friend WithEvents Label18 As System.Windows.Forms.Label
     Friend WithEvents chkProjectDir As System.Windows.Forms.CheckBox
+    Friend WithEvents TabPage6 As Windows.Forms.TabPage
 End Class

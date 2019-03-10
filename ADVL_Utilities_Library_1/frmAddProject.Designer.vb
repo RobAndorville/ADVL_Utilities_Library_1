@@ -29,13 +29,13 @@ Partial Class frmAddProject
         Me.Label13 = New System.Windows.Forms.Label()
         Me.txtApplicationName = New System.Windows.Forms.TextBox()
         Me.Label11 = New System.Windows.Forms.Label()
-        Me.txtDataLocnPath = New System.Windows.Forms.TextBox()
+        Me.txtDataRelLocnPath = New System.Windows.Forms.TextBox()
         Me.Label10 = New System.Windows.Forms.Label()
-        Me.txtDataLocnType = New System.Windows.Forms.TextBox()
+        Me.txtDataRelLocnType = New System.Windows.Forms.TextBox()
         Me.Label9 = New System.Windows.Forms.Label()
-        Me.txtSettingsLocnPath = New System.Windows.Forms.TextBox()
+        Me.txtSettingsRelLocnPath = New System.Windows.Forms.TextBox()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.txtSettingsLocnType = New System.Windows.Forms.TextBox()
+        Me.txtSettingsRelLocnType = New System.Windows.Forms.TextBox()
         Me.txtCreationDate = New System.Windows.Forms.TextBox()
         Me.txtType = New System.Windows.Forms.TextBox()
         Me.txtAuthor = New System.Windows.Forms.TextBox()
@@ -59,6 +59,7 @@ Partial Class frmAddProject
         Me.ProgressBar2 = New System.Windows.Forms.ProgressBar()
         Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
         Me.Label12 = New System.Windows.Forms.Label()
+        Me.chkSearchSubDirectories = New System.Windows.Forms.CheckBox()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -80,13 +81,13 @@ Partial Class frmAddProject
         Me.GroupBox1.Controls.Add(Me.Label13)
         Me.GroupBox1.Controls.Add(Me.txtApplicationName)
         Me.GroupBox1.Controls.Add(Me.Label11)
-        Me.GroupBox1.Controls.Add(Me.txtDataLocnPath)
+        Me.GroupBox1.Controls.Add(Me.txtDataRelLocnPath)
         Me.GroupBox1.Controls.Add(Me.Label10)
-        Me.GroupBox1.Controls.Add(Me.txtDataLocnType)
+        Me.GroupBox1.Controls.Add(Me.txtDataRelLocnType)
         Me.GroupBox1.Controls.Add(Me.Label9)
-        Me.GroupBox1.Controls.Add(Me.txtSettingsLocnPath)
+        Me.GroupBox1.Controls.Add(Me.txtSettingsRelLocnPath)
         Me.GroupBox1.Controls.Add(Me.Label8)
-        Me.GroupBox1.Controls.Add(Me.txtSettingsLocnType)
+        Me.GroupBox1.Controls.Add(Me.txtSettingsRelLocnType)
         Me.GroupBox1.Controls.Add(Me.txtCreationDate)
         Me.GroupBox1.Controls.Add(Me.txtType)
         Me.GroupBox1.Controls.Add(Me.txtAuthor)
@@ -141,64 +142,64 @@ Partial Class frmAddProject
         Me.Label11.TabIndex = 22
         Me.Label11.Text = "Application name:"
         '
-        'txtDataLocnPath
+        'txtDataRelLocnPath
         '
-        Me.txtDataLocnPath.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.txtDataRelLocnPath.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtDataLocnPath.Location = New System.Drawing.Point(263, 178)
-        Me.txtDataLocnPath.Name = "txtDataLocnPath"
-        Me.txtDataLocnPath.Size = New System.Drawing.Size(497, 20)
-        Me.txtDataLocnPath.TabIndex = 19
+        Me.txtDataRelLocnPath.Location = New System.Drawing.Point(300, 178)
+        Me.txtDataRelLocnPath.Name = "txtDataRelLocnPath"
+        Me.txtDataRelLocnPath.Size = New System.Drawing.Size(460, 20)
+        Me.txtDataRelLocnPath.TabIndex = 19
         '
         'Label10
         '
         Me.Label10.AutoSize = True
-        Me.Label10.Location = New System.Drawing.Point(225, 181)
+        Me.Label10.Location = New System.Drawing.Point(262, 181)
         Me.Label10.Name = "Label10"
         Me.Label10.Size = New System.Drawing.Size(32, 13)
         Me.Label10.TabIndex = 18
         Me.Label10.Text = "Path:"
         '
-        'txtDataLocnType
+        'txtDataRelLocnType
         '
-        Me.txtDataLocnType.Location = New System.Drawing.Point(123, 178)
-        Me.txtDataLocnType.Name = "txtDataLocnType"
-        Me.txtDataLocnType.Size = New System.Drawing.Size(96, 20)
-        Me.txtDataLocnType.TabIndex = 17
+        Me.txtDataRelLocnType.Location = New System.Drawing.Point(160, 178)
+        Me.txtDataRelLocnType.Name = "txtDataRelLocnType"
+        Me.txtDataRelLocnType.Size = New System.Drawing.Size(96, 20)
+        Me.txtDataRelLocnType.TabIndex = 17
         '
         'Label9
         '
         Me.Label9.AutoSize = True
         Me.Label9.Location = New System.Drawing.Point(6, 181)
         Me.Label9.Name = "Label9"
-        Me.Label9.Size = New System.Drawing.Size(96, 13)
+        Me.Label9.Size = New System.Drawing.Size(133, 13)
         Me.Label9.TabIndex = 16
-        Me.Label9.Text = "Data location type:"
+        Me.Label9.Text = "Data relative location type:"
         '
-        'txtSettingsLocnPath
+        'txtSettingsRelLocnPath
         '
-        Me.txtSettingsLocnPath.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.txtSettingsRelLocnPath.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtSettingsLocnPath.Location = New System.Drawing.Point(263, 152)
-        Me.txtSettingsLocnPath.Name = "txtSettingsLocnPath"
-        Me.txtSettingsLocnPath.Size = New System.Drawing.Size(497, 20)
-        Me.txtSettingsLocnPath.TabIndex = 15
+        Me.txtSettingsRelLocnPath.Location = New System.Drawing.Point(300, 152)
+        Me.txtSettingsRelLocnPath.Name = "txtSettingsRelLocnPath"
+        Me.txtSettingsRelLocnPath.Size = New System.Drawing.Size(460, 20)
+        Me.txtSettingsRelLocnPath.TabIndex = 15
         '
         'Label8
         '
         Me.Label8.AutoSize = True
-        Me.Label8.Location = New System.Drawing.Point(225, 155)
+        Me.Label8.Location = New System.Drawing.Point(262, 155)
         Me.Label8.Name = "Label8"
         Me.Label8.Size = New System.Drawing.Size(32, 13)
         Me.Label8.TabIndex = 14
         Me.Label8.Text = "Path:"
         '
-        'txtSettingsLocnType
+        'txtSettingsRelLocnType
         '
-        Me.txtSettingsLocnType.Location = New System.Drawing.Point(123, 152)
-        Me.txtSettingsLocnType.Name = "txtSettingsLocnType"
-        Me.txtSettingsLocnType.Size = New System.Drawing.Size(96, 20)
-        Me.txtSettingsLocnType.TabIndex = 13
+        Me.txtSettingsRelLocnType.Location = New System.Drawing.Point(160, 152)
+        Me.txtSettingsRelLocnType.Name = "txtSettingsRelLocnType"
+        Me.txtSettingsRelLocnType.Size = New System.Drawing.Size(96, 20)
+        Me.txtSettingsRelLocnType.TabIndex = 13
         '
         'txtCreationDate
         '
@@ -247,9 +248,9 @@ Partial Class frmAddProject
         Me.Label7.AutoSize = True
         Me.Label7.Location = New System.Drawing.Point(6, 155)
         Me.Label7.Name = "Label7"
-        Me.Label7.Size = New System.Drawing.Size(111, 13)
+        Me.Label7.Size = New System.Drawing.Size(148, 13)
         Me.Label7.TabIndex = 6
-        Me.Label7.Text = "Settings location type:"
+        Me.Label7.Text = "Settings relative location type:"
         '
         'Label5
         '
@@ -308,15 +309,14 @@ Partial Class frmAddProject
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.ListBox1.FormattingEnabled = True
-        Me.ListBox1.Location = New System.Drawing.Point(12, 308)
+        Me.ListBox1.Location = New System.Drawing.Point(12, 334)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(766, 160)
+        Me.ListBox1.Size = New System.Drawing.Size(766, 134)
         Me.ListBox1.TabIndex = 31
         '
         'btnFindFiles
         '
-        Me.btnFindFiles.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnFindFiles.Location = New System.Drawing.Point(675, 279)
+        Me.btnFindFiles.Location = New System.Drawing.Point(12, 308)
         Me.btnFindFiles.Name = "btnFindFiles"
         Me.btnFindFiles.Size = New System.Drawing.Size(103, 22)
         Me.btnFindFiles.TabIndex = 32
@@ -338,7 +338,7 @@ Partial Class frmAddProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtSearchDirectory.Location = New System.Drawing.Point(170, 281)
         Me.txtSearchDirectory.Name = "txtSearchDirectory"
-        Me.txtSearchDirectory.Size = New System.Drawing.Size(499, 20)
+        Me.txtSearchDirectory.Size = New System.Drawing.Size(607, 20)
         Me.txtSearchDirectory.TabIndex = 34
         '
         'btnBrowse
@@ -387,11 +387,22 @@ Partial Class frmAddProject
         Me.Label12.TabIndex = 39
         Me.Label12.Text = "Searching ..."
         '
+        'chkSearchSubDirectories
+        '
+        Me.chkSearchSubDirectories.AutoSize = True
+        Me.chkSearchSubDirectories.Location = New System.Drawing.Point(121, 311)
+        Me.chkSearchSubDirectories.Name = "chkSearchSubDirectories"
+        Me.chkSearchSubDirectories.Size = New System.Drawing.Size(132, 17)
+        Me.chkSearchSubDirectories.TabIndex = 40
+        Me.chkSearchSubDirectories.Text = "Search SubDirectories"
+        Me.chkSearchSubDirectories.UseVisualStyleBackColor = True
+        '
         'frmAddProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(790, 515)
+        Me.Controls.Add(Me.chkSearchSubDirectories)
         Me.Controls.Add(Me.Label12)
         Me.Controls.Add(Me.ProgressBar2)
         Me.Controls.Add(Me.ProgressBar1)
@@ -415,13 +426,13 @@ Partial Class frmAddProject
     Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox
     Friend WithEvents txtApplicationName As System.Windows.Forms.TextBox
     Friend WithEvents Label11 As System.Windows.Forms.Label
-    Friend WithEvents txtDataLocnPath As System.Windows.Forms.TextBox
+    Friend WithEvents txtDataRelLocnPath As System.Windows.Forms.TextBox
     Friend WithEvents Label10 As System.Windows.Forms.Label
-    Friend WithEvents txtDataLocnType As System.Windows.Forms.TextBox
+    Friend WithEvents txtDataRelLocnType As System.Windows.Forms.TextBox
     Friend WithEvents Label9 As System.Windows.Forms.Label
-    Friend WithEvents txtSettingsLocnPath As System.Windows.Forms.TextBox
+    Friend WithEvents txtSettingsRelLocnPath As System.Windows.Forms.TextBox
     Friend WithEvents Label8 As System.Windows.Forms.Label
-    Friend WithEvents txtSettingsLocnType As System.Windows.Forms.TextBox
+    Friend WithEvents txtSettingsRelLocnType As System.Windows.Forms.TextBox
     Friend WithEvents txtCreationDate As System.Windows.Forms.TextBox
     Friend WithEvents txtType As System.Windows.Forms.TextBox
     Friend WithEvents txtAuthor As System.Windows.Forms.TextBox
@@ -448,4 +459,5 @@ Partial Class frmAddProject
     Friend WithEvents Label12 As System.Windows.Forms.Label
     Friend WithEvents txtComments As System.Windows.Forms.TextBox
     Friend WithEvents Label13 As System.Windows.Forms.Label
+    Friend WithEvents chkSearchSubDirectories As Windows.Forms.CheckBox
 End Class

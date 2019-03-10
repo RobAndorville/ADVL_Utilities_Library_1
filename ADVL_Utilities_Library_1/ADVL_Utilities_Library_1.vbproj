@@ -67,6 +67,7 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FormatConvert.vb" />
     <Compile Include="frmAddProject.Designer.vb">
       <DependentUpon>frmAddProject.vb</DependentUpon>
     </Compile>
@@ -97,10 +98,22 @@
     <Compile Include="frmProject.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmProjectParams.Designer.vb">
+      <DependentUpon>frmProjectParams.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmProjectParams.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmZipSelectFile.Designer.vb">
       <DependentUpon>frmZipSelectFile.vb</DependentUpon>
     </Compile>
     <Compile Include="frmZipSelectFile.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmZipSelectFileModal.Designer.vb">
+      <DependentUpon>frmZipSelectFileModal.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmZipSelectFileModal.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -119,6 +132,20 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="SystemUtilities.vb" />
+    <Compile Include="XmlDisplay.Designer.vb">
+      <DependentUpon>XmlDisplay.vb</DependentUpon>
+    </Compile>
+    <Compile Include="XmlDisplay.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="XmlDisplaySettings.vb" />
+    <Compile Include="XmlHtmDisplay.Designer.vb">
+      <DependentUpon>XmlHtmDisplay.vb</DependentUpon>
+    </Compile>
+    <Compile Include="XmlHtmDisplay.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="XmlHtmDisplaySettings.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="frmAddProject.resx">
@@ -136,8 +163,14 @@
     <EmbeddedResource Include="frmProject.resx">
       <DependentUpon>frmProject.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmProjectParams.resx">
+      <DependentUpon>frmProjectParams.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmZipSelectFile.resx">
       <DependentUpon>frmZipSelectFile.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmZipSelectFileModal.resx">
+      <DependentUpon>frmZipSelectFileModal.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
@@ -147,7 +180,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram1.cd">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
@@ -157,6 +192,9 @@
       <CustomToolNamespace>My</CustomToolNamespace>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{94E38DFF-614B-4CBD-B67C-F211BB35CE8B}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

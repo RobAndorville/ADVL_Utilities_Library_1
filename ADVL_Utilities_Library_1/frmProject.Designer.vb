@@ -33,24 +33,20 @@ Partial Class frmProject
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.txtComments = New System.Windows.Forms.TextBox()
         Me.Label6 = New System.Windows.Forms.Label()
-        Me.txtApplicationName = New System.Windows.Forms.TextBox()
-        Me.Label11 = New System.Windows.Forms.Label()
-        Me.txtSettingsLocnPath = New System.Windows.Forms.TextBox()
+        Me.txtPath = New System.Windows.Forms.TextBox()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.txtSettingsLocnType = New System.Windows.Forms.TextBox()
         Me.txtCreationDate = New System.Windows.Forms.TextBox()
         Me.txtType = New System.Windows.Forms.TextBox()
         Me.txtAuthor = New System.Windows.Forms.TextBox()
         Me.txtDescription = New System.Windows.Forms.TextBox()
         Me.txtProjectName = New System.Windows.Forms.TextBox()
-        Me.Label7 = New System.Windows.Forms.Label()
         Me.Label5 = New System.Windows.Forms.Label()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.btnSelectDefault = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.btnSelDefault = New System.Windows.Forms.Button()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
@@ -120,9 +116,10 @@ Partial Class frmProject
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridView1.Location = New System.Drawing.Point(12, 281)
+        Me.DataGridView1.Location = New System.Drawing.Point(12, 257)
         Me.DataGridView1.Name = "DataGridView1"
-        Me.DataGridView1.Size = New System.Drawing.Size(768, 219)
+        Me.DataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
+        Me.DataGridView1.Size = New System.Drawing.Size(768, 243)
         Me.DataGridView1.TabIndex = 23
         '
         'GroupBox1
@@ -131,17 +128,13 @@ Partial Class frmProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.GroupBox1.Controls.Add(Me.txtComments)
         Me.GroupBox1.Controls.Add(Me.Label6)
-        Me.GroupBox1.Controls.Add(Me.txtApplicationName)
-        Me.GroupBox1.Controls.Add(Me.Label11)
-        Me.GroupBox1.Controls.Add(Me.txtSettingsLocnPath)
+        Me.GroupBox1.Controls.Add(Me.txtPath)
         Me.GroupBox1.Controls.Add(Me.Label8)
-        Me.GroupBox1.Controls.Add(Me.txtSettingsLocnType)
         Me.GroupBox1.Controls.Add(Me.txtCreationDate)
         Me.GroupBox1.Controls.Add(Me.txtType)
         Me.GroupBox1.Controls.Add(Me.txtAuthor)
         Me.GroupBox1.Controls.Add(Me.txtDescription)
         Me.GroupBox1.Controls.Add(Me.txtProjectName)
-        Me.GroupBox1.Controls.Add(Me.Label7)
         Me.GroupBox1.Controls.Add(Me.Label5)
         Me.GroupBox1.Controls.Add(Me.Label4)
         Me.GroupBox1.Controls.Add(Me.Label3)
@@ -149,7 +142,7 @@ Partial Class frmProject
         Me.GroupBox1.Controls.Add(Me.Label1)
         Me.GroupBox1.Location = New System.Drawing.Point(12, 40)
         Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Size = New System.Drawing.Size(768, 235)
+        Me.GroupBox1.Size = New System.Drawing.Size(768, 211)
         Me.GroupBox1.TabIndex = 24
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Project:"
@@ -158,74 +151,49 @@ Partial Class frmProject
         '
         Me.txtComments.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtComments.Location = New System.Drawing.Point(489, 100)
+        Me.txtComments.Location = New System.Drawing.Point(299, 100)
         Me.txtComments.Name = "txtComments"
-        Me.txtComments.Size = New System.Drawing.Size(272, 20)
+        Me.txtComments.Size = New System.Drawing.Size(462, 20)
         Me.txtComments.TabIndex = 25
         '
         'Label6
         '
         Me.Label6.AutoSize = True
-        Me.Label6.Location = New System.Drawing.Point(424, 103)
+        Me.Label6.Location = New System.Drawing.Point(234, 103)
         Me.Label6.Name = "Label6"
         Me.Label6.Size = New System.Drawing.Size(59, 13)
         Me.Label6.TabIndex = 24
         Me.Label6.Text = "Comments:"
         '
-        'txtApplicationName
+        'txtPath
         '
-        Me.txtApplicationName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.txtPath.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtApplicationName.Location = New System.Drawing.Point(103, 204)
-        Me.txtApplicationName.Name = "txtApplicationName"
-        Me.txtApplicationName.Size = New System.Drawing.Size(659, 20)
-        Me.txtApplicationName.TabIndex = 23
-        '
-        'Label11
-        '
-        Me.Label11.AutoSize = True
-        Me.Label11.Location = New System.Drawing.Point(6, 207)
-        Me.Label11.Name = "Label11"
-        Me.Label11.Size = New System.Drawing.Size(91, 13)
-        Me.Label11.TabIndex = 22
-        Me.Label11.Text = "Application name:"
-        '
-        'txtSettingsLocnPath
-        '
-        Me.txtSettingsLocnPath.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtSettingsLocnPath.Location = New System.Drawing.Point(263, 152)
-        Me.txtSettingsLocnPath.Multiline = True
-        Me.txtSettingsLocnPath.Name = "txtSettingsLocnPath"
-        Me.txtSettingsLocnPath.Size = New System.Drawing.Size(499, 46)
-        Me.txtSettingsLocnPath.TabIndex = 15
+        Me.txtPath.Location = New System.Drawing.Point(237, 152)
+        Me.txtPath.Multiline = True
+        Me.txtPath.Name = "txtPath"
+        Me.txtPath.Size = New System.Drawing.Size(525, 46)
+        Me.txtPath.TabIndex = 15
         '
         'Label8
         '
         Me.Label8.AutoSize = True
-        Me.Label8.Location = New System.Drawing.Point(225, 155)
+        Me.Label8.Location = New System.Drawing.Point(199, 155)
         Me.Label8.Name = "Label8"
         Me.Label8.Size = New System.Drawing.Size(32, 13)
         Me.Label8.TabIndex = 14
         Me.Label8.Text = "Path:"
         '
-        'txtSettingsLocnType
-        '
-        Me.txtSettingsLocnType.Location = New System.Drawing.Point(123, 152)
-        Me.txtSettingsLocnType.Name = "txtSettingsLocnType"
-        Me.txtSettingsLocnType.Size = New System.Drawing.Size(96, 20)
-        Me.txtSettingsLocnType.TabIndex = 13
-        '
         'txtCreationDate
         '
-        Me.txtCreationDate.Location = New System.Drawing.Point(280, 100)
+        Me.txtCreationDate.Location = New System.Drawing.Point(87, 100)
         Me.txtCreationDate.Name = "txtCreationDate"
         Me.txtCreationDate.Size = New System.Drawing.Size(128, 20)
         Me.txtCreationDate.TabIndex = 11
         '
         'txtType
         '
-        Me.txtType.Location = New System.Drawing.Point(87, 100)
+        Me.txtType.Location = New System.Drawing.Point(87, 152)
         Me.txtType.Name = "txtType"
         Me.txtType.Size = New System.Drawing.Size(96, 20)
         Me.txtType.TabIndex = 10
@@ -258,19 +226,10 @@ Partial Class frmProject
         Me.txtProjectName.Size = New System.Drawing.Size(675, 20)
         Me.txtProjectName.TabIndex = 7
         '
-        'Label7
-        '
-        Me.Label7.AutoSize = True
-        Me.Label7.Location = New System.Drawing.Point(6, 155)
-        Me.Label7.Name = "Label7"
-        Me.Label7.Size = New System.Drawing.Size(111, 13)
-        Me.Label7.TabIndex = 6
-        Me.Label7.Text = "Settings location type:"
-        '
         'Label5
         '
         Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(199, 103)
+        Me.Label5.Location = New System.Drawing.Point(6, 103)
         Me.Label5.Name = "Label5"
         Me.Label5.Size = New System.Drawing.Size(75, 13)
         Me.Label5.TabIndex = 4
@@ -279,7 +238,7 @@ Partial Class frmProject
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(10, 103)
+        Me.Label4.Location = New System.Drawing.Point(6, 155)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(34, 13)
         Me.Label4.TabIndex = 3
@@ -312,22 +271,22 @@ Partial Class frmProject
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "Name:"
         '
-        'btnSelectDefault
+        'btnSelDefault
         '
-        Me.btnSelectDefault.Location = New System.Drawing.Point(364, 12)
-        Me.btnSelectDefault.Name = "btnSelectDefault"
-        Me.btnSelectDefault.Size = New System.Drawing.Size(85, 22)
-        Me.btnSelectDefault.TabIndex = 25
-        Me.btnSelectDefault.Text = "Select Default"
-        Me.ToolTip1.SetToolTip(Me.btnSelectDefault, "Select the default project")
-        Me.btnSelectDefault.UseVisualStyleBackColor = True
+        Me.btnSelDefault.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnSelDefault.Location = New System.Drawing.Point(364, 12)
+        Me.btnSelDefault.Name = "btnSelDefault"
+        Me.btnSelDefault.Size = New System.Drawing.Size(105, 22)
+        Me.btnSelDefault.TabIndex = 26
+        Me.btnSelDefault.Text = "Select Default"
+        Me.btnSelDefault.UseVisualStyleBackColor = True
         '
         'frmProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(792, 512)
-        Me.Controls.Add(Me.btnSelectDefault)
+        Me.Controls.Add(Me.btnSelDefault)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.DataGridView1)
         Me.Controls.Add(Me.btnSaveAs)
@@ -352,24 +311,20 @@ Partial Class frmProject
     Friend WithEvents btnSaveAs As System.Windows.Forms.Button
     Friend WithEvents DataGridView1 As System.Windows.Forms.DataGridView
     Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox
-    Friend WithEvents txtSettingsLocnPath As System.Windows.Forms.TextBox
+    Friend WithEvents txtPath As System.Windows.Forms.TextBox
     Friend WithEvents Label8 As System.Windows.Forms.Label
-    Friend WithEvents txtSettingsLocnType As System.Windows.Forms.TextBox
     Friend WithEvents txtCreationDate As System.Windows.Forms.TextBox
     Friend WithEvents txtType As System.Windows.Forms.TextBox
     Friend WithEvents txtAuthor As System.Windows.Forms.TextBox
     Friend WithEvents txtDescription As System.Windows.Forms.TextBox
     Friend WithEvents txtProjectName As System.Windows.Forms.TextBox
-    Friend WithEvents Label7 As System.Windows.Forms.Label
     Friend WithEvents Label5 As System.Windows.Forms.Label
     Friend WithEvents Label4 As System.Windows.Forms.Label
     Friend WithEvents Label3 As System.Windows.Forms.Label
     Friend WithEvents Label2 As System.Windows.Forms.Label
     Friend WithEvents Label1 As System.Windows.Forms.Label
-    Friend WithEvents txtApplicationName As System.Windows.Forms.TextBox
-    Friend WithEvents Label11 As System.Windows.Forms.Label
     Friend WithEvents txtComments As System.Windows.Forms.TextBox
     Friend WithEvents Label6 As System.Windows.Forms.Label
     Friend WithEvents ToolTip1 As Windows.Forms.ToolTip
-    Friend WithEvents btnSelectDefault As Windows.Forms.Button
+    Friend WithEvents btnSelDefault As Windows.Forms.Button
 End Class

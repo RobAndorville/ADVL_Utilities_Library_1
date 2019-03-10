@@ -18,6 +18,7 @@
 
 
 Imports System.IO.Compression
+Imports System.Windows.Forms
 'Note: to access .ZipFile, use Project \ Add Reference \ Assemblies \  Framework \ System.IO.Compression
 'Note: to access .ZipFile, use Project \ Add Reference \ Assemblies \  Framework \ System.IO.Compression.FileSystem
 'Note: To access FontStyle, use Project \ Add Reference \ Assemblies \  Framework \ System.Drawing
@@ -194,6 +195,16 @@ Public Class ZipComp '----------------------------------------------------------
         End Set
     End Property
 
+    Private _selectedFile As String = "" 'The name of a file selected on the ZipSelectFile form.
+    Property SelectedFile As String
+        Get
+            Return _selectedFile
+        End Get
+        Set(value As String)
+            _selectedFile = value
+        End Set
+    End Property
+
 
 
     'Private _zipFilePath As String = "" 'The path of the zip file.
@@ -319,6 +330,46 @@ Public Class ZipComp '----------------------------------------------------------
         End If
     End Sub
 
+    Public Sub AddData(ByVal DataFileName As String, ByRef Stream As IO.Stream)
+        'Save the data in the Stream to an entry named DataFileName in the Archive file.
+
+        If ArchivePath = "" Then
+            RaiseEvent ErrorMessage("Archive path is blank.")
+        Else
+            Try
+                Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Update)
+                    'First remove existing entries of the same name:
+                    Do
+                        Dim entry As ZipArchiveEntry = archive.GetEntry(DataFileName)
+                        If IsNothing(entry) Then
+                            Exit Do
+                        Else
+                            entry.Delete()
+                        End If
+                    Loop
+
+                    'Add the new entry:
+                    Dim newEntry As ZipArchiveEntry = archive.CreateEntry(DataFileName)
+
+                    'newEntry.Open.Write(Stream, 0, Stream.Length)
+                    'Dim bytesToAdd As Byte() = Stream.
+                    'newEntry.Open.Write()
+                    'Dim writer As IO.StreamWriter = New IO.StreamWriter(Stream)
+
+                    'Dim writer2 As New IO.StreamWriter(newEntry.Open)
+                    'writer2.Write(Stream)
+
+                    'Dim entryStream As IO.Stream()
+                    Stream.CopyTo(newEntry.Open)
+
+                End Using
+            Catch ex As Exception
+                RaiseEvent ErrorMessage("Error writing Data to Archive:" & ex.Message & vbCrLf)
+            End Try
+        End If
+
+    End Sub
+
     Public Function GetText(ByVal TextFileName As String) As String
         'Get the text from an entry with the name TextFileName.
 
@@ -338,6 +389,91 @@ Public Class ZipComp '----------------------------------------------------------
             Catch ex As Exception
                 RaiseEvent ErrorMessage("Error with GetText: " & vbCrLf & ex.Message & vbCrLf)
             End Try
+        End If
+
+    End Function
+
+    Public Function GetData(ByVal DataFilename As String) As IO.Stream
+        'Get the data from an entry witht he name DataFileName.
+
+        If ArchivePath = "" Then
+            RaiseEvent ErrorMessage("Archive path is blank.")
+        Else
+            Try
+                Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Read)
+                    Dim entry As ZipArchiveEntry = archive.GetEntry(DataFilename)
+
+                    'GetData = entry.Open
+                    'Dim myStream As IO.Stream
+                    'entry.Open().CopyTo(GetData)
+                    'entry.Open().CopyTo(myStream)
+                    'Return myStream
+                    'entry.Open()
+                    'entry.Open.CopyTo(myStream)
+                    'GetData = myStream
+
+                    'entry.Open.CopyTo(GetData)
+                    'entry.Open.CopyToAsync(GetData)
+
+                    'GetData = entry.Open
+
+                    'Dim myStream As IO.Stream = entry.Open
+                    'myStream.Position = 0
+                    'GetData = myStream
+
+
+                    'GetData = entry.Open 'Unable to cast object of type 'System.IO.Compression.DeflateStream' to type 'System.IO.MemoryStream'.
+                    'Dim defStream As IO.Compression.DeflateStream = entry.Open
+                    'Dim defStream As IO.Compression.DeflateStream
+                    'defStream = entry.Open
+
+                    'entry.Open.CopyTo(defStream) 'Error 
+                    'entry.Open().CopyTo(defStream) 'Error
+
+                    'If defStream Is Nothing Then
+                    '    Exit Function
+                    'End If
+
+                    'Dim Len As Integer = defStream.Length
+
+                    'defStream.Position = 0 'Error
+                    'defStream.CopyTo(GetData) 'Error
+
+                    'Dim myStream As IO.Stream
+                    'defStream.CopyTo(myStream)
+
+                    'Return myStream
+
+                    'Dim reader As IO.StreamReader = New IO.StreamReader(entry.Open)
+
+                    'Dim Len As Long = reader.BaseStream.Length 'Operation not supported
+
+                    'reader.BaseStream.CopyTo(GetData) 'Value cannot be a null
+
+                    'Dim stream As IO.Stream
+                    'stream = entry.Open
+                    'Dim reader As New IO.StreamReader(stream)
+
+                    'GetData = reader.ReadToEnd
+                    'reader.BaseStream.CopyTo(GetData)
+
+                    'Return reader.BaseStream
+
+                    Dim bytesToGet(entry.Length - 1) As Byte
+                    entry.Open.Read(bytesToGet, 0, entry.Length)
+
+                    'Dim stream As IO.Stream = MemoryStream(bytesToGet)
+
+                    Dim myStream As IO.MemoryStream = New IO.MemoryStream(bytesToGet)
+
+                    'GetData = bytesToGet.
+                    GetData = myStream
+
+                End Using
+            Catch ex As Exception
+                RaiseEvent ErrorMessage("Error with GetData: " & vbCrLf & ex.Message & vbCrLf)
+            End Try
+
         End If
 
     End Function
@@ -371,11 +507,30 @@ Public Class ZipComp '----------------------------------------------------------
             RaiseEvent ErrorMessage("Archive path is blank." & vbCrLf)
         Else
             Try
-                Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Read)
-                    For Each entry As ZipArchiveEntry In archive.Entries
-                        If entry.FullName = EntryName Then
-                            entry.Delete()
-                            Exit For
+                ''Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Read)
+                'Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Update)
+                '    For Each entry As ZipArchiveEntry In archive.Entries
+                '        If entry.FullName = EntryName Then
+                '            entry.Delete()
+                '            'Exit For
+                '            'Continue - Entry name may be repeated!
+                '        End If
+                '    Next
+                'End Using
+
+                'NOTE: Cannot update the collection (of Entries) while in the For Each loop! (Produces an error!)
+                '      Use a For loop instead:
+                Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Update)
+                    Dim NEntries As Integer = archive.Entries.Count
+                    Dim I As Integer
+                    'For Each entry As ZipArchiveEntry In archive.Entries
+                    For I = 0 To NEntries - 1
+                        'If entry.FullName = EntryName Then
+                        If archive.Entries(I).FullName = EntryName Then
+                            'entry.Delete()
+                            archive.Entries(I).Delete()
+                            'Exit For
+                            'Continue - Entry name may be repeated!
                         End If
                     Next
                 End Using
@@ -397,6 +552,46 @@ Public Class ZipComp '----------------------------------------------------------
                 End Using
             Catch ex As Exception
                 RaiseEvent ErrorMessage("Error creating new entry named: " & EntryName & ". Error message: " & ex.Message & vbCrLf)
+            End Try
+        End If
+    End Sub
+
+    Public Sub RenameEntry(ByVal Oldname As String, ByVal NewName As String)
+        'Rename an entry.
+        If ArchivePath = "" Then
+            RaiseEvent ErrorMessage("Archive path is blank." & vbCrLf)
+        Else
+            Try
+                Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Update)
+                    Dim OldEntry As ZipArchiveEntry = archive.GetEntry(Oldname)
+                    If IsNothing(OldEntry) Then
+                        RaiseEvent ErrorMessage("Entry name not found in the archive: " & Oldname & vbCrLf)
+                    Else
+                        'OldEntry found. Create entry with the new name.
+                        'First delete any existing entries with the new name:
+                        Do
+                            Dim FindEntry As ZipArchiveEntry = archive.GetEntry(NewName)
+                            If IsNothing(FindEntry) Then
+                                Exit Do
+                            Else
+                                FindEntry.Delete()
+                            End If
+                        Loop
+
+                        'Add the new entry:
+                        Dim newEntry As ZipArchiveEntry = archive.CreateEntry(NewName)
+
+                        'Copy the old entry to the new entry:
+                        Dim oldStream As IO.Stream = OldEntry.Open()
+                        Dim newStream As IO.Stream = newEntry.Open
+                        oldStream.CopyTo(newStream)
+
+                        'Delete the old entry:
+                        OldEntry.Delete()
+                    End If
+                End Using
+            Catch ex As Exception
+
             End Try
         End If
     End Sub
@@ -439,6 +634,8 @@ Public Class ZipComp '----------------------------------------------------------
     Public Sub SelectFile()
         'Show the ZipSelectFile form.
 
+        SelectedFile = ""
+
         If IsNothing(SelectFileForm) Then
             SelectFileForm = New frmZipSelectFile
             SelectFileForm.ZipArchivePath = ArchivePath
@@ -448,9 +645,26 @@ Public Class ZipComp '----------------------------------------------------------
         End If
     End Sub
 
+    Public Function SelectFileModal(ByVal FileExtension As String) As String
+        'Show the frmZipSelectFile form as modal and return the selected file.
+
+        'Dim SelectFileForm As New frmZipSelectFile
+        Dim SelectFileForm As New frmZipSelectFileModal
+        SelectFileForm.ZipArchivePath = ArchivePath
+        SelectFileForm.FileExtension = FileExtension
+        SelectFileForm.GetFileList()
+
+        If SelectFileForm.ShowDialog() = Windows.Forms.DialogResult.OK Then
+            Return SelectFileForm.FileName
+        Else
+            Return ""
+        End If
+
+    End Function
 
 
     Private Sub SelectFileForm_FileSelected(FileName As String) Handles SelectFileForm.FileSelected
+        SelectedFile = FileName
         RaiseEvent FileSelected(FileName)
     End Sub
 
@@ -460,6 +674,34 @@ Public Class ZipComp '----------------------------------------------------------
 
     Private Sub SelectFileForm_Message(Message As String) Handles SelectFileForm.Message
         RaiseEvent Message(Message)
+    End Sub
+
+    Public Sub GetEntryList(ByRef FileNames As ArrayList, ByVal FileExtension As String)
+        'Return a list of file names with the specified file extension.
+
+        Dim ValidExtension As String = FileExtension
+        If ValidExtension.StartsWith(".") Then
+        Else
+            ValidExtension = "." & ValidExtension
+        End If
+
+        If ArchivePath = "" Then
+            'No archive specified.
+            RaiseEvent ErrorMessage("No archive path specified." & vbCrLf)
+        Else
+            Try
+                Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Read)
+                    For Each entry As ZipArchiveEntry In archive.Entries
+                        If entry.FullName.EndsWith(ValidExtension) Then
+                            FileNames.Add(entry.FullName)
+                        End If
+                    Next
+                End Using
+            Catch ex As Exception
+                RaiseEvent ErrorMessage("GetEntryList error: " & ex.Message & vbCrLf)
+            End Try
+        End If
+
     End Sub
 
 
@@ -490,6 +732,13 @@ Public Class XSequence '--------------------------------------------------------
 
 #Region " Variable declarations"
 
+    Public NewParameter As New ParamNameDescVal 'Store the Name, Description and Value of a new parameter.
+
+    'Public Parameter As New Dictionary(Of String, String) 'The Parameter dictionary.
+    Public Parameter As New Dictionary(Of String, ParamDescVal) 'The Parameter dictionary.
+    'Add new parameter example: Prameter.Add("InputQuery", "Select * From My_Data_Table")
+    'Get a parameter value: InputDataQuery = Parameter("InputQuery").Value
+
     'Structure used  for recording and running a processing sequence:
     Structure strucSequenceStatus
         Dim Recording As Boolean
@@ -497,7 +746,7 @@ Public Class XSequence '--------------------------------------------------------
         Dim Interactive As Boolean
     End Structure
 
-    'Structure used to hold Property Sequence values
+    'Structure used to hold Information Vector values
     Structure strucPropSeq
         Dim Path As String
         Dim Value As String
@@ -511,7 +760,7 @@ Public Class XSequence '--------------------------------------------------------
         Dim EndIndex As Integer   'The Sequence() index number of the end of the loop
     End Structure
 
-    'Dim Sequence() As strucPropSeq 'Now using Property Sequence()...
+    'Dim Sequence() As strucPropSeq 'Now using Information Vector Sequence()...
     'Dim SequenceCount As Integer 'The number of entries in Seqeunce()
 
     'Dim LoopInfo() As strucLoopInfo 'Stores information about loops. Used for processing _PropSeq()
@@ -521,7 +770,7 @@ Public Class XSequence '--------------------------------------------------------
 
     'Private _sequenceStatus As String 'Valid status strings: "No_more_input_files", "At_end_of_file"
 
-    'Variables used to store and process a Property Sequence:
+    'Variables used to store and process a Information Vector Sequence:
 
     Dim LoopInfo() As strucLoopInfo 'Stores information about loops. Used for processing _PropSeq()
     Dim LoopInfoCount As Integer 'The number of entries stored in LoopInfo()
@@ -564,7 +813,7 @@ Public Class XSequence '--------------------------------------------------------
         End Set
     End Property
 
-    Private mSequence() As strucPropSeq 'Property Sequence elements: Path, Value, NextItem
+    Private mSequence() As strucPropSeq 'Information Vector Sequence (Property Sequence) elements: Path, Value, NextItem
     Private mSequenceCount As Integer = 0 'The number of entries in _seqeunce() 'Added initialsation to zero on 4Jan14
     Property Sequence(ByVal Index As Integer) As strucPropSeq
         Get
@@ -602,31 +851,35 @@ Public Class XSequence '--------------------------------------------------------
     'List of methods:
 
 
-    'RunXSequence(XSeq)     Runs an XML Property Sequence file.
+    'RunXSequence(XSeq)     Runs an XML Information Vector Sequence file.
 
-    'ExtractPropSeq(XSeq)   Extracts the property sequence from an XML Sequence file. The sequence is stored in the Sequence() array.
+    'ExtractPropSeq(XSeq)   Extracts the Information Vector sequence from an XML Sequence file. The sequence is stored in the Sequence() array.
     '  ClearPropSeq           Clears the Sequence() array. The Sequence array contains Path, Value and NextItem fields.
     '  AppendPropSeqItem      Adds a new property setting to the Sequence() array.
     '  ScanChildNodes         Scans the child nodes of the XML Sequence file
 
-    'ProcessPropSeqNextItems    Calculates the NextItem fields in the Property Sequence array Sequence().
+    'ProcessPropSeqNextItems    Calculates the NextItem fields in the Infromation Vector Sequence array Sequence().
 
-    'RunPropSeq                 Runs the property sequence statements contained in the Sequence() array.
-    '  PreScanInstruction       Initial processing of a Property Sequence instruction.
-    '  ProcessLoops             Checks for loops in Property Sequence instructions.
+    'RunPropSeq                 Runs the Information Vector sequence (Property Sequence) statements contained in the Sequence() array.
+    '  PreScanInstruction       Initial processing of a PInformation Vector Sequence instruction.
+    '  ProcessLoops             Checks for loops in Information Vector Sequence instructions.
 
     'Public Sub RunXSequence(ByRef XSeq As System.Xml.XmlDocument, ByRef SequenceStatus As String)
     'Public Sub RunXSequence(ByRef XSeq As System.Xml.XmlDocument, ByRef Status As Collection)
     Public Sub RunXSequence(ByRef XSeq As System.Xml.XmlDocument, ByRef Status As System.Collections.Specialized.StringCollection)
+        'Debug.Print("Running RunXSequence(XSeq, Status)")
+        'Debug.Print("Starting ExtractPropSeq(XSeq)")
         ExtractPropSeq(XSeq)
+        'Debug.Print("Starting ProcessPropSeqNextItems()")
         ProcessPropSeqNextItems()
+        'Debug.Print("RunPropSeq(Status)")
         RunPropSeq(Status)
-
+        'Debug.Print("Finished RunXSequence")
     End Sub
 
 
     Private Sub ClearPropSeq()
-        'Clears the Property Sequence array:
+        'Clears the Information Vector Sequence (Property Sequence) array:
 
         'ReDim Sequence(0 To 0)
         'SequenceCount = 0
@@ -698,14 +951,15 @@ Public Class XSequence '--------------------------------------------------------
         AppendPropSeqItem("End_Of_Sequence", "", 0)
 
         'For Debugging:
-        Debug.Print("")
-        Debug.Print("Contents of the Property Sequence array: -------------------------------------------------------")
-        Debug.Print("Path       Value         Next Item")
-        For I = 0 To mSequenceCount - 1
-            Debug.Print(mSequence(I).Path & " " & mSequence(I).Value & " " & mSequence(I).NextItem)
-        Next
-        Debug.Print("End of the Property Sequence -------------------------------------------------------------------")
-        Debug.Print("")
+        'Debug.Print("")
+        'Debug.Print("ExtractPropSeq(XSeq)")
+        'Debug.Print("Contents of the Property Sequence array: -------------------------------------------------------")
+        'Debug.Print("Path       Value         Next Item")
+        'For I = 0 To mSequenceCount - 1
+        '    Debug.Print(mSequence(I).Path & " " & mSequence(I).Value & " " & mSequence(I).NextItem)
+        'Next
+        'Debug.Print("End of the Property Sequence -------------------------------------------------------------------")
+        'Debug.Print("")
 
     End Sub
 
@@ -885,14 +1139,15 @@ Public Class XSequence '--------------------------------------------------------
         Next
 
         'For Debugging:
-        Debug.Print("")
-        Debug.Print("Contents of the Property Sequence array: -------------------------------------------------------")
-        Debug.Print("Index     Path       Value         Next Item")
-        For I = 0 To mSequenceCount - 1
-            Debug.Print(I & " " & mSequence(I).Path & " " & mSequence(I).Value & " " & mSequence(I).NextItem)
-        Next
-        Debug.Print("End of the Property Sequence -------------------------------------------------------------------")
-        Debug.Print("")
+        'Debug.Print("")
+        'Debug.Print("ProcessPropSeqNextItems()")
+        'Debug.Print("Contents of the Property Sequence array: -------------------------------------------------------")
+        'Debug.Print("Index     Path       Value         Next Item")
+        'For I = 0 To mSequenceCount - 1
+        '    Debug.Print(I & " " & mSequence(I).Path & " " & mSequence(I).Value & " " & mSequence(I).NextItem)
+        'Next
+        'Debug.Print("End of the Property Sequence -------------------------------------------------------------------")
+        'Debug.Print("")
 
     End Sub
 
@@ -912,9 +1167,20 @@ Public Class XSequence '--------------------------------------------------------
         '  It will be declared in that code and passes by reference to this class.
         'Dim SequenceStatus As String = "" 'Valid status strings: "No_more_input_files", "At_end_of_file"
 
+        'Debug.Print("Starting RunPropSeq(Status)")
+
+        'Debug.Print("Starting: While Path <> End_Of_Sequence")
+
         While Path <> "End_Of_Sequence"
+
+
+
             Path = mSequence(LineNo).Path
+            'Debug.Print("Path = " & Path)
+
             Value = mSequence(LineNo).Value
+            'Debug.Print("Value = " & Value)
+
             NextItem = mSequence(LineNo).NextItem
             If Path <> "End_Of_Sequence" Then
                 If Path = "Start_Loop" Then
@@ -977,12 +1243,13 @@ Public Class XSequence '--------------------------------------------------------
 
         Dim I As Integer 'Loop index
 
-        Debug.Print("Contents of the Sequence() array:")
-        Debug.WriteLine(String.Format("{0, -8}{1,-96}{2,-64}{3,-8}", "Item", "Path", "Value", "Next Item"))
+        'Debug.Print("DisplaySequenceArray(XSeq)")
+        'Debug.Print("Contents of the Sequence() array:")
+        'Debug.WriteLine(String.Format("{0, -8}{1,-96}{2,-64}{3,-8}", "Item", "Path", "Value", "Next Item"))
 
-        For I = 1 To mSequenceCount
-            Debug.WriteLine(String.Format("{0,-8}{1,-96}{2,-64}{3,-8}", I - 1, mSequence(I - 1).Path, mSequence(I - 1).Value, mSequence(I - 1).NextItem))
-        Next
+        'For I = 1 To mSequenceCount
+        '    Debug.WriteLine(String.Format("{0,-8}{1,-96}{2,-64}{3,-8}", I - 1, mSequence(I - 1).Path, mSequence(I - 1).Value, mSequence(I - 1).NextItem))
+        'Next
 
     End Sub
 
@@ -1039,7 +1306,11 @@ Public Class XSequence '--------------------------------------------------------
 
                 Case Else
                     'Unknown instruction!
-                    RaiseEvent ErrorMsg("XSequence warning: Unknown instruction: " & path)
+                    'RaiseEvent ErrorMsg("XSequence warning: Unknown instruction: " & path & "  Property value: " & prop & vbCrLf)
+
+                    'Send as an instruction: (This works OK if the XML file is not a Processing Sequence - the elements are just sent in sequence.)
+                    RaiseEvent Instruction(prop, path)
+
             End Select
         End If
     End Sub
@@ -1079,6 +1350,20 @@ Public Class XSequence '--------------------------------------------------------
         End If
     End Sub
 
+    Public Sub AddParameter()
+        'Add a new parameter entry to Parameter.
+
+        Dim ParamData As New ParamDescVal
+
+        ParamData.Value = NewParameter.Value
+        ParamData.Description = NewParameter.Description
+        Parameter.Add(NewParameter.Name, ParamData)
+
+        'Reset NewParameter for next Parameter
+        NewParameter.Name = ""
+        NewParameter.Description = ""
+        NewParameter.Value = ""
+    End Sub
 
 
 #Region " Sequence Status methods"
@@ -1126,8 +1411,72 @@ Public Class XSequence '--------------------------------------------------------
 
 #End Region
 
+#Region " Classes "
+
+
+#End Region
+
 End Class 'XSequence -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Public Class ParamNameDescVal
+    'ParamInfo is used to store the Name, Description and Value of a parameter.
+
+    Private _name As String = "" 'The name of a parameter.
+    Property Name As String
+        Get
+            Return _name
+        End Get
+        Set(value As String)
+            _name = value
+        End Set
+    End Property
+
+    Private _description As String = "" 'A description of the parameter
+    Property Description As String
+        Get
+            Return _description
+        End Get
+        Set(value As String)
+            _description = value
+        End Set
+    End Property
+
+    Private _value As String = "" 'The value of a parameter.
+    Property Value As String
+        Get
+            Return _value
+        End Get
+        Set(value As String)
+            _value = value
+        End Set
+    End Property
+
+End Class
+
+Public Class ParamDescVal
+    'ParamInfo is used to store the Description and Value of a parameter.
+
+    Private _description As String = "" 'A description of the parameter
+    Property Description As String
+        Get
+            Return _description
+        End Get
+        Set(value As String)
+            _description = value
+        End Set
+    End Property
+
+    Private _value As String = "" 'The value of a parameter.
+    Property Value As String
+        Get
+            Return _value
+        End Get
+        Set(value As String)
+            _value = value
+        End Set
+    End Property
+
+End Class
 
 'The XMessage class is used to read an XML Message (XMessage).
 'An XMessage is a simplified XSequence. It is used to exchange information between Andorville (TM) applications.
@@ -1328,15 +1677,15 @@ Public Class XMessage '---------------------------------------------------------
         AppendPropSeqItem("End_Of_Sequence", "", 0)
 
         'For Debugging:
-        Debug.Print("")
-        Debug.Print("ExtractPropSeq() completed")
-        Debug.Print("Contents of the Property Sequence array: -------------------------------------------------------")
-        Debug.Print("Path       Value         Next Item")
-        For I = 0 To mSequenceCount - 1
-            Debug.Print(mSequence(I).Path & " " & mSequence(I).Value & " " & mSequence(I).NextItem)
-        Next
-        Debug.Print("End of the Property Sequence -------------------------------------------------------------------")
-        Debug.Print("")
+        'Debug.Print("")
+        'Debug.Print("ExtractPropSeq() completed")
+        'Debug.Print("Contents of the Property Sequence array: -------------------------------------------------------")
+        'Debug.Print("Path       Value         Next Item")
+        'For I = 0 To mSequenceCount - 1
+        '    Debug.Print(mSequence(I).Path & " " & mSequence(I).Value & " " & mSequence(I).NextItem)
+        'Next
+        'Debug.Print("End of the Property Sequence -------------------------------------------------------------------")
+        'Debug.Print("")
 
     End Sub
 
@@ -1515,15 +1864,15 @@ Public Class XMessage '---------------------------------------------------------
         Next
 
         'For Debugging:
-        Debug.Print("")
-        Debug.Print("ProcessPropSeqNextItems() completed")
-        Debug.Print("Contents of the Property Sequence array: -------------------------------------------------------")
-        Debug.Print("Index     Path       Value         Next Item")
-        For I = 0 To mSequenceCount - 1
-            Debug.Print(I & " " & mSequence(I).Path & " " & mSequence(I).Value & " " & mSequence(I).NextItem)
-        Next
-        Debug.Print("End of the Property Sequence -------------------------------------------------------------------")
-        Debug.Print("")
+        'Debug.Print("")
+        'Debug.Print("ProcessPropSeqNextItems() completed")
+        'Debug.Print("Contents of the Property Sequence array: -------------------------------------------------------")
+        'Debug.Print("Index     Path       Value         Next Item")
+        'For I = 0 To mSequenceCount - 1
+        '    Debug.Print(I & " " & mSequence(I).Path & " " & mSequence(I).Value & " " & mSequence(I).NextItem)
+        'Next
+        'Debug.Print("End of the Property Sequence -------------------------------------------------------------------")
+        'Debug.Print("")
 
     End Sub
 
@@ -1608,12 +1957,12 @@ Public Class XMessage '---------------------------------------------------------
 
         Dim I As Integer 'Loop index
 
-        Debug.Print("Contents of the Sequence() array:")
-        Debug.WriteLine(String.Format("{0, -8}{1,-96}{2,-64}{3,-8}", "Item", "Path", "Value", "Next Item"))
+        'Debug.Print("Contents of the Sequence() array:")
+        'Debug.WriteLine(String.Format("{0, -8}{1,-96}{2,-64}{3,-8}", "Item", "Path", "Value", "Next Item"))
 
-        For I = 1 To mSequenceCount
-            Debug.WriteLine(String.Format("{0,-8}{1,-96}{2,-64}{3,-8}", I - 1, mSequence(I - 1).Path, mSequence(I - 1).Value, mSequence(I - 1).NextItem))
-        Next
+        'For I = 1 To mSequenceCount
+        '    Debug.WriteLine(String.Format("{0,-8}{1,-96}{2,-64}{3,-8}", I - 1, mSequence(I - 1).Path, mSequence(I - 1).Value, mSequence(I - 1).NextItem))
+        'Next
 
     End Sub
 
@@ -1866,7 +2215,6 @@ Public Class FileLocation '-----------------------------------------------------
         End Select
     End Function
 
-
 #End Region 'Location Methods ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #Region "Location Events" '--------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1884,19 +2232,44 @@ Public Class Project '----------------------------------------------------------
 
 #Region " Variable declarations - All the variables used in this class." '-------------------------------------------------------------------------------------------------------------------
 
+    'The relative locations allow the SettingsLocn and DataLocn to be updated when the project file or archive is moved:
+    Public SettingsRelLocn As New FileLocation 'This is the Settings location relative to the Project Location.
+    Public DataRelLocn As New FileLocation 'This is the Data location relative to the Project Location.
+    Public SystemRelLocn As New FileLocation 'This is the System location relative to the Project Location.
+    'For a Directory project type: SettingsRelLocn.Type = Directory, SettingsRelLocn.Path = ""
+    '                              DataRelLocn.Type = Directory,     DataRelLocn.Path = ""
+    'For an Archive project type:  SettingsRelLocn.Type = Archive,   SettingsRelLocn.Path = ""
+    '                              DataRelLocn.Type = Archive,       DataRelLocn.Path = ""
+    'For a Hybrid project type:    The Project is stored in a Directory
+    '                              SettingsRelLocn.Type = Directory or Archive, SettingsRelLocn.Path = <The name of the directory or archive within the Project Directory>
+    '                              DataRelLocn.Type = Directory or Archive,     DataRelLocn.Path = <The name of the directory or archive within the Project Directory>
+    'These settings and the Project Type and Path are used to generate the SettingsLocn and DataLocn.
+    'Public ProjectLocn As New FileLocation 'This the the Project directory or Archive. (ADDED 29Jul18.) This contains the Settings Location and Data Location. UPDATE: USE THE TYPE AND PATH PROPERTIES>
+
     Public SettingsLocn As New FileLocation 'This is a directory or archive where settings are stored.
     'SettingsLocn.Type (Directory or Archive), SettingsLocn.Path
     Public DataLocn As New FileLocation 'This is a directory or archive where data is stored.
     'DataLocn.Type (Directory or Archive), DataLocn.Path
+    Public SystemLocn As New FileLocation 'This is a directory or archive where system data is stored. (System data can be preserved when settings or other data is deleted.)
 
     Public WithEvents ProjectForm As frmProject 'Used to select a project.
+    Public WithEvents ProjectParamsForm As frmProjectParams 'Used to view the Project Parameters.
 
-    Public ApplicationName As String 'The name of the application using the message form.
+    'Public ProjectParam As New Dictionary(Of String, ParamInfo) 'Dictionary of Project Parameters.
+    Public Parameter As New Dictionary(Of String, ParamInfo) 'Dictionary of Project Parameters.
+    Public ParentParameter As New Dictionary(Of String, ParamInfo) 'Dictionary of Parent Project Parameters
 
-    Public ApplicationSummary As New ApplicationSummary 'This stores information about the application that created the project.
+    Public ApplicationName As String 'The name of the application using the project.
+
+    'Public ApplicationSummary As New ApplicationSummary 'This stores information about the application that created the project.
+    'Public HostApplication As New ApplicationSummary 'This stores information about the application that created the project.
+    Public Application As New ApplicationSummary 'This stores information about the application that created the project.
     Public Author As New Author 'Stores information about the project author.
     Public Version As New Version ' Stores the Project format version (based on the ADVL_Project_Utilities project version).
     Public Usage As New Usage 'Stores project usage information.
+
+    'File conversion variables:
+    Dim WithEvents ProjInfoConversion As ADVL_Utilities_Library_1.FormatConvert.ProjectInfoFileConversion
 
 #End Region 'Variable Declarations -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1933,6 +2306,17 @@ Public Class Project '----------------------------------------------------------
         End Set
     End Property
 
+    'Private _formatCode As String = "2" 'The Format Code identifies the format of the project. From 20 July 2018, the Format Code is "2".
+    Private _formatCode As String = "ADVL_2" 'The Format Code identifies the format of the project. From 20 July 2018, the Format Code is "ADVL_2".
+    Property FormatCode As String
+        Get
+            Return _formatCode
+        End Get
+        Set(value As String)
+            _formatCode = value
+        End Set
+    End Property
+
     Private _creationDate As DateTime = "1-Jan-2000 12:00:00" 'The creation date of the current project.
     Property CreationDate As DateTime
         Get
@@ -1943,6 +2327,16 @@ Public Class Project '----------------------------------------------------------
         End Set
     End Property
 
+    Private _iD As String = "" 'Project ID. This is generated from the .GetHashCode of the string: <ProjectName> & " " & <CreationDate>
+    Property ID As String
+        Get
+            Return _iD
+        End Get
+        Set(value As String)
+            _iD = value
+        End Set
+    End Property
+
     Public Enum Types
         None      'All files are stored in the Application Directory.
         Directory 'All files are stored in the Project Directory.
@@ -1950,13 +2344,150 @@ Public Class Project '----------------------------------------------------------
         Hybrid    'Settings data is stored in the Project Directory. Data files are stored in one or more Project Files.
     End Enum
 
-    Private _type As Types = Types.None 'The type of project (None, Directory, File, Hybrid).
+    Private _type As Types = Types.None 'The type of project (None, Directory, Archive, Hybrid).
     Property Type As Types
         Get
             Return _type
         End Get
         Set(value As Types)
             _type = value
+            If _type = Types.Archive Then
+                _locnType = FileLocation.Types.Archive
+            ElseIf _type = Types.Directory Then
+                _locnType = FileLocation.Types.Directory
+            ElseIf _type = Types.Hybrid Then
+                _locnType = FileLocation.Types.Directory
+            ElseIf _type = Types.None Then
+                _locnType = FileLocation.Types.Directory
+            End If
+        End Set
+    End Property
+
+    Private _locnType As FileLocation.Types = FileLocation.Types.Directory 'The location type of the Project location (Directory or Archive).
+    ReadOnly Property LocnType As FileLocation.Types
+        Get
+            Return _locnType
+        End Get
+    End Property
+
+    Private _path As String = "" 'The path to the project directory or archive.
+    Property Path As String
+        Get
+            Return _path
+        End Get
+        Set(value As String)
+            _path = value
+        End Set
+    End Property
+
+    Private _relativePath As String = "" 'The path to the project directory (or archive?) relative to the Parent Project. (Currently Archive projects cannot contain child projects.)
+    Property RelativePath As String
+        Get
+            Return _relativePath
+        End Get
+        Set(value As String)
+            _relativePath = value
+        End Set
+    End Property
+
+    'Private _hostProjectName As String = "" 'The name of the host project. (This is blank if there is no host project.)
+    'Property HostProjectName As String
+    '    Get
+    '        Return _hostProjectName
+    '    End Get
+    '    Set(value As String)
+    '        _hostProjectName = value
+    '    End Set
+    'End Property
+
+    Private _parentProjectName As String = "" 'The name of the host project. (This is blank if there is no host project.)
+    Property ParentProjectName As String
+        Get
+            Return _parentProjectName
+        End Get
+        Set(value As String)
+            _parentProjectName = value
+        End Set
+    End Property
+
+    'Private _hostProjectDirectoryName As String = "" 'The name of the host project directory.
+    'Property HostProjectDirectoryName As String
+    '    Get
+    '        Return _hostProjectDirectoryName
+    '    End Get
+    '    Set(value As String)
+    '        _hostProjectDirectoryName = value
+    '    End Set
+    'End Property
+
+    Private _parentProjectPath As String = "" 'The path of the Parent Project.
+    Property ParentProjectPath As String
+        Get
+            Return _parentProjectPath
+        End Get
+        Set(value As String)
+            _parentProjectPath = value
+        End Set
+    End Property
+
+    Private _parentProjectDirectoryName As String = "" 'The name of the Parent Project directory.
+    Property ParentProjectDirectoryName As String
+        Get
+            Return _parentProjectDirectoryName
+        End Get
+        Set(value As String)
+            _parentProjectDirectoryName = value
+        End Set
+    End Property
+
+    'Private _hostProjectCreationDate As DateTime = "1-Jan-2000 12:00:00" 'The creation date of the host project.
+    'Property HostProjectCreationDate As Date
+    '    Get
+    '        Return _hostProjectCreationDate
+    '    End Get
+    '    Set(value As Date)
+    '        _hostProjectCreationDate = value
+    '    End Set
+    'End Property
+
+    Private _parentProjectCreationDate As DateTime = "1-Jan-2000 12:00:00" 'The creation date of the host project.
+    Property ParentProjectCreationDate As Date
+        Get
+            Return _parentProjectCreationDate
+        End Get
+        Set(value As Date)
+            _parentProjectCreationDate = value
+        End Set
+    End Property
+
+    'Private _hostProjectID As String = "" 'The host project ID. (This is a hash of the host project name and creation date.)
+    'Property HostProjectID As String
+    '    Get
+    '        Return _hostProjectID
+    '    End Get
+    '    Set(value As String)
+    '        _hostProjectID = value
+    '    End Set
+    'End Property
+
+    Private _parentProjectID As String = "" 'The host project ID. (This is a hash of the host project name and creation date.)
+    Property ParentProjectID As String
+        Get
+            Return _parentProjectID
+        End Get
+        Set(value As String)
+            _parentProjectID = value
+        End Set
+    End Property
+
+    'ADDED 20Feb19:
+    Private _connectOnOpen As Boolean = True 'It True, the application will connect to the Message Service when the Project is opened.
+    Property ConnectOnOpen As Boolean
+        Get
+            Return _connectOnOpen
+        End Get
+        Set(value As Boolean)
+            _connectOnOpen = value
         End Set
     End Property
 
@@ -1966,17 +2497,97 @@ Public Class Project '----------------------------------------------------------
 
     Public Function SettingsLocked() As Boolean
         'Returns True if a lock file is found in the settings location.
-        Return SettingsFileExists("Settings.lock")
+        Return SettingsFileExists("Settings.Lock")
     End Function
 
     Public Function DataLocked() As Boolean
         'Returns True if a lock file is found in the data location.
-        Return DataFileExists("Data.lock")
+        Return DataFileExists("Data.Lock")
     End Function
+
+    Public Function SystemLocked() As Boolean
+        'Returns True is a lock file is found in the system data location.
+        Return SystemFileExists("System.Lock")
+    End Function
+
+    Public Function ProjectLocked() As Boolean
+        'Returns True if a project lock file is found in the settings location.
+        'Return SettingsFileExists("Project.Lock")
+        'Return ProjectFileExists("Project.Lock")
+        Return ProjectFileExists("Project.Lock")
+    End Function
+
+    Public Function LockedAtPath(ByVal Path As String) As Boolean
+        'Returns True if the project at Path contains a "Project.Lock" file.
+
+        If Path.EndsWith(".AdvlProject") Then 'Archive Project
+            'Check if the File "Project.Lock" exists in the project archive:
+            Dim Zip As New ZipComp
+            Zip.ArchivePath = Path
+            If Zip.ArchiveExists Then
+                Return Zip.EntryExists("Project.Lock")
+            Else
+                Return False
+            End If
+        Else 'Directory or Hybrid or Default Project.
+            Return System.IO.File.Exists(Path & "\Project.Lock")
+        End If
+    End Function
+
+    'Public Sub SaveLastProjectInfo()
+    '    'Save information about the last project used.
+    '    'This is saved in the Application Directory.
+
+    '    Dim SettingsLocationType As String
+    '    Select Case SettingsLocn.Type
+    '        Case FileLocation.Types.Directory
+    '            SettingsLocationType = "Directory"
+    '        Case FileLocation.Types.Archive
+    '            SettingsLocationType = "Archive"
+    '    End Select
+
+    '    Dim ProjectInfoXDoc = <?xml version="1.0" encoding="utf-8"?>
+    '                          <!---->
+    '                          <!--Last Project Information for Application: ADVL_Zip-->
+    '                          <!---->
+    '                          <Project>
+    '                              <Name><%= Name %></Name>
+    '                              <Description><%= Description %></Description>
+    '                              <SettingsLocation>
+    '                                  <Type><%= SettingsLocationType %></Type>
+    '                                  <Path><%= SettingsLocn.Path %></Path>
+    '                              </SettingsLocation>
+    '                          </Project>
+
+    '    ProjectInfoXDoc.Save(ApplicationDir & "\" & "Last_Project_Info.xml")
+    'End Sub
 
     Public Sub SaveLastProjectInfo()
         'Save information about the last project used.
         'This is saved in the Application Directory.
+
+        Dim ProjectInfoXDoc = <?xml version="1.0" encoding="utf-8"?>
+                              <!---->
+                              <!--Last Project Information-->
+                              <!---->
+                              <Project>
+                                  <Name><%= Name %></Name>
+                                  <Description><%= Description %></Description>
+                                  <FormatCode>ADVL_2</FormatCode>
+                                  <Location>
+                                      <Type><%= Type %></Type>
+                                      <Path><%= Path %></Path>
+                                  </Location>
+                              </Project>
+
+        'ProjectInfoXDoc.Save(ApplicationDir & "\" & "Last_Project_Info.xml")
+        ProjectInfoXDoc.Save(ApplicationDir & "\" & "Last_Project_Info_ADVL_2.xml")
+    End Sub
+
+    Public Sub SaveLastProjectInfo_Old()
+        'Save information about the last project used.
+        'This is saved in the Application Directory.
+        'UPDATE: 17Jul18: The Project Information file: ADVL_Project_Info.xml is now stored in the Project Location (not the SettingsLocn).
 
         Dim SettingsLocationType As String
         Select Case SettingsLocn.Type
@@ -1993,50 +2604,323 @@ Public Class Project '----------------------------------------------------------
                               <Project>
                                   <Name><%= Name %></Name>
                                   <Description><%= Description %></Description>
-                                  <SettingsLocation>
-                                      <Type><%= SettingsLocationType %></Type>
-                                      <Path><%= SettingsLocn.Path %></Path>
-                                  </SettingsLocation>
+                                  <Location>
+                                      <Type><%= Type %></Type>
+                                      <Path><%= Path %></Path>
+                                  </Location>
                               </Project>
 
         ProjectInfoXDoc.Save(ApplicationDir & "\" & "Last_Project_Info.xml")
     End Sub
 
+
+    'Public Sub ReadLastProjectInfo()
+    '    'Read the Last Project Information.
+
+    '    If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info.xml") Then 'Read Last Project information
+    '        Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Last_Project_Info.xml")
+    '        Dim SettingsLocnPath As String = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value 'Note: the settings location contains the data location.
+    '        Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
+    '            Case "Directory"
+    '                SettingsLocn.Type = FileLocation.Types.Directory
+    '                Usage.SaveLocn.Type = FileLocation.Types.Directory
+    '                If System.IO.Directory.Exists(SettingsLocnPath) Then
+    '                    SettingsLocn.Path = SettingsLocnPath
+    '                    Usage.SaveLocn.Path = SettingsLocnPath
+    '                    Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
+    '                    Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+    '                Else
+    '                    UseDefaultProject()
+    '                End If
+    '            Case "Archive"
+    '                SettingsLocn.Type = FileLocation.Types.Archive
+    '                Usage.SaveLocn.Type = FileLocation.Types.Archive
+    '                If System.IO.File.Exists(SettingsLocnPath) Then
+    '                    SettingsLocn.Path = SettingsLocnPath
+    '                    Usage.SaveLocn.Path = SettingsLocnPath
+    '                    Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
+    '                    Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+    '                Else
+    '                    UseDefaultProject()
+    '                End If
+    '        End Select
+    '    Else 'Open Default project
+    '        UseDefaultProject()
+    '    End If
+    'End Sub
+
     Public Sub ReadLastProjectInfo()
         'Read the Last Project Information.
+        '  The Last Project Information file is in the Application Directory.
+
+        If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info_ADVL_2.xml") Then 'The Last Project Info file exists.
+            'Dim ProjInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
+            Dim ProjInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Last_Project_Info_ADVL_2.xml")
+            ReadLastProjectInfoAdvl_2(ProjInfoXDoc)
+        Else
+            If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info.xml") Then 'The original ADVL_1 version
+                RaiseEvent Message("Converting Last_Project_Info.xml to Last_Project_Info_ADVL_2.xml." & vbCrLf)
+                'Convert the file to the latest ADVL_2 format:
+                Dim Conversion As New ADVL_Utilities_Library_1.FormatConvert.LastProjectInfoFileConversion
+                Conversion.DirectoryPath = ApplicationDir
+                Conversion.InputFileName = "Last_Project_Info.xml"
+                Conversion.InputFormatCode = FormatConvert.LastProjectInfoFileConversion.FormatCodes.ADVL_1
+                Conversion.OutputFormatCode = FormatConvert.LastProjectInfoFileConversion.FormatCodes.ADVL_2
+                Conversion.Convert()
+                If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info_ADVL_2.xml") Then
+                    ReadLastProjectInfo() 'Try to read the file again.
+                Else
+                    RaiseEvent ErrorMessage("Error converting Last_Project_Info.xml to Last_Project_Info_ADVL_2.xml." & vbCrLf)
+                End If
+            Else
+                RaiseEvent ErrorMessage("No versions of the Last Project Information file were found." & vbCrLf)
+                RaiseEvent ErrorMessage("The Default project will be used." & vbCrLf)
+                UseDefaultProject()
+            End If
+        End If
+    End Sub
+
+    Private Sub ReadLastProjectInfoAdvl_2(ByRef XDoc As System.Xml.Linq.XDocument)
+        'Read the the ADVL_2 format version of the Last Project Information file.
+
+        'Read the Project Name:
+        If XDoc.<Project>.<Name>.Value <> Nothing Then
+            Name = XDoc.<Project>.<Name>.Value
+        Else
+            RaiseEvent ErrorMessage("The Project Name is not specified in the Last Project Information file." & vbCrLf)
+            RaiseEvent ErrorMessage("The Default project will be opened." & vbCrLf)
+            'OpenDefaultProject()
+            UseDefaultProject()
+            Exit Sub
+        End If
+
+        'Read the Project Description:
+        If XDoc.<Project>.<Description>.Value <> Nothing Then
+            Description = XDoc.<Project>.<Description>.Value
+        Else
+            RaiseEvent ErrorMessage("The Project Description is not specified in the Last Project Information file." & vbCrLf)
+        End If
+
+        'Read the Project Location Type:
+        If XDoc.<Project>.<Location>.<Type>.Value <> Nothing Then
+            Select Case XDoc.<Project>.<Location>.<Type>.Value '(None, Directory, Archive or Hybrid)
+                Case "None"
+                    Type = Types.None
+                    Usage.SaveLocn.Type = FileLocation.Types.Directory
+                Case "Directory"
+                    Type = Types.Directory
+                    Usage.SaveLocn.Type = FileLocation.Types.Directory
+                Case "Archive"
+                    Type = Types.Archive
+                    Usage.SaveLocn.Type = FileLocation.Types.Archive
+                Case "Hybrid"
+                    Type = Types.Hybrid
+                    Usage.SaveLocn.Type = FileLocation.Types.Directory
+            End Select
+        Else
+            RaiseEvent ErrorMessage("The Project Location Type is not specified in the Last Project Information file." & vbCrLf)
+        End If
+
+        'Read the Project Location Path:
+        If XDoc.<Project>.<Location>.<Path>.Value <> Nothing Then
+            Path = XDoc.<Project>.<Location>.<Path>.Value
+            Usage.SaveLocn.Path = Path
+        Else
+            RaiseEvent ErrorMessage("The Project Location Path is not specified in the Last Project Information file." & vbCrLf)
+        End If
+
+    End Sub
+
+    Public Sub ReadLastProjectInfo_Old2()
+        'Read the Last Project Information.
+        If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info.xml") Then 'Read Last Project information
+            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Last_Project_Info.xml")
+
+            If ProjectInfoXDoc.<Project>.<FormatCode>.Value = Nothing Then
+                RaiseEvent ErrorMessage("The Last Project Information file has no format code." & vbCrLf)
+                RaiseEvent ErrorMessage("Use the Format Convert application to update the file." & vbCrLf)
+            ElseIf ProjectInfoXDoc.<Project>.<FormatCode>.Value = "ADVL_2" Then 'The file Format Code is the latest.
+                'Read the Project Name:
+                'If ProjectInfoXDoc.<Project>.<Location>.<Name>.Value <> Nothing Then
+                If ProjectInfoXDoc.<Project>.<Name>.Value <> Nothing Then
+                    'Name = ProjectInfoXDoc.<Project>.<Location>.<Name>.Value
+                    Name = ProjectInfoXDoc.<Project>.<Name>.Value
+                Else
+                    RaiseEvent ErrorMessage("The Project Name is not specified in the Last Project Information file." & vbCrLf)
+                End If
+
+                'Read the Project Description:
+                'If ProjectInfoXDoc.<Project>.<Location>.<Description>.Value <> Nothing Then
+                If ProjectInfoXDoc.<Project>.<Description>.Value <> Nothing Then
+                    'Description = ProjectInfoXDoc.<Project>.<Location>.<Description>.Value
+                    Description = ProjectInfoXDoc.<Project>.<Description>.Value
+                Else
+                    RaiseEvent ErrorMessage("The Project Description is not specified in the Last Project Information file." & vbCrLf)
+                End If
+
+                'Read the Project Location Type:
+                If ProjectInfoXDoc.<Project>.<Location>.<Type>.Value <> Nothing Then
+                    Select Case ProjectInfoXDoc.<Project>.<Location>.<Type>.Value '(None, Directory, Archive or Hybrid)
+                        Case "None"
+                            'ProjectLocn.Type = FileLocation.Types.Directory
+                            Type = Types.None
+                            Usage.SaveLocn.Type = FileLocation.Types.Directory
+                        Case "Directory"
+                            'ProjectLocn.Type = FileLocation.Types.Directory
+                            Type = Types.Directory
+                            Usage.SaveLocn.Type = FileLocation.Types.Directory
+                        Case "Archive"
+                            'ProjectLocn.Type = FileLocation.Types.Archive
+                            Type = Types.Archive
+                            Usage.SaveLocn.Type = FileLocation.Types.Archive
+                        Case "Hybrid"
+                            'ProjectLocn.Type = FileLocation.Types.Directory
+                            Type = Types.Hybrid
+                            Usage.SaveLocn.Type = FileLocation.Types.Directory
+                    End Select
+                Else
+                    RaiseEvent ErrorMessage("The Project Location Type is not specified in the Last Project Information file." & vbCrLf)
+                End If
+
+                'Read the Project Location Path:
+                If ProjectInfoXDoc.<Project>.<Location>.<Path>.Value <> Nothing Then
+                    'ProjectLocn.Path = ProjectInfoXDoc.<Project>.<Location>.<Path>.Value
+                    Path = ProjectInfoXDoc.<Project>.<Location>.<Path>.Value
+                    Usage.SaveLocn.Path = Path
+                Else
+                    RaiseEvent ErrorMessage("The Project Location Path is not specified in the Last Project Information file." & vbCrLf)
+                End If
+
+            Else 'The file Format Code is not the latest.
+                RaiseEvent ErrorMessage("The Last Project Information file has an old format code: " & ProjectInfoXDoc.<Project>.<FormatCode>.Value & vbCrLf)
+                RaiseEvent ErrorMessage("Use the Format Convert application to update the file." & vbCrLf)
+            End If
+
+        Else 'Open Default project
+            UseDefaultProject()
+        End If
+
+    End Sub
+
+    Public Sub ReadLastProjectInfo_Old()
+        'Read the Last Project Information.
+        'UPDATE: 17Jul18: The Project Information file: ADVL_Project_Info.xml is now stored in Project.Path (not the SettingsLocn).
 
         If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info.xml") Then 'Read Last Project information
             Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Last_Project_Info.xml")
-            Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
-                Case "Directory"
-                    SettingsLocn.Type = FileLocation.Types.Directory
-                    Usage.SaveLocn.Type = FileLocation.Types.Directory
-                Case "Archive"
-                    SettingsLocn.Type = FileLocation.Types.Archive
-                    Usage.SaveLocn.Type = FileLocation.Types.Archive
-            End Select
-            SettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-            Usage.SaveLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+            Dim SettingsLocnPath As String
 
-            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
-            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+            If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value <> Nothing Then 'This is a pre-17Jul18 Last_Project_Info.xml file.
+                SettingsLocnPath = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value 'Note: the settings location contains the data location.
+                Path = "" 'A blank Project.Path indicates that the SettingsLocnPath is being used to locate the ADVL_Project_Info.xml file.
+            ElseIf ProjectInfoXDoc.<Project>.<Location>.<Path>.Value <> Nothing Then 'This is a post-17Jul18 Last_Project_Info.xml file.
+                Path = ProjectInfoXDoc.<Project>.<Location>.<Path>.Value
+            Else
+                RaiseEvent ErrorMessage("The Project Path or the Settings Location Path were not found in the Last_Project_Info.xml file!" & vbCrLf)
+                Exit Sub
+            End If
+
+
+            If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value <> Nothing Then 'This is a pre-17Jul18 Last_Project_Info.xml file. ADVL_Project_Info.xml is at SettingsLocn.
+                Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
+                    Case "Directory"
+                        SettingsLocn.Type = FileLocation.Types.Directory
+                        Usage.SaveLocn.Type = FileLocation.Types.Directory
+                        If System.IO.Directory.Exists(SettingsLocnPath) Then
+                            SettingsLocn.Path = SettingsLocnPath
+                            Usage.SaveLocn.Path = SettingsLocnPath
+                            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
+                            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+                        Else
+                            UseDefaultProject()
+                        End If
+                    Case "Archive"
+                        SettingsLocn.Type = FileLocation.Types.Archive
+                        Usage.SaveLocn.Type = FileLocation.Types.Archive
+                        If System.IO.File.Exists(SettingsLocnPath) Then
+                            SettingsLocn.Path = SettingsLocnPath
+                            Usage.SaveLocn.Path = SettingsLocnPath
+                            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
+                            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+                        Else
+                            UseDefaultProject()
+                        End If
+                End Select
+            ElseIf ProjectInfoXDoc.<Project>.<Location>.<Type>.Value <> Nothing Then 'This is a post-17Jul18 Last_Project_Info.xml file. ADVL_Project_Info.xml is at Project.Path (not SettingsLocn).
+                Select Case ProjectInfoXDoc.<Project>.<Location>.<Type>.Value '(None, Directory, Archive or Hybrid)
+                    Case "Directory"
+                        'SettingsLocn.Type = FileLocation.Types.Directory
+                        'Usage.SaveLocn.Type = FileLocation.Types.Directory
+                        'If System.IO.Directory.Exists(SettingsLocnPath) Then
+                        '    SettingsLocn.Path = SettingsLocnPath
+                        '    Usage.SaveLocn.Path = SettingsLocnPath
+                        '    Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
+                        '    Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+                        'Else
+                        '    UseDefaultProject()
+                        'End If
+                        Type = Types.Directory
+                        Usage.SaveLocn.Type = FileLocation.Types.Directory
+                        If System.IO.Directory.Exists(Path) Then
+                            Usage.SaveLocn.Path = Path
+                            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
+                            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+                        Else
+                            UseDefaultProject()
+                        End If
+                    Case "Archive"
+                        'SettingsLocn.Type = FileLocation.Types.Archive
+                        'Usage.SaveLocn.Type = FileLocation.Types.Archive
+                        'If System.IO.File.Exists(SettingsLocnPath) Then
+                        '    SettingsLocn.Path = SettingsLocnPath
+                        '    Usage.SaveLocn.Path = SettingsLocnPath
+                        '    Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
+                        '    Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+                        'Else
+                        '    UseDefaultProject()
+                        'End If
+                        Type = Types.Archive
+                        Usage.SaveLocn.Type = FileLocation.Types.Archive
+                        If System.IO.File.Exists(Path) Then
+                            Usage.SaveLocn.Path = Path
+                            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
+                            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
+                        Else
+                            UseDefaultProject()
+                        End If
+                    Case "Hybrid"
+                        'TO DO
+                    Case "None"
+                        'TO DO
+                End Select
+            Else
+
+            End If
 
         Else 'Open Default project
-            If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
-
-            Else
-                CreateDefaultProject()
-            End If
-            'Set setting to Default Project:
-            SettingsLocn.Type = FileLocation.Types.Directory
-            Usage.SaveLocn.Type = FileLocation.Types.Directory
-            SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
-            Usage.SaveLocn.Path = ApplicationDir & "\" & "Default_Project"
-            Name = "Default"
-            Description = "Default project. Data and settings are stored in the Default_Project directory in the Application Directory."
-            Type = Types.None
+            UseDefaultProject()
         End If
+    End Sub
 
+    Private Sub UseDefaultProject()
+        'Open the Default project.
+        'Create the Default project if it doesn't already exist.
+
+        If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
+
+        Else
+            CreateDefaultProject()
+        End If
+        'Set setting to Default Project:
+        'SettingsLocn.Type = FileLocation.Types.Directory
+        Type = Types.Directory
+        Usage.SaveLocn.Type = FileLocation.Types.Directory
+        'SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
+        Path = ApplicationDir & "\" & "Default_Project"
+        Usage.SaveLocn.Path = ApplicationDir & "\" & "Default_Project"
+        Name = "Default"
+        Description = "Default project. Data and settings are stored in the Default_Project directory in the Application Directory."
+        Type = Types.None
     End Sub
 
     Public Function ProjectInfoFileExists() As Boolean
@@ -2045,6 +2929,687 @@ Public Class Project '----------------------------------------------------------
     End Function
 
     Public Sub ReadProjectInfoFile()
+        'Read the Project information in a Project Information file.
+
+        'First check if the project exists:
+        Select Case Type
+            Case Types.Archive
+                If System.IO.File.Exists(Path) Then
+                    'Archive file found.
+                Else
+                    UseDefaultProject()
+                    Exit Sub
+                End If
+            Case Types.Directory
+                If System.IO.Directory.Exists(Path) Then
+                    'The Project directory found.
+                Else
+                    UseDefaultProject()
+                    Exit Sub
+                End If
+            Case Types.Hybrid
+                If System.IO.Directory.Exists(Path) Then
+                    'The Project directory found.
+                Else
+                    UseDefaultProject()
+                    Exit Sub
+                End If
+            Case Types.None
+                'Use the default project.
+                'Check if the Default_Project directory exists in the Application Directory:
+                If System.IO.Directory.Exists(ApplicationDir & "\Default_Project") Then
+                    'Default_Project directory found.
+                Else
+                    UseDefaultProject()
+                    Exit Sub
+                End If
+        End Select
+
+        If ProjectFileExists("Project_Info_ADVL_2.xml") Then 'The Project Information file exists (ADVL_2 format version).
+            'Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
+            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
+            ReadXmlProjectFile("Project_Info_ADVL_2.xml", ProjectInfoXDoc)
+            ReadProjectInfoFileAdvl_2(ProjectInfoXDoc)
+        Else
+            If ProjectFileExists("ADVL_Project_Info.xml") Then 'The original ADVL_1 format version of the Project Information file exists.
+                RaiseEvent Message("Converting ADVL_Project_Info.xml to Project_Info_ADVL_2.xml." & vbCrLf)
+                'Convert the file to the latest ADVL_2 format:
+                'Dim ProjInfoConversion As New ADVL_Utilities_Library_1.FormatConvert.ProjectInfoFileConversion
+                ProjInfoConversion = New ADVL_Utilities_Library_1.FormatConvert.ProjectInfoFileConversion
+                'ProjInfoConversion.ProjectType = Type
+                'NOTE: PROJECTTYPE DOES NOT USE THE SAME ENUMS AS TYPE!!!
+                Select Case Type
+                    Case Types.Archive
+                        ProjInfoConversion.ProjectType = FormatConvert.ProjectInfoFileConversion.ProjectTypes.Archive
+                    Case Types.Directory
+                        ProjInfoConversion.ProjectType = FormatConvert.ProjectInfoFileConversion.ProjectTypes.Directory
+                    Case Types.Hybrid
+                        ProjInfoConversion.ProjectType = FormatConvert.ProjectInfoFileConversion.ProjectTypes.Directory
+                    Case Types.None
+                        ProjInfoConversion.ProjectType = FormatConvert.ProjectInfoFileConversion.ProjectTypes.Directory
+                End Select
+                RaiseEvent Message("Project Path: " & Path & vbCrLf)
+                ProjInfoConversion.ProjectPath = Path
+                ProjInfoConversion.InputFileName = "ADVL_Project_Info.xml"
+                ProjInfoConversion.InputFormatCode = FormatConvert.ProjectInfoFileConversion.FormatCodes.ADVL_1
+                ProjInfoConversion.OutputFormatCode = FormatConvert.ProjectInfoFileConversion.FormatCodes.ADVL_2
+                ProjInfoConversion.Convert()
+                If ProjectFileExists("Project_Info_ADVL_2.xml") Then
+                    ReadProjectInfoFile() 'Try ReadProjectInfoFile again. This time Project_Info_ADVL_2.xml should be found
+                Else
+                    RaiseEvent ErrorMessage("Error converting ADVL_Project_Info.xml to Project_Info_ADVL_2.xml." & vbCrLf)
+                End If
+            Else
+                RaiseEvent ErrorMessage("No versions of the Project Information file were found." & vbCrLf)
+            End If
+        End If
+    End Sub
+
+    'Public Sub ReadProjectInfoFileAtPath()
+    Public Function ReadProjectInfoFileAtPath() As Boolean
+        'Read the Project Information file at the location in Path.
+
+        If Path.EndsWith(".AdvlProject") Then 'Archive project.
+            If System.IO.File.Exists(Path) Then
+                'Archive file found.
+                Type = Types.Archive
+            Else
+                UseDefaultProject()
+                'Exit Sub
+                Return False 'Project Info file could not be read at Path
+                Exit Function
+            End If
+        Else 'Default, Directory or Hybrid project.
+            If System.IO.Directory.Exists(Path) Then
+                'The Project directory found.
+                Type = Types.Directory 'Assume the project type is directory. This can be updated after the project info file is read.
+            Else
+                UseDefaultProject()
+                Return False 'Project Info file could not be read at Path
+                'Exit Sub
+                Exit Function
+            End If
+        End If
+
+        If ProjectFileExists("Project_Info_ADVL_2.xml") Then 'The Project Information file exists (ADVL_2 format version).
+            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
+            ReadXmlProjectFile("Project_Info_ADVL_2.xml", ProjectInfoXDoc)
+            ReadProjectInfoFileAdvl_2(ProjectInfoXDoc)
+            Return True 'Project Info file could be read at Path
+        Else
+            If ProjectFileExists("ADVL_Project_Info.xml") Then 'The original ADVL_1 format version of the Project Information file exists.
+                RaiseEvent Message("Converting ADVL_Project_Info.xml to Project_Info_ADVL_2.xml." & vbCrLf)
+                'Convert the file to the latest ADVL_2 format:
+                ProjInfoConversion = New ADVL_Utilities_Library_1.FormatConvert.ProjectInfoFileConversion
+                'ProjInfoConversion.ProjectType = Type
+                'NOTE: PROJECTTYPE DOES NOT USE THE SAME ENUMS AS TYPE!!!
+                Select Case Type
+                    Case Types.Archive
+                        ProjInfoConversion.ProjectType = FormatConvert.ProjectInfoFileConversion.ProjectTypes.Archive
+                    Case Types.Directory
+                        ProjInfoConversion.ProjectType = FormatConvert.ProjectInfoFileConversion.ProjectTypes.Directory
+                    Case Types.Hybrid
+                        ProjInfoConversion.ProjectType = FormatConvert.ProjectInfoFileConversion.ProjectTypes.Directory
+                    Case Types.None
+                        ProjInfoConversion.ProjectType = FormatConvert.ProjectInfoFileConversion.ProjectTypes.Directory
+                End Select
+                RaiseEvent Message("Project Path: " & Path & vbCrLf)
+                ProjInfoConversion.ProjectPath = Path
+                ProjInfoConversion.InputFileName = "ADVL_Project_Info.xml"
+                ProjInfoConversion.InputFormatCode = FormatConvert.ProjectInfoFileConversion.FormatCodes.ADVL_1
+                ProjInfoConversion.OutputFormatCode = FormatConvert.ProjectInfoFileConversion.FormatCodes.ADVL_2
+                ProjInfoConversion.Convert()
+                If ProjectFileExists("Project_Info_ADVL_2.xml") Then
+                    ReadProjectInfoFile() 'Try ReadProjectInfoFile again. This time Project_Info_ADVL_2.xml should be found
+                Else
+                    RaiseEvent ErrorMessage("Error converting ADVL_Project_Info.xml to Project_Info_ADVL_2.xml." & vbCrLf)
+                    Return False 'Project Info file could not be read at Path
+                End If
+            Else
+                RaiseEvent ErrorMessage("No versions of the Project Information file were found." & vbCrLf)
+                Return False 'Project Info file could not be read at Path
+            End If
+        End If
+
+    End Function
+
+    Private Sub ReadProjectInfoFileAdvl_2(ByRef XDoc As System.Xml.Linq.XDocument)
+        'Read the Project Information XDocument (ADVL_2 format version).
+
+        FormatCode = "ADVL_2"
+        'Read the Project Name:
+        If XDoc.<Project>.<Name>.Value = Nothing Then
+            Name = ""
+        Else
+            Name = XDoc.<Project>.<Name>.Value
+        End If
+
+        'Read the Project Type
+        If XDoc.<Project>.<Type>.Value = Nothing Then
+            Type = Types.None
+        Else
+            Select Case XDoc.<Project>.<Type>.Value
+                Case "None"
+                    Type = Types.None
+                    'SettingsLocn = ProjectLocn 'Use Default project: Settings location = Project location.
+                    'DataLocn = ProjectLocn     'Use Default project: Data location = Project location.
+                    'Note: If Type = None, the Default project will be used.
+                    SettingsLocn.Type = FileLocation.Types.Directory
+                    SettingsLocn.Path = Path
+                    DataLocn.Type = FileLocation.Types.Directory
+                    DataLocn.Path = Path
+                    SystemLocn.Type = FileLocation.Types.Directory
+                    SystemLocn.Path = Path
+                    Usage.SaveLocn.Type = FileLocation.Types.Directory
+                    Usage.SaveLocn.Path = Path
+                Case "Archive"
+                    Type = Types.Archive
+                    'SettingsLocn = ProjectLocn 'For Archive type, Settings location is the same as the Project location.
+                    'DataLocn = ProjectLocn     'For Archive type, Data location is the same as the Project location.
+                    'Note: If Type = Archive, the SettingsLocn and DataLocn are both the project archive file.
+                    SettingsLocn.Type = FileLocation.Types.Archive
+                    SettingsLocn.Path = Path
+                    DataLocn.Type = FileLocation.Types.Archive
+                    DataLocn.Path = Path
+                    SystemLocn.Type = FileLocation.Types.Archive
+                    SystemLocn.Path = Path
+                    Usage.SaveLocn.Type = FileLocation.Types.Archive
+                    Usage.SaveLocn.Path = Path
+                Case "Directory"
+                    Type = Types.Directory
+                    'SettingsLocn = ProjectLocn 'For Directory type, Settings location is the same as the Project location.
+                    'DataLocn = ProjectLocn     'For Directory type, Data location is the same as the Project location.
+                    'Note: If Type = Directory, the SettingsLocn and DataLocn are both the project directory.
+                    SettingsLocn.Type = FileLocation.Types.Directory
+                    SettingsLocn.Path = Path
+                    DataLocn.Type = FileLocation.Types.Directory
+                    DataLocn.Path = Path
+                    SystemLocn.Type = FileLocation.Types.Directory
+                    SystemLocn.Path = Path
+                    Usage.SaveLocn.Type = FileLocation.Types.Directory
+                    Usage.SaveLocn.Path = Path
+                Case "Hybrid"
+                    Type = Types.Hybrid
+                    'A Hybrid project is stored in a directory with the settings stored in the directory, a sub-directory or a sub-archive.
+                    If XDoc.<Project>.<SettingsRelativeLocation>.<Type>.Value = Nothing Then
+                        RaiseEvent ErrorMessage("No Settings relative location type is specified for the Hybrid project." & vbCrLf)
+                    Else
+                        Select Case XDoc.<Project>.<SettingsRelativeLocation>.<Type>.Value
+                            Case "Directory"
+                                SettingsLocn.Type = FileLocation.Types.Directory
+                                If XDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value = Nothing Then
+                                    RaiseEvent ErrorMessage("No Settings relative location path is specified for the Hybrid project." & vbCrLf)
+                                Else
+                                    If XDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value = "" Then
+                                        SettingsLocn.Path = Path 'The Settings Path is the same as the Project Directory
+                                    Else
+                                        'SettingsLocn.Path = Path & "\" & XDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value 'The Settings Path is a sub-directory of the Project Directory.
+                                        SettingsLocn.Path = Path & XDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value 'The Settings Path is a sub-directory of the Project Directory.
+                                    End If
+                                End If
+
+                            Case "Archive"
+                                SettingsLocn.Type = FileLocation.Types.Archive
+                                If XDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value = Nothing Then
+                                    RaiseEvent ErrorMessage("No Settings relative location path is specified for the Hybrid project." & vbCrLf)
+                                Else
+                                    If XDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value = "" Then
+                                        SettingsLocn.Path = Path 'The Settings Path is the same as the Project Directory
+                                        RaiseEvent ErrorMessage("The Settings relative location path is an Archive with a blank name specified." & vbCrLf)
+                                        RaiseEvent ErrorMessage("The Project path will be used." & vbCrLf)
+                                    Else
+                                        'SettingsLocn.Path = Path & "\" & XDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value 'The Settings Path is an Archive in the Project Directory.
+                                        SettingsLocn.Path = Path & XDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value 'The Settings Path is an Archive in the Project Directory.
+                                    End If
+                                End If
+
+                        End Select
+                    End If
+
+                    'A Hybrid project is stored in a directory with the data stored in the directory, a sub-directory or a sub-archive.
+                    If XDoc.<Project>.<DataRelativeLocation>.<Type>.Value = Nothing Then
+                        RaiseEvent ErrorMessage("No Data relative location type is specified for the Hybrid project." & vbCrLf)
+                    Else
+                        Select Case XDoc.<Project>.<DataRelativeLocation>.<Type>.Value
+                            Case "Directory"
+                                DataLocn.Type = FileLocation.Types.Directory
+                                If XDoc.<Project>.<DataRelativeLocation>.<Path>.Value = Nothing Then
+                                    RaiseEvent ErrorMessage("No Data relative location path is specified for the Hybrid project." & vbCrLf)
+                                Else
+                                    If XDoc.<Project>.<DataRelativeLocation>.<Path>.Value = "" Then
+                                        DataLocn.Path = Path 'The Data Path is the same as the Project Directory
+                                    Else
+                                        'DataLocn.Path = Path & "\" & XDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is a sub-directory of the Project Directory.
+                                        DataLocn.Path = Path & XDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is a sub-directory of the Project Directory.
+                                    End If
+                                End If
+
+                            Case "Archive"
+                                DataLocn.Type = FileLocation.Types.Archive
+                                If XDoc.<Project>.<DataRelativeLocation>.<Path>.Value = Nothing Then
+                                    RaiseEvent ErrorMessage("No Data relative location path is specified for the Hybrid project." & vbCrLf)
+                                Else
+                                    If XDoc.<Project>.<DataRelativeLocation>.<Path>.Value = "" Then
+                                        DataLocn.Path = Path 'The Data Path is the same as the Project Directory
+                                        RaiseEvent ErrorMessage("The Data relative location path is an Archive with a blank name specified." & vbCrLf)
+                                        RaiseEvent ErrorMessage("The Project path will be used." & vbCrLf)
+                                    Else
+                                        'DataLocn.Path = Path & "\" & XDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is an Archive in the Project Directory.
+                                        DataLocn.Path = Path & XDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is an Archive in the Project Directory.
+                                    End If
+                                End If
+
+                        End Select
+                    End If
+
+                    'A Hybrid project is stored in a directory with the system data stored in the directory, a sub-directory or a sub-archive.
+                    If XDoc.<Project>.<SystemRelativeLocation>.<Type>.Value = Nothing Then
+                        RaiseEvent ErrorMessage("No System relative location type is specified for the Hybrid project." & vbCrLf)
+                    Else
+                        Select Case XDoc.<Project>.<SystemRelativeLocation>.<Type>.Value
+                            Case "Directory"
+                                SystemLocn.Type = FileLocation.Types.Directory
+                                If XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value = Nothing Then
+                                    RaiseEvent ErrorMessage("No System relative location path is specified for the Hybrid project." & vbCrLf)
+                                Else
+                                    If XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value = "" Then
+                                        SystemLocn.Path = Path 'The Data Path is the same as the Project Directory
+                                    Else
+                                        'SystemLocn.Path = Path & "\" & XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value 'The System Path is a sub-directory of the Project Directory.
+                                        SystemLocn.Path = Path & XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value 'The System Path is a sub-directory of the Project Directory.
+                                    End If
+                                End If
+
+                            Case "Archive"
+                                SystemLocn.Type = FileLocation.Types.Archive
+                                If XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value = Nothing Then
+                                    RaiseEvent ErrorMessage("No System relative location path is specified for the Hybrid project." & vbCrLf)
+                                Else
+                                    If XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value = "" Then
+                                        SystemLocn.Path = Path 'The System Path is the same as the Project Directory
+                                        RaiseEvent ErrorMessage("The System relative location path is an Archive with a blank name specified." & vbCrLf)
+                                        RaiseEvent ErrorMessage("The Project path will be used." & vbCrLf)
+                                    Else
+                                        'SystemLocn.Path = Path & "\" & XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value 'The Data Path is an Archive in the Project Directory.
+                                        SystemLocn.Path = Path & XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value 'The Data Path is an Archive in the Project Directory.
+                                    End If
+                                End If
+
+                        End Select
+                    End If
+
+                Case Else
+                    Type = Types.None
+                    RaiseEvent ErrorMessage("Unknown Project Type: " & XDoc.<Project>.<Type>.Value & vbCrLf)
+            End Select
+        End If
+
+        'Read the project Description
+        If XDoc.<Project>.<Description>.Value = Nothing Then
+            Description = ""
+        Else
+            Description = XDoc.<Project>.<Description>.Value
+        End If
+
+        'Read the project Creation Date:
+        If XDoc.<Project>.<CreationDate>.Value = Nothing Then
+            CreationDate = "1-Jan-2000 12:00:00"
+        Else
+            CreationDate = XDoc.<Project>.<CreationDate>.Value
+        End If
+
+        'The Project Information File Format Code has already beeen read.
+
+        'Read Project ID:
+        If XDoc.<Project>.<ID>.Value = Nothing Then
+            'Leave the ID blank.
+        Else
+            ID = XDoc.<Project>.<ID>.Value
+        End If
+
+        'Read the Parent Project Name:
+        If XDoc.<Project>.<ParentProject>.<Name>.Value = Nothing Then
+            ParentProjectName = ""
+        Else
+            ParentProjectName = XDoc.<Project>.<ParentProject>.<Name>.Value
+        End If
+
+        'Read the Parent Project Directory Name:
+        If XDoc.<Project>.<ParentProject>.<DirectoryName>.Value = Nothing Then
+            ParentProjectDirectoryName = ""
+        Else
+            ParentProjectDirectoryName = XDoc.<Project>.<ParentProject>.<DirectoryName>.Value
+        End If
+
+        'Read the Parent Project CreationDate:
+        If XDoc.<Project>.<ParentProject>.<CreationDate>.Value = Nothing Then
+            ParentProjectCreationDate = "1-Jan-2000 12:00:00"
+        Else
+            ParentProjectCreationDate = XDoc.<Project>.<ParentProject>.<CreationDate>.Value
+        End If
+
+        'Read the Parent Project ID:
+        If XDoc.<Project>.<ParentProject>.<ID>.Value = Nothing Then
+            ParentProjectID = ""
+        Else
+            ParentProjectID = XDoc.<Project>.<ParentProject>.<ID>.Value
+        End If
+
+        'Read the Parent Project Path:
+        If XDoc.<Project>.<ParentProject>.<Path>.Value = Nothing Then
+            ParentProjectPath = ""
+        Else
+            ParentProjectPath = XDoc.<Project>.<ParentProject>.<Path>.Value
+        End If
+
+        'Read the Project Author information:
+        If XDoc.<Project>.<Author>.<Name>.Value = Nothing Then
+            Author.Name = ""
+        Else
+            Author.Name = XDoc.<Project>.<Author>.<Name>.Value
+        End If
+        If XDoc.<Project>.<Author>.<Description>.Value = Nothing Then
+            Author.Description = ""
+        Else
+            Author.Description = XDoc.<Project>.<Author>.<Description>.Value
+        End If
+        If XDoc.<Project>.<Author>.<Contact>.Value = Nothing Then
+            Author.Contact = ""
+        Else
+            Author.Contact = XDoc.<Project>.<Author>.<Contact>.Value
+        End If
+
+        'Read the Application information: 
+        If XDoc.<Project>.<Application>.<Name>.Value = Nothing Then
+            Application.Name = ""
+        Else
+            Application.Name = XDoc.<Project>.<Application>.<Name>.Value
+        End If
+        If XDoc.<Project>.<Application>.<Description>.Value = Nothing Then
+            Application.Description = ""
+        Else
+            Application.Description = XDoc.<Project>.<Application>.<Description>.Value
+        End If
+        If XDoc.<Project>.<HostApplication>.<CreationDate>.Value = Nothing Then
+            Application.CreationDate = "1-Jan-2000 12:00:00"
+        Else
+            Application.CreationDate = XDoc.<Project>.<Application>.<CreationDate>.Value
+        End If
+        If XDoc.<Project>.<HostApplication>.<Version>.<Major>.Value = Nothing Then
+            Application.Version.Major = 0
+        Else
+            Application.Version.Major = XDoc.<Project>.<Application>.<Version>.<Major>.Value
+        End If
+        If XDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value = Nothing Then
+            Application.Version.Minor = 0
+        Else
+            Application.Version.Minor = XDoc.<Project>.<Application>.<Version>.<Minor>.Value
+        End If
+        If XDoc.<Project>.<HostApplication>.<Version>.<Build>.Value = Nothing Then
+            Application.Version.Build = 0
+        Else
+            Application.Version.Build = XDoc.<Project>.<Application>.<Version>.<Build>.Value
+        End If
+        If XDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value = Nothing Then
+            Application.Version.Revision = 0
+        Else
+            Application.Version.Revision = XDoc.<Project>.<Application>.<Version>.<Revision>.Value
+        End If
+        If XDoc.<Project>.<HostApplication>.<Author>.<Name>.Value = Nothing Then
+            Application.Author.Name = ""
+        Else
+            Application.Author.Name = XDoc.<Project>.<Application>.<Author>.<Name>.Value
+        End If
+        If XDoc.<Project>.<HostApplication>.<Author>.<Description>.Value = Nothing Then
+            Application.Author.Description = ""
+        Else
+            Application.Author.Description = XDoc.<Project>.<Application>.<Author>.<Description>.Value
+        End If
+        If XDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value = Nothing Then
+            Application.Author.Contact = ""
+        Else
+            Application.Author.Contact = XDoc.<Project>.<Application>.<Author>.<Contact>.Value
+        End If
+
+        If XDoc.<Project>.<ConnectOnOpen>.Value = Nothing Then
+            ConnectOnOpen = True
+        Else
+            ConnectOnOpen = XDoc.<Project>.<ConnectOnOpen>.Value
+        End If
+
+        Usage.RestoreUsageInfo()
+        Usage.StartTime = Now
+
+    End Sub
+
+    Public Sub ReadProjectInfoFile_Old2()
+        'Read the Project information in a Project Information file.
+
+        If ProjectFileExists("ADVL_Project_Info.xml") Then 'The Project Information file exists.
+            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
+            ReadXmlProjectFile("ADVL_Project_Info.xml", ProjectInfoXDoc)
+
+            If ProjectInfoXDoc Is Nothing Then
+                RaiseEvent ErrorMessage("Error reading the ADVL_Project_Info.xml file." & vbCrLf)
+            Else
+                'The ADVL_Project_Info.xml file was read.
+                If ProjectInfoXDoc.<Project>.<FormatCode>.Value = Nothing Then
+                    RaiseEvent ErrorMessage("The Project Information file has no format code. Run the Format Convert application to update the format." & vbCrLf)
+                ElseIf ProjectInfoXDoc.<Project>.<FormatCode>.Value = "ADVL_2" Then 'Read the Project Information.
+                    FormatCode = "ADVL_2"
+                    'Read the Project Name:
+                    If ProjectInfoXDoc.<Project>.<Name>.Value = Nothing Then
+                        Name = ""
+                    Else
+                        Name = ProjectInfoXDoc.<Project>.<Name>.Value
+                    End If
+
+                    'Read the Project Type
+                    If ProjectInfoXDoc.<Project>.<Type>.Value = Nothing Then
+                        Type = Types.None
+                    Else
+                        Select Case ProjectInfoXDoc.<Project>.<Type>.Value
+                            Case "None"
+                                Type = Types.None
+                                'SettingsLocn = ProjectLocn 'Use Default project: Settings location = Project location.
+                                'DataLocn = ProjectLocn     'Use Default project: Data location = Project location.
+                                'Note: If Type = None, the Default project will be used.
+                                SettingsLocn.Type = FileLocation.Types.Directory
+                                SettingsLocn.Path = Path
+                                DataLocn.Type = FileLocation.Types.Directory
+                                DataLocn.Path = Path
+                            Case "Archive"
+                                Type = Types.Archive
+                                'SettingsLocn = ProjectLocn 'For Archive type, Settings location is the same as the Project location.
+                                'DataLocn = ProjectLocn     'For Archive type, Data location is the same as the Project location.
+                                'Note: If Type = Archive, the SettingsLocn and DataLocn are both the project archive file.
+                                SettingsLocn.Type = FileLocation.Types.Archive
+                                SettingsLocn.Path = Path
+                                DataLocn.Type = FileLocation.Types.Archive
+                                DataLocn.Path = Path
+                            Case "Directory"
+                                Type = Types.Directory
+                                'SettingsLocn = ProjectLocn 'For Directory type, Settings location is the same as the Project location.
+                                'DataLocn = ProjectLocn     'For Directory type, Data location is the same as the Project location.
+                                'Note: If Type = Directory, the SettingsLocn and DataLocn are both the project directory.
+                                SettingsLocn.Type = FileLocation.Types.Directory
+                                SettingsLocn.Path = Path
+                                DataLocn.Type = FileLocation.Types.Directory
+                                DataLocn.Path = Path
+                            Case "Hybrid"
+                                Type = Types.Hybrid
+                                'A Hybrid project is stored in a directory with the settings stored in the directory, a sub-directory or a sub-archive.
+                                If ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Type>.Value = Nothing Then
+                                    RaiseEvent ErrorMessage("No Settings relative location type is specified for the Hybrid project." & vbCrLf)
+                                Else
+                                    Select Case ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Type>.Value
+                                        Case "Directory"
+                                            SettingsLocn.Type = FileLocation.Types.Directory
+                                            If ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value = Nothing Then
+                                                RaiseEvent ErrorMessage("No Settings relative location path is specified for the Hybrid project." & vbCrLf)
+                                            Else
+                                                If ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value = "" Then
+                                                    SettingsLocn.Path = Path 'The Settings Path is the same as the Project Directory
+                                                Else
+                                                    SettingsLocn.Path = Path & "\" & ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value 'The Settings Path is a sub-directory of the Project Directory.
+                                                End If
+                                            End If
+
+                                        Case "Archive"
+                                            SettingsLocn.Type = FileLocation.Types.Archive
+                                            If ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value = Nothing Then
+                                                RaiseEvent ErrorMessage("No Settings relative location path is specified for the Hybrid project." & vbCrLf)
+                                            Else
+                                                If ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value = "" Then
+                                                    SettingsLocn.Path = Path 'The Settings Path is the same as the Project Directory
+                                                    RaiseEvent ErrorMessage("The Settings relative location path is an Archive with a blank name specified." & vbCrLf)
+                                                    RaiseEvent ErrorMessage("The Project path will be used." & vbCrLf)
+                                                Else
+                                                    SettingsLocn.Path = Path & "\" & ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value 'The Settings Path is an Archive in the Project Directory.
+                                                End If
+                                            End If
+
+                                    End Select
+                                End If
+                                'A Hybrid project is stored in a directory with the data stored in the directory, a sub-directory or a sub-archive.
+                                If ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Type>.Value = Nothing Then
+                                    RaiseEvent ErrorMessage("No Data relative location type is specified for the Hybrid project." & vbCrLf)
+                                Else
+                                    Select Case ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Type>.Value
+                                        Case "Directory"
+                                            DataLocn.Type = FileLocation.Types.Directory
+                                            If ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Path>.Value = Nothing Then
+                                                RaiseEvent ErrorMessage("No Data relative location path is specified for the Hybrid project." & vbCrLf)
+                                            Else
+                                                If ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Path>.Value = "" Then
+                                                    DataLocn.Path = Path 'The Data Path is the same as the Project Directory
+                                                Else
+                                                    DataLocn.Path = Path & "\" & ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is a sub-directory of the Project Directory.
+                                                End If
+                                            End If
+
+                                        Case "Archive"
+                                            DataLocn.Type = FileLocation.Types.Archive
+                                            If ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Path>.Value = Nothing Then
+                                                RaiseEvent ErrorMessage("No Data relative location path is specified for the Hybrid project." & vbCrLf)
+                                            Else
+                                                If ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Path>.Value = "" Then
+                                                    DataLocn.Path = Path 'The Data Path is the same as the Project Directory
+                                                    RaiseEvent ErrorMessage("The Data relative location path is an Archive with a blank name specified." & vbCrLf)
+                                                    RaiseEvent ErrorMessage("The Project path will be used." & vbCrLf)
+                                                Else
+                                                    DataLocn.Path = Path & "\" & ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is an Archive in the Project Directory.
+                                                End If
+                                            End If
+
+                                    End Select
+                                End If
+
+                            Case Else
+                                Type = Types.None
+                                RaiseEvent ErrorMessage("Unknown Project Type: " & ProjectInfoXDoc.<Project>.<Type>.Value & vbCrLf)
+                        End Select
+                    End If
+
+                    'Read the project Description
+                    If ProjectInfoXDoc.<Project>.<Description>.Value = Nothing Then
+                        Description = ""
+                    Else
+                        Description = ProjectInfoXDoc.<Project>.<Description>.Value
+                    End If
+
+                    'Read the project Creation Date:
+                    If ProjectInfoXDoc.<Project>.<CreationDate>.Value = Nothing Then
+                        CreationDate = ""
+                    Else
+                        CreationDate = ProjectInfoXDoc.<Project>.<CreationDate>.Value
+                    End If
+
+                    'The Project Information File Format Code has already beeen read.
+
+                    'Read the Project Author information:
+                    If ProjectInfoXDoc.<Project>.<Author>.<Name>.Value = Nothing Then
+                        Author.Name = ""
+                    Else
+                        Author.Name = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<Author>.<Description>.Value = Nothing Then
+                        Author.Description = ""
+                    Else
+                        Author.Description = ProjectInfoXDoc.<Project>.<Author>.<Description>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<Author>.<Contact>.Value = Nothing Then
+                        Author.Contact = ""
+                    Else
+                        Author.Contact = ProjectInfoXDoc.<Project>.<Author>.<Contact>.Value
+                    End If
+
+                    'Read the Application information: 
+                    If ProjectInfoXDoc.<Project>.<Application>.<Name>.Value = Nothing Then
+                        Application.Name = ""
+                    Else
+                        Application.Name = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<Application>.<Description>.Value = Nothing Then
+                        Application.Description = ""
+                    Else
+                        Application.Description = ProjectInfoXDoc.<Project>.<Application>.<Description>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value = Nothing Then
+                        Application.CreationDate = "1-Jan-2000 12:00:00"
+                    Else
+                        Application.CreationDate = ProjectInfoXDoc.<Project>.<Application>.<CreationDate>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value = Nothing Then
+                        Application.Version.Major = 0
+                    Else
+                        Application.Version.Major = ProjectInfoXDoc.<Project>.<Application>.<Version>.<Major>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value = Nothing Then
+                        Application.Version.Minor = 0
+                    Else
+                        Application.Version.Minor = ProjectInfoXDoc.<Project>.<Application>.<Version>.<Minor>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value = Nothing Then
+                        Application.Version.Build = 0
+                    Else
+                        Application.Version.Build = ProjectInfoXDoc.<Project>.<Application>.<Version>.<Build>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value = Nothing Then
+                        Application.Version.Revision = 0
+                    Else
+                        Application.Version.Revision = ProjectInfoXDoc.<Project>.<Application>.<Version>.<Revision>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value = Nothing Then
+                        Application.Author.Name = ""
+                    Else
+                        Application.Author.Name = ProjectInfoXDoc.<Project>.<Application>.<Author>.<Name>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value = Nothing Then
+                        Application.Author.Description = ""
+                    Else
+                        Application.Author.Description = ProjectInfoXDoc.<Project>.<Application>.<Author>.<Description>.Value
+                    End If
+                    If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value = Nothing Then
+                        Application.Author.Contact = ""
+                    Else
+                        Application.Author.Contact = ProjectInfoXDoc.<Project>.<Application>.<Author>.<Contact>.Value
+                    End If
+
+                    Usage.RestoreUsageInfo()
+
+                Else
+                    RaiseEvent ErrorMessage("Unknown Project Information format: " & ProjectInfoXDoc.<Project>.<FormatCode>.Value & vbCrLf)
+                    RaiseEvent ErrorMessage("Run the Format Convert application to update the format." & vbCrLf)
+                End If
+            End If
+        Else 'The Project Information file was not found.
+            RaiseEvent ErrorMessage("The ADVL_Project_Info.xml file dwas not found." & vbCrLf)
+        End If
+
+    End Sub
+
+    Public Sub ReadProjectInfoFile_Old()
         'Read project settings in a project information file.
         'This file is located in the project Settings Location.
         'The project settings location is initially obtained from the current project file or from the project list.
@@ -2055,9 +3620,23 @@ Public Class Project '----------------------------------------------------------
         'DataLocn has a value only for Hybrid projects.
         'Future project types may use these location settings or add new location settings.
 
-        If SettingsFileExists("ADVL_Project_Info.xml") Then
+        'UPDATE 19JUL18
+        'The ADVL_Project_Info.xml file is now stored in the project directory or archive file specified by Project.Type and Project.Path.
+
+        'If Project.Path = "" Then the project is an old pre-19JUL18 version.
+
+        If Path = "" Then 'Pre-19JUL18 Project version.
+
+        Else 'Post-19JUL18 Project version.
+
+
+        End If
+
+        'If SettingsFileExists("ADVL_Project_Info.xml") Then
+        If ProjectFileExists("ADVL_Project_Info.xml") Then
             Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
-            ReadXmlSettings("ADVL_Project_Info.xml", ProjectInfoXDoc)
+            'ReadXmlSettings("ADVL_Project_Info.xml", ProjectInfoXDoc)
+            ReadXmlProjectFile("ADVL_Project_Info.xml", ProjectInfoXDoc)
 
             'NOTE: saved values (SavedSettingsLocn etc) stored the values recorded in the ADVL_Project_Info.xml file.
             'These were used to handle the case where the project directory or archive has been moved and the saved values need to be updated.
@@ -2247,63 +3826,171 @@ Public Class Project '----------------------------------------------------------
 
 
 
-            'Read the Application Summary
+            'Read the Application Summary NOTE: THIS CODE REMAINS TO HANDLE OLD PROJECT VERSIONS. IN NEW VERSIONS, <ApplicationSummary> IS REPLACED BY <HostApplication>.
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value = Nothing Then
-                ApplicationSummary.Name = ""
+                'ApplicationSummary.Name = ""
+                'HostApplication.Name = ""
+                Application.Name = ""
             Else
-                ApplicationSummary.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
+                'ApplicationSummary.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
+                'HostApplication.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
+                Application.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
             End If
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value = Nothing Then
-                ApplicationSummary.Description = ""
+                'ApplicationSummary.Description = ""
+                'HostApplication.Description = ""
+                Application.Description = ""
             Else
-                ApplicationSummary.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
+                'ApplicationSummary.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
+                'HostApplication.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
+                Application.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
             End If
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value = Nothing Then
-                ApplicationSummary.CreationDate = ""
+                'ApplicationSummary.CreationDate = ""
+                'HostApplication.CreationDate = "1-Jan-2000 12:00:00"
+                Application.CreationDate = "1-Jan-2000 12:00:00"
+
             Else
-                ApplicationSummary.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
+                'ApplicationSummary.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
+                'HostApplication.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
+                Application.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
             End If
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value = Nothing Then
-                ApplicationSummary.Version.Major = ""
+                'ApplicationSummary.Version.Major = ""
+                'HostApplication.Version.Major = ""
+                'HostApplication.Version.Major = 0
+                Application.Version.Major = 0
             Else
-                ApplicationSummary.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
+                'ApplicationSummary.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
+                'HostApplication.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
+                Application.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
             End If
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value = Nothing Then
-                ApplicationSummary.Version.Minor = ""
+                'ApplicationSummary.Version.Minor = ""
+                'HostApplication.Version.Minor = ""
+                'HostApplication.Version.Minor = 0
+                Application.Version.Minor = 0
             Else
-                ApplicationSummary.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
+                'ApplicationSummary.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
+                'HostApplication.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
+                Application.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
             End If
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value = Nothing Then
-                ApplicationSummary.Version.Build = ""
+                'ApplicationSummary.Version.Build = ""
+                'HostApplication.Version.Build = ""
+                'HostApplication.Version.Build = 0
+                Application.Version.Build = 0
             Else
-                ApplicationSummary.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
+                'ApplicationSummary.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
+                'HostApplication.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
+                Application.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
             End If
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value = Nothing Then
-                ApplicationSummary.Version.Revision = ""
+                'ApplicationSummary.Version.Revision = ""
+                'HostApplication.Version.Revision = ""
+                'HostApplication.Version.Revision = 0
+                Application.Version.Revision = 0
             Else
-                ApplicationSummary.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
+                'ApplicationSummary.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
+                'HostApplication.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
+                Application.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
             End If
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value = Nothing Then
-                ApplicationSummary.Author.Name = ""
+                'ApplicationSummary.Author.Name = ""
+                'HostApplication.Author.Name = ""
+                Application.Author.Name = ""
             Else
-                ApplicationSummary.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
+                'ApplicationSummary.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
+                'HostApplication.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
+                Application.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
             End If
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value = Nothing Then
-                ApplicationSummary.Author.Description = ""
+                'ApplicationSummary.Author.Description = ""
+                'HostApplication.Author.Description = ""
+                Application.Author.Description = ""
             Else
-                ApplicationSummary.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
+                'ApplicationSummary.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
+                'HostApplication.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
+                Application.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
             End If
             If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value = Nothing Then
-                ApplicationSummary.Author.Contact = ""
+                'ApplicationSummary.Author.Contact = ""
+                'HostApplication.Author.Contact = ""
+                Application.Author.Contact = ""
             Else
-                ApplicationSummary.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
+                'ApplicationSummary.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
+                'HostApplication.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
+                Application.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
+            End If
+
+            'Read the Host Application information: 
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<Name>.Value = Nothing Then
+                'HostApplication.Name = ""
+            Else
+                'HostApplication.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Name>.Value
+                Application.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Name>.Value
+            End If
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<Description>.Value = Nothing Then
+                'HostApplication.Description = ""
+            Else
+                'HostApplication.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Description>.Value
+                Application.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Description>.Value
+            End If
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value = Nothing Then
+                'HostApplication.CreationDate = ""
+            Else
+                'HostApplication.CreationDate = ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value
+                Application.CreationDate = ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value
+            End If
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value = Nothing Then
+                'HostApplication.Version.Major = ""
+            Else
+                'HostApplication.Version.Major = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value
+                Application.Version.Major = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value
+            End If
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value = Nothing Then
+                'HostApplication.Version.Minor = ""
+            Else
+                'HostApplication.Version.Minor = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value
+                Application.Version.Minor = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value
+            End If
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value = Nothing Then
+                'HostApplication.Version.Build = ""
+            Else
+                'HostApplication.Version.Build = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value
+                Application.Version.Build = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value
+            End If
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value = Nothing Then
+                'HostApplication.Version.Revision = ""
+            Else
+                'HostApplication.Version.Revision = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value
+                Application.Version.Revision = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value
+            End If
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value = Nothing Then
+                'HostApplication.Author.Name = ""
+            Else
+                'HostApplication.Author.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value
+                Application.Author.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value
+            End If
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value = Nothing Then
+                'HostApplication.Author.Description = ""
+            Else
+                'HostApplication.Author.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value
+                Application.Author.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value
+            End If
+            If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value = Nothing Then
+                'HostApplication.Author.Contact = ""
+            Else
+                'HostApplication.Author.Contact = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value
+                Application.Author.Contact = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value
             End If
 
             Usage.RestoreUsageInfo()
 
         Else
             'No Project_Info.xml file found.
-            OpenDefaultProject()
+            'OpenDefaultProject()
+            UseDefaultProject()
             Usage.RestoreUsageInfo()
         End If
     End Sub
@@ -2318,42 +4005,69 @@ Public Class Project '----------------------------------------------------------
         'DataLocn has a value only for Hybrid projects.
         'Future project types may use these location settings or add new location settings.
 
-        Dim SettingsLocationType As String
-        Dim SettingsLocationPath As String
-        Dim DataLocationType As String
-        Dim DataLocationPath As String
+        'Dim SettingsLocationType As String
+        'Dim SettingsLocationPath As String
+        'Dim DataLocationType As String
+        'Dim DataLocationPath As String
 
-        Dim ProjectType As String
-        Select Case Type
-            Case Types.None
-                ProjectType = "None"
-                SettingsLocationType = ""
-                SettingsLocationPath = ""
-                DataLocationType = ""
-                DataLocationPath = ""
+        'Dim SettingsRelLocnType As String
+        'Dim SettingsRelLocnPath As String
+        'Dim DataRelLocnType As String
+        'Dim DataRelLocnPath As String
 
-            Case Types.Directory
-                ProjectType = "Directory"
-                SettingsLocationType = ""
-                SettingsLocationPath = ""
-                DataLocationType = ""
-                DataLocationPath = ""
+        'Dim ProjectType As String
 
-            Case Types.Archive
-                ProjectType = "Archive"
-                SettingsLocationType = ""
-                SettingsLocationPath = ""
-                DataLocationType = ""
-                DataLocationPath = ""
+        'NOTE: SettingsRelLocn and DataRelLocn are now global variables in the Project class.
+        'Select Case Type
+        '    Case Types.None
+        '        ProjectType = "None"
+        '        'SettingsLocationType = ""
+        '        'SettingsLocationPath = ""
+        '        'DataLocationType = ""
+        '        'DataLocationPath = ""
+        '        SettingsRelLocnType = ""
+        '        SettingsRelLocnPath = ""
+        '        DataRelLocnType = ""
+        '        DataRelLocnPath = ""
 
-            Case Types.Hybrid
-                ProjectType = "Hybrid"
-                SettingsLocationType = ""
-                SettingsLocationPath = ""
-                DataLocationType = "Archive"
-                DataLocationPath = DataLocn.Path
+        '    Case Types.Directory
+        '        ProjectType = "Directory"
+        '        'SettingsLocationType = ""
+        '        'SettingsLocationPath = ""
+        '        'DataLocationType = ""
+        '        'DataLocationPath = ""
+        '        SettingsRelLocnType = ""
+        '        SettingsRelLocnPath = ""
+        '        DataRelLocnType = ""
+        '        DataRelLocnPath = ""
 
-        End Select
+        '    Case Types.Archive
+        '        ProjectType = "Archive"
+        '        'SettingsLocationType = ""
+        '        'SettingsLocationPath = ""
+        '        'DataLocationType = ""
+        '        'DataLocationPath = ""
+        '        SettingsRelLocnType = ""
+        '        SettingsRelLocnPath = ""
+        '        DataRelLocnType = ""
+        '        DataRelLocnPath = ""
+
+        '        'Relative locations are used for Hybrid Projects.
+        '        'The Settings and Data locations are specified relative to the Project Location.
+        '        'If the Project location is moved, the Settings and Data locations can be determined from the realtive locations.
+        '        'UPDATE 29Jul18 - THESE RELATIVE LOCATIONS ARE NOW PROJECT CLASS PROPERTIES.
+        '    Case Types.Hybrid
+        '        ProjectType = "Hybrid"
+        '        'SettingsLocationType = ""
+        '        'SettingsLocationPath = ""
+        '        'DataLocationType = "Archive"
+        '        'DataLocationPath = DataLocn.Path
+        '        SettingsRelLocnType = ""
+        '        SettingsRelLocnPath = ""
+        '        DataRelLocnType = "Archive"
+        '        DataRelLocnPath = DataLocn.Path
+
+        'End Select
 
         'Dim SettingsLocationType As String
         'Select Case SettingsLocn.Type
@@ -2386,51 +4100,110 @@ Public Class Project '----------------------------------------------------------
 
         Dim ProjectInfoXDoc = <?xml version="1.0" encoding="utf-8"?>
                               <!---->
-                              <!--Project Information for Application: ADVL_Zip-->
+                              <!--Project Information File-->
                               <!---->
                               <Project>
+                                  <FormatCode>ADVL_2</FormatCode>
                                   <Name><%= Name %></Name>
-                                  <Type><%= ProjectType %></Type>
+                                  <Type><%= Type %></Type>
                                   <Description><%= Description %></Description>
                                   <CreationDate><%= Format(CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-                                  <Version>
-                                      <Major><%= Version.Major %></Major>
-                                      <Minor><%= Version.Minor %></Minor>
-                                      <Build><%= Version.Build %></Build>
-                                      <Revision><%= Version.Revision %></Revision>
-                                  </Version>
+                                  <ID><%= ID %></ID>
+                                  <Relativepath><%= RelativePath %></Relativepath>
+                                  <ParentProject>
+                                      <Name><%= ParentProjectName %></Name>
+                                      <DirectoryName><%= ParentProjectDirectoryName %></DirectoryName>
+                                      <CreationDate><%= Format(ParentProjectCreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+                                      <ID><%= ParentProjectID %></ID>
+                                      <Path><%= ParentProjectPath %></Path>
+                                  </ParentProject>
                                   <Author>
                                       <Name><%= Author.Name %></Name>
                                       <Description><%= Author.Description %></Description>
                                       <Contact><%= Author.Contact %></Contact>
                                   </Author>
-                                  <SettingsLocation>
-                                      <Type><%= SettingsLocationType %></Type>
-                                      <Path><%= SettingsLocationPath %></Path>
-                                  </SettingsLocation>
-                                  <DataLocation>
-                                      <Type><%= DataLocationType %></Type>
-                                      <Path><%= DataLocationPath %></Path>
-                                  </DataLocation>
-                                  <ApplicationSummary>
-                                      <Name><%= ApplicationSummary.Name %></Name>
-                                      <Description><%= ApplicationSummary.Description %></Description>
-                                      <CreationDate><%= Format(ApplicationSummary.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+                                  <SettingsRelativeLocation>
+                                      <Type><%= SettingsRelLocn.Type %></Type>
+                                      <Path><%= SettingsRelLocn.Path %></Path>
+                                  </SettingsRelativeLocation>
+                                  <DataRelativeLocation>
+                                      <Type><%= DataRelLocn.Type %></Type>
+                                      <Path><%= DataRelLocn.Path %></Path>
+                                  </DataRelativeLocation>
+                                  <SystemRelativeLocation>
+                                      <Type><%= SystemRelLocn.Type %></Type>
+                                      <Path><%= SystemRelLocn.Path %></Path>
+                                  </SystemRelativeLocation>
+                                  <Application>
+                                      <Name><%= Application.Name %></Name>
+                                      <Description><%= Application.Description %></Description>
+                                      <CreationDate><%= Format(Application.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
                                       <Version>
-                                          <Major><%= ApplicationSummary.Version.Major %></Major>
-                                          <Minor><%= ApplicationSummary.Version.Minor %></Minor>
-                                          <Build><%= ApplicationSummary.Version.Build %></Build>
-                                          <Revision><%= ApplicationSummary.Version.Revision %></Revision>
+                                          <Major><%= Application.Version.Major %></Major>
+                                          <Minor><%= Application.Version.Minor %></Minor>
+                                          <Build><%= Application.Version.Build %></Build>
+                                          <Revision><%= Application.Version.Revision %></Revision>
                                       </Version>
                                       <Author>
-                                          <Name><%= ApplicationSummary.Author.Name %></Name>
-                                          <Description><%= ApplicationSummary.Author.Description %></Description>
-                                          <Contact><%= ApplicationSummary.Author.Contact %></Contact>
+                                          <Name><%= Application.Author.Name %></Name>
+                                          <Description><%= Application.Author.Description %></Description>
+                                          <Contact><%= Application.Author.Contact %></Contact>
                                       </Author>
-                                  </ApplicationSummary>
+                                  </Application>
+                                  <ConnectOnOpen><%= ConnectOnOpen %></ConnectOnOpen>
                               </Project>
 
-        SaveXmlSettings("ADVL_Project_Info.xml", ProjectInfoXDoc)
+        '<ConnectOnOpen><%= ConnectOnOpen %></ConnectOnOpen> ADDED 20Feb19
+
+        '<HostProject>
+        '    <Name><%= HostProjectName %></Name>
+        '    <DirectoryName><%= HostProjectDirectoryName %></DirectoryName>
+        '    <CreationDate><%= Format(HostProjectCreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+        '    <ID><%= HostProjectID %></ID>
+        '</HostProject>
+
+        '   <Type><%= ProjectType %></Type>
+
+        '<!--Project Information for Application: ADVL_Zip-->
+
+        '<Version>
+        '    <Major><%= Version.Major %></Major>
+        '    <Minor><%= Version.Minor %></Minor>
+        '    <Build><%= Version.Build %></Build>
+        '    <Revision><%= Version.Revision %></Revision>
+        '</Version>
+
+        '<SettingsLocation>
+        '    <Type><%= SettingsLocationType %></Type>
+        '    <Path><%= SettingsLocationPath %></Path>
+        '</SettingsLocation>
+        '<DataLocation>
+        '    <Type><%= DataLocationType %></Type>
+        '    <Path><%= DataLocationPath %></Path>
+        '</DataLocation>
+
+        '<HostApplication>
+        '    <Name><%= HostApplication.Name %></Name>
+        '    <Description><%= HostApplication.Description %></Description>
+        '    <CreationDate><%= Format(HostApplication.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+        '    <Version>
+        '        <Major><%= HostApplication.Version.Major %></Major>
+        '        <Minor><%= HostApplication.Version.Minor %></Minor>
+        '        <Build><%= HostApplication.Version.Build %></Build>
+        '        <Revision><%= HostApplication.Version.Revision %></Revision>
+        '    </Version>
+        '    <Author>
+        '        <Name><%= HostApplication.Author.Name %></Name>
+        '        <Description><%= HostApplication.Author.Description %></Description>
+        '        <Contact><%= HostApplication.Author.Contact %></Contact>
+        '    </Author>
+        '</HostApplication>
+
+        'UPDATE: 16Jul18: <ApplicationSummary> changed to <HostApplication>
+        'SaveXmlSettings("ADVL_Project_Info.xml", ProjectInfoXDoc)
+
+        'SaveXmlSettings("Project_Info_ADVL_2.xml", ProjectInfoXDoc)
+        SaveXmlProjectFile("Project_Info_ADVL_2.xml", ProjectInfoXDoc)
 
     End Sub
 
@@ -2460,12 +4233,12 @@ Public Class Project '----------------------------------------------------------
             Select Case SettingsLocn.Type
                 Case FileLocation.Types.Directory
                     'Create a lock file:
-                    Dim fs = System.IO.File.Create(SettingsLocn.Path & "\" & "Settings.lock")
+                    Dim fs = System.IO.File.Create(SettingsLocn.Path & "\" & "Settings.Lock")
                     fs.Dispose() 'This closes the file.
                 Case FileLocation.Types.Archive
                     Dim Zip As New ZipComp
                     Zip.ArchivePath = SettingsLocn.Path
-                    Zip.AddEntry("Settings.lock")
+                    Zip.AddEntry("Settings.Lock")
             End Select
         End If
     End Sub
@@ -2475,11 +4248,11 @@ Public Class Project '----------------------------------------------------------
         If SettingsLocked() Then
             Select Case SettingsLocn.Type
                 Case FileLocation.Types.Directory
-                    System.IO.File.Delete(SettingsLocn.Path & "\" & "Settings.lock")
+                    System.IO.File.Delete(SettingsLocn.Path & "\" & "Settings.Lock")
                 Case FileLocation.Types.Archive
                     Dim Zip As New ZipComp
                     Zip.ArchivePath = SettingsLocn.Path
-                    Zip.RemoveEntry("Settings.lock")
+                    Zip.RemoveEntry("Settings.Lock")
             End Select
         Else
             RaiseEvent ErrorMessage("Settings are not locked." & vbCrLf)
@@ -2512,12 +4285,12 @@ Public Class Project '----------------------------------------------------------
             Select Case DataLocn.Type
                 Case FileLocation.Types.Directory
                     'Create a lock file:
-                    Dim fs = System.IO.File.Create(DataLocn.Path & "\" & "Data.lock")
+                    Dim fs = System.IO.File.Create(DataLocn.Path & "\" & "Data.Lock")
                     fs.Dispose() 'This closes the file.
                 Case FileLocation.Types.Archive
                     Dim Zip As New ZipComp
                     Zip.ArchivePath = DataLocn.Path
-                    Zip.AddEntry("Data.lock")
+                    Zip.AddEntry("Data.Lock")
             End Select
         End If
     End Sub
@@ -2527,14 +4300,171 @@ Public Class Project '----------------------------------------------------------
         If DataLocked() Then
             Select Case DataLocn.Type
                 Case FileLocation.Types.Directory
-                    System.IO.File.Delete(DataLocn.Path & "\" & "Data.lock")
+                    System.IO.File.Delete(DataLocn.Path & "\" & "Data.Lock")
                 Case FileLocation.Types.Archive
                     Dim Zip As New ZipComp
                     Zip.ArchivePath = DataLocn.Path
-                    Zip.RemoveEntry("Data.lock")
+                    Zip.RemoveEntry("Data.Lock")
             End Select
         Else
             RaiseEvent ErrorMessage("Data is not locked." & vbCrLf)
+        End If
+    End Sub
+
+    Public Function SystemFileExists(ByVal SystemName As String) As Boolean
+        'Returns True if the system file exists.
+        Select Case SystemLocn.Type
+            Case FileLocation.Types.Directory
+                'Check if the SystemName exists in the project directory:
+                Return System.IO.File.Exists(SystemLocn.Path & "\" & SystemName)
+            Case FileLocation.Types.Archive
+                'Check if the SystemName exists in the project archive:
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = SystemLocn.Path
+                If Zip.ArchiveExists Then
+                    Return Zip.EntryExists(SystemName)
+                Else
+                    Return False
+                End If
+        End Select
+    End Function
+
+    Public Sub LockSystem()
+        'Add a lock file to the System location to indicate that it is in use.
+        If SystemLocked() Then
+            RaiseEvent ErrorMessage("System is already locked." & vbCrLf)
+        Else
+            Select Case SystemLocn.Type
+                Case FileLocation.Types.Directory
+                    'Create a lock file:
+                    Dim fs = System.IO.File.Create(SystemLocn.Path & "\" & "System.Lock")
+                    fs.Dispose() 'This closes the file.
+                Case FileLocation.Types.Archive
+                    Dim Zip As New ZipComp
+                    Zip.ArchivePath = SystemLocn.Path
+                    Zip.AddEntry("System.Lock")
+            End Select
+        End If
+    End Sub
+
+    Public Sub UnlockSystem()
+        'Remove a lock file from the System location to indicate that it is no longer in use.
+        If SystemLocked() Then
+            Select Case SystemLocn.Type
+                Case FileLocation.Types.Directory
+                    System.IO.File.Delete(SystemLocn.Path & "\" & "System.Lock")
+                Case FileLocation.Types.Archive
+                    Dim Zip As New ZipComp
+                    Zip.ArchivePath = SystemLocn.Path
+                    Zip.RemoveEntry("System.Lock")
+            End Select
+        Else
+            RaiseEvent ErrorMessage("System is not locked." & vbCrLf)
+        End If
+    End Sub
+
+    Public Function ProjectFileExists(ByVal FileName As String) As Boolean
+        'Returns True if the Project File exists.
+        'The Project Location is defined by Type and Path.
+
+        Select Case Type
+            Case Types.None
+                'Note: When the Type is None, the Default project is being used (Type = Directory, Path = Application Directory \ Default_Project
+                'Check if the FileName exists in the project directory:
+                Return System.IO.File.Exists(Path & "\" & FileName)
+            Case Types.Directory
+                'Check if the FileName exists in the project directory:
+                Return System.IO.File.Exists(Path & "\" & FileName)
+            Case Types.Archive
+                'Check if the FileName exists in the project archive:
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = Path
+                If Zip.ArchiveExists Then
+                    'Return Zip.EntryExists(Name)
+                    Return Zip.EntryExists(FileName)
+                Else
+                    Return False
+                End If
+            Case Types.Hybrid
+                'Note: When the Type is Hybrid, the Project Directory is specified by Type (= Directory) and Path.
+                'Check if the FileName exists in the project directory:
+                Return System.IO.File.Exists(Path & "\" & FileName)
+        End Select
+
+    End Function
+
+    'Public Function ProjectFileExists_Old(ByVal Name As String) As Boolean
+    '    'Returns True if the Project file exists.
+    '    Select Case ProjectLocn.Type
+    '        Case FileLocation.Types.Directory
+    '            'Check if the Name exists in the project directory:
+    '            Return System.IO.File.Exists(ProjectLocn.Path & "\" & Name)
+    '        Case FileLocation.Types.Archive
+    '            'Check if the Name exists in the project archive:
+    '            Dim Zip As New ZipComp
+    '            Zip.ArchivePath = ProjectLocn.Path
+    '            If Zip.ArchiveExists Then
+    '                Return Zip.EntryExists(Name)
+    '            Else
+    '                Return False
+    '            End If
+    '    End Select
+    'End Function
+
+    Public Sub LockProject()
+        'Add a Project lock file to the settings location to indicate that the project is in use.
+        If ProjectLocked() Then
+            RaiseEvent ErrorMessage("The project is already locked." & vbCrLf)
+        Else
+            'Select Case SettingsLocn.Type
+            Select Case Type
+                'Case FileLocation.Types.Directory
+                Case Types.Directory
+                    'Create a project lock file:
+                    'Dim fs = System.IO.File.Create(SettingsLocn.Path & "\" & "Project.lock")
+                    Dim fs = System.IO.File.Create(Path & "\" & "Project.Lock")
+                    fs.Dispose() 'This closes the file.
+                    'Case FileLocation.Types.Archive
+                Case Types.Archive
+                    Dim Zip As New ZipComp
+                    'Zip.ArchivePath = SettingsLocn.Path
+                    Zip.ArchivePath = Path
+                    Zip.AddEntry("Project.Lock")
+                Case Types.Hybrid
+                    'RaiseEvent ErrorMessage("ADD CODE TO CREATE A LOCK FILE TO A HYBRID PROJECT!" & vbCrLf)
+                    Dim fs = System.IO.File.Create(Path & "\" & "Project.Lock")
+                    fs.Dispose() 'This closes the file.
+                Case Types.None
+                    'Create a project lock file:
+                    Dim fs = System.IO.File.Create(Path & "\" & "Project.Lock")
+                    fs.Dispose() 'This closes the file.
+            End Select
+        End If
+    End Sub
+
+    Public Sub UnlockProject()
+        'Remove a Project lock file from the settings location to indicate that it is no longer in use.
+        If ProjectLocked() Then
+            'Select Case SettingsLocn.Type
+            Select Case Type
+                'Case FileLocation.Types.Directory
+                Case Types.Directory
+                    'System.IO.File.Delete(SettingsLocn.Path & "\" & "Project.lock")
+                    System.IO.File.Delete(Path & "\" & "Project.Lock")
+                    'Case FileLocation.Types.Archive
+                Case Types.Archive
+                    Dim Zip As New ZipComp
+                    'Zip.ArchivePath = SettingsLocn.Path
+                    Zip.ArchivePath = Path
+                    Zip.RemoveEntry("Project.Lock")
+                Case Types.Hybrid
+                    'RaiseEvent ErrorMessage("ADD CODE TO REMOVE A LOCK FILE FROM A HYBRID PROJECT!" & vbCrLf)
+                    System.IO.File.Delete(Path & "\" & "Project.Lock")
+                Case Types.None
+                    System.IO.File.Delete(Path & "\" & "Project.Lock")
+            End Select
+        Else
+            RaiseEvent ErrorMessage("Project is not locked." & vbCrLf)
         End If
     End Sub
 
@@ -2550,6 +4480,24 @@ Public Class Project '----------------------------------------------------------
                 Dim Zip As New ZipComp
                 Zip.ArchivePath = SettingsLocn.Path
                 Zip.AddText(SettingsName, XmlDoc.ToString)
+        End Select
+    End Sub
+
+    Public Sub RenameSettingsFile(ByVal OldFilename, ByVal NewFilename)
+        'Rename a settings file.
+        Select Case SettingsLocn.Type
+            Case FileLocation.Types.Directory
+                'Remove any file named NewFileName:
+                If System.IO.File.Exists(SettingsLocn.Path & "\" & NewFilename) Then
+                    System.IO.File.Delete(SettingsLocn.Path & "\" & NewFilename)
+                End If
+                If System.IO.File.Exists(SettingsLocn.Path & "\" & OldFilename) Then
+                    System.IO.File.Move(SettingsLocn.Path & "\" & OldFilename, SettingsLocn.Path & "\" & NewFilename)
+                End If
+            Case FileLocation.Types.Archive
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = SettingsLocn.Path
+                Zip.RenameEntry(OldFilename, NewFilename)
         End Select
     End Sub
 
@@ -2599,6 +4547,95 @@ Public Class Project '----------------------------------------------------------
 
     End Sub
 
+    Public Sub ReadXmlProjectFile(ByVal FileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
+        'Read the XML File from the Project location.
+
+        Select Case Type
+            Case Types.None
+                'Read the Project document in the directory at ProjectLocn.Path
+                If System.IO.File.Exists(Path & "\" & FileName) Then
+                    XmlDoc = XDocument.Load(Path & "\" & FileName)
+                Else
+                    XmlDoc = Nothing
+                End If
+
+            Case Types.Directory
+                'Read the Project document in the directory at ProjectLocn.Path
+                If System.IO.File.Exists(Path & "\" & FileName) Then
+                    XmlDoc = XDocument.Load(Path & "\" & FileName)
+                Else
+                    XmlDoc = Nothing
+                End If
+
+            Case Types.Archive
+                'Read the Project document in the archive at ProjectLocn.Path
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = Path
+                If Zip.EntryExists(FileName) Then
+                    'Debugging:
+                    'Debug.Print(Zip.GetText(SettingsName))
+                    'Dim Temp As String = Zip.GetText(FileName)
+
+                    XmlDoc = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText(FileName))
+                Else
+                    XmlDoc = Nothing
+                End If
+                Zip = Nothing
+
+            Case Types.Hybrid
+                'Read the Project document in the directory at ProjectLocn.Path
+                If System.IO.File.Exists(Path & "\" & FileName) Then
+                    XmlDoc = XDocument.Load(Path & "\" & FileName)
+                Else
+                    XmlDoc = Nothing
+                End If
+
+        End Select
+
+    End Sub
+
+    'Public Sub ReadXmlProjectFile_Old(ByVal FileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
+    '    'Read the XML File from the Project location.
+
+    '    Select Case ProjectLocn.Type
+    '        Case FileLocation.Types.Directory
+    '            'Read the Project document in the directory at ProjectLocn.Path
+    '            If System.IO.File.Exists(ProjectLocn.Path & "\" & FileName) Then
+    '                XmlDoc = XDocument.Load(ProjectLocn.Path & "\" & FileName)
+    '            Else
+    '                XmlDoc = Nothing
+    '            End If
+
+    '        Case FileLocation.Types.Archive
+    '            'Read the Project document in the archive at ProjectLocn.Path
+    '            Dim Zip As New ZipComp
+    '            Zip.ArchivePath = ProjectLocn.Path
+    '            If Zip.EntryExists(FileName) Then
+    '                'Debugging:
+    '                'Debug.Print(Zip.GetText(SettingsName))
+    '                Dim Temp As String = Zip.GetText(FileName)
+
+    '                XmlDoc = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText(FileName))
+
+    '            Else
+    '                XmlDoc = Nothing
+    '            End If
+    '            Zip = Nothing
+    '    End Select
+
+    'End Sub
+
+    'Read and write Data files: -------------------------------------------------------------------------------------
+    'ReadXmlData     - Read data into an XDocument
+    'ReadXmlDocData  - Read data into an XmlDocument
+    'SaveData        - Save data from a Stream into a Data file
+    'SaveXmlData     - Save data from an XDocument
+    'RenameDataFile  - Rename a data file
+    'DeleteData      - Delete a data file
+    'SelectDataFile  - Display a list of data files for selection
+    'GetDataFileList - Returns a list of data files
+    'ReadData        - Read the data in a fil einto a Stream
+
     Public Sub ReadXmlData(ByVal DataFileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
         'Read the XML data from the data location.
 
@@ -2606,7 +4643,12 @@ Public Class Project '----------------------------------------------------------
             Case FileLocation.Types.Directory
                 'Read the Xml data document in the directory at DataLocn.Path
                 If System.IO.File.Exists(DataLocn.Path & "\" & DataFileName) Then
-                    XmlDoc = XDocument.Load(DataLocn.Path & "\" & DataFileName)
+                    Try
+                        XmlDoc = XDocument.Load(DataLocn.Path & "\" & DataFileName)
+                    Catch ex As Exception
+                        RaiseEvent ErrorMessage("Error reading XML file. " & ex.Message & vbCrLf)
+                    End Try
+
                 Else
                     XmlDoc = Nothing
                 End If
@@ -2625,14 +4667,58 @@ Public Class Project '----------------------------------------------------------
 
     End Sub
 
-    Public Sub SaveData(ByVal DataName As String, ByRef Data As String)
-        'Save the data in the data location.
+    Public Sub ReadXmlDocData(ByVal DataFileName As String, ByRef XmlDoc As System.Xml.XmlDocument)
+        'Version of the ReadXmlData that outputs the data into an XmlDocument (instead of and XDocument).
+
+        Select Case DataLocn.Type
+            Case FileLocation.Types.Directory
+                'Read the Xml data document in the directory at DataLocn.Path
+                If System.IO.File.Exists(DataLocn.Path & "\" & DataFileName) Then
+                    'XmlDoc = XDocument.Load(DataLocn.Path & "\" & DataFileName)
+                    XmlDoc.Load(DataLocn.Path & "\" & DataFileName)
+                Else
+                    XmlDoc = Nothing
+                End If
+
+            Case FileLocation.Types.Archive
+                'Read the Xml Ddata document in the archive at DataLocn.Path
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+                If Zip.EntryExists(DataFileName) Then
+                    'XmlDoc = XDocument.Parse(Zip.GetText(DataFileName))
+                    XmlDoc.LoadXml(Zip.GetText(DataFileName))
+                Else
+                    XmlDoc = Nothing
+                End If
+                Zip = Nothing
+        End Select
+
+    End Sub
+
+    Public Sub SaveData(ByVal DataFileName As String, ByRef Stream As IO.Stream)
+        'Save the data in the Stream to a file named DataFileName in the data location.
 
         Select Case DataLocn.Type
             Case FileLocation.Types.Directory
 
-            Case FileLocation.Types.Archive
+                'Dim fileStream As New IO.FileStream(DataLocn.Path & "\" & DataFileName, IO.FileMode.OpenOrCreate) 'THIS RESULTED IN SOME OLD DATA IN THE ORIGINAL FILE REMAINING.
+                Dim fileStream As New IO.FileStream(DataLocn.Path & "\" & DataFileName, IO.FileMode.Create) 'This creates a new file or completely overwrites an existing file.
 
+                If IsNothing(Stream) Then
+                    RaiseEvent ErrorMessage("Project.SaveData error: Stream is Nothing." & vbCrLf)
+                Else
+                    Stream.Position = 0
+                    Dim streamReader As New IO.BinaryReader(Stream)
+                    fileStream.Write(streamReader.ReadBytes(Stream.Length), 0, Stream.Length)
+                End If
+
+                fileStream.Close()
+
+            Case FileLocation.Types.Archive
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+                Stream.Position = 0
+                Zip.AddData(DataFileName, Stream)
         End Select
 
     End Sub
@@ -2640,15 +4726,43 @@ Public Class Project '----------------------------------------------------------
     Public Sub SaveXmlData(ByVal DataFileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
         'Save the XML data in the data location.
 
+        If DataFileName = "" Then
+            RaiseEvent ErrorMessage("DataFileName is blank." & vbCrLf)
+            Exit Sub
+        End If
+
         Select Case DataLocn.Type
             Case FileLocation.Types.Directory
-                'Save the data XML document in the directory at DataLocn.Path
-                XmlDoc.Save(DataLocn.Path & "\" & DataFileName)
+                Try
+                    'Save the data XML document in the directory at DataLocn.Path
+                    XmlDoc.Save(DataLocn.Path & "\" & DataFileName)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage("Error saving XML file. " & ex.Message & vbCrLf)
+                End Try
+
             Case FileLocation.Types.Archive
                 'Save the data XML document in the archive at DataLocn.Path
                 Dim Zip As New ZipComp
                 Zip.ArchivePath = DataLocn.Path
                 Zip.AddText(DataFileName, XmlDoc.ToString)
+        End Select
+    End Sub
+
+    Public Sub RenameDataFile(ByVal OldFilename, ByVal NewFilename)
+        'Rename a data file.
+        Select Case DataLocn.Type
+            Case FileLocation.Types.Directory
+                'Remove any file named NewFileName:
+                If System.IO.File.Exists(DataLocn.Path & "\" & NewFilename) Then
+                    System.IO.File.Delete(DataLocn.Path & "\" & NewFilename)
+                End If
+                If System.IO.File.Exists(DataLocn.Path & "\" & OldFilename) Then
+                    System.IO.File.Move(DataLocn.Path & "\" & OldFilename, DataLocn.Path & "\" & NewFilename)
+                End If
+            Case FileLocation.Types.Archive
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+                Zip.RenameEntry(OldFilename, NewFilename)
         End Select
     End Sub
 
@@ -2667,15 +4781,688 @@ Public Class Project '----------------------------------------------------------
         End Select
     End Sub
 
-    Public Function ReadData(ByVal DataName) As String
-        'Read the data from the data location.
+    Public Function SelectDataFile(ByVal DataFileType As String, ByVal DataFileExtension As String) As String
+        'Displays a list of data files with the specified extension for selection.
+        'The DataFileType string is used to display a description of the type of data file.
+        'Eg: SelectDataFile("Text files", "txt")
+
+        'Select Case Type
+        Select Case DataLocn.Type
+            'Case Types.Archive
+            Case FileLocation.Types.Archive
+                'The data files are stored in an archive file.
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+                'Zip.SelectFile()
+                'Zip.frm
+                'Dim OpenFileDialog As New Zip.frmZipSelectFile
+                Return Zip.SelectFileModal(DataFileExtension)
+
+                'Case Types.Directory
+            Case FileLocation.Types.Directory
+                'The data files are stored in a directory.
+                Dim OpenFileDialog As New System.Windows.Forms.OpenFileDialog
+                OpenFileDialog.InitialDirectory = DataLocn.Path
+                OpenFileDialog.Filter = DataFileType & " | *." & DataFileExtension
+                If OpenFileDialog.ShowDialog = Windows.Forms.DialogResult.OK Then
+                    Return System.IO.Path.GetFileName(OpenFileDialog.FileName)
+                Else
+                    Return ""
+                End If
+
+                'Case Types.None
+                '    'The data files are stored in the application directory.
+                '    Dim OpenFileDialog As New System.Windows.Forms.OpenFileDialog
+                '    OpenFileDialog.InitialDirectory = DataLocn.Path
+                '    OpenFileDialog.Filter = DataFileType & " | *." & DataFileExtension
+                '    If OpenFileDialog.ShowDialog = Windows.Forms.DialogResult.OK Then
+                '        Return System.IO.Path.GetFileName(OpenFileDialog.FileName)
+                '    Else
+                '        Return ""
+                '    End If
+
+                'Case Types.Hybrid
+
+        End Select
+
+    End Function
+
+    Public Function GetDataFileList(ByVal DataFileExtension As String, ByRef FilenameList As ArrayList)
+        'Returns a list of data files with the specified extension.
+
+        'Select Case Type
+        Select Case DataLocn.Type
+            'Case Types.Archive
+            Case FileLocation.Types.Archive
+                'The data files are stored in an archive file.
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+
+                'Case Types.Directory
+            Case FileLocation.Types.Directory
+                'The data files are stored in a directory.
+                FilenameList.Clear()
+                For Each foundFile As String In IO.Directory.GetFiles(DataLocn.Path, "*." & DataFileExtension)
+                    'FilenameList.Add(foundFile)
+                    FilenameList.Add(IO.Path.GetFileName(foundFile))
+                Next
+
+                'Case Types.None
+                '    'The data files are stored in the application directory.
+                '    FilenameList.Clear()
+                '    For Each foundFile As String In IO.Directory.GetFiles(DataLocn.Path, "*." & DataFileExtension)
+                '        'FilenameList.Add(foundFile)
+                '        FilenameList.Add(IO.Path.GetFileName(foundFile))
+                '    Next
+
+        End Select
+
+    End Function
+
+    'Public Function ReadData(ByVal DataName) As String
+    '    'Read the data from the data location.
+
+    '    Select Case DataLocn.Type
+    '        Case FileLocation.Types.Directory
+
+    '        Case FileLocation.Types.Archive
+
+    '    End Select
+
+    'End Function
+
+    Public Sub ReadData(ByVal DataFileName As String, ByRef Stream As IO.Stream)
+        'Read the data in the file named DataFileName in the data location into the Stream.
 
         Select Case DataLocn.Type
             Case FileLocation.Types.Directory
+                Try
+                    Dim fileStream As New IO.FileStream(DataLocn.Path & "\" & DataFileName, System.IO.FileMode.Open)
+
+                    Dim myData(fileStream.Length) As Byte
+
+                    fileStream.Read(myData, 0, fileStream.Length) 'Additional information: Buffer cannot be null.
+
+                    Dim streamWriter As New IO.BinaryWriter(Stream)
+                    streamWriter.Write(myData)
+
+                    fileStream.Close()
+
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage(ex.Message & vbCrLf)
+                End Try
+
+            Case FileLocation.Types.Archive
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+                Stream = Zip.GetData(DataFileName)
+
+        End Select
+
+    End Sub
+
+    'Read and write System files: -------------------------------------------------------------------------------------
+    'ReadXmlSystemFile     - Read data into an XDocument
+    'ReadXmlDocSystemFile  - Read data into an XmlDocument
+    'SaveSystemFile        - Save data from a Stream into a Data file
+    'SaveXmlSystemFile     - Save data from an XDocument
+    'RenameSystemFile      - Rename a data file
+    'DeleteSystemFile      - Delete a data file
+    'SelectSystemFile      - Display a list of data files for selection
+    'GetSystemFileList     - Returns a list of data files
+    'ReadSystemFile        - Read the data in a file into a Stream
+
+    Public Sub ReadXmlSystemFile(ByVal SystemFileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
+        'Read the XML data from the system location.
+
+        Select Case SystemLocn.Type
+            Case FileLocation.Types.Directory
+                'Read the Xml data document in the directory at SystemLocn.Path
+                If System.IO.File.Exists(SystemLocn.Path & "\" & SystemFileName) Then
+                    Try
+                        XmlDoc = XDocument.Load(SystemLocn.Path & "\" & SystemFileName)
+                    Catch ex As Exception
+                        RaiseEvent ErrorMessage("Error reading XML file. " & ex.Message & vbCrLf)
+                    End Try
+
+                Else
+                    XmlDoc = Nothing
+                End If
+
+            Case FileLocation.Types.Archive
+                'Read the Xml data document in the archive at SystemLocn.Path
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = SystemLocn.Path
+                If Zip.EntryExists(SystemFileName) Then
+                    XmlDoc = XDocument.Parse(Zip.GetText(SystemFileName))
+                Else
+                    XmlDoc = Nothing
+                End If
+                Zip = Nothing
+        End Select
+
+    End Sub
+
+    Public Sub ReadXmlDocSystemFile(ByVal SystemFileName As String, ByRef XmlDoc As System.Xml.XmlDocument)
+        'Version of the ReadXmlSystemFile that outputs the data into an XmlDocument (instead of and XDocument).
+
+        Select Case SystemLocn.Type
+            Case FileLocation.Types.Directory
+                'Read the Xml data document in the directory at SystemLocn.Path
+                If System.IO.File.Exists(SystemLocn.Path & "\" & SystemFileName) Then
+                    'XmlDoc = XDocument.Load(DataLocn.Path & "\" & DataFileName)
+                    XmlDoc.Load(SystemLocn.Path & "\" & SystemFileName)
+                Else
+                    XmlDoc = Nothing
+                End If
+
+            Case FileLocation.Types.Archive
+                'Read the Xml data document in the archive at SystemLocn.Path
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = SystemLocn.Path
+                If Zip.EntryExists(SystemFileName) Then
+                    'XmlDoc = XDocument.Parse(Zip.GetText(DataFileName))
+                    XmlDoc.LoadXml(Zip.GetText(SystemFileName))
+                Else
+                    XmlDoc = Nothing
+                End If
+                Zip = Nothing
+        End Select
+
+    End Sub
+
+    Public Sub SaveSystemFile(ByVal SystemFileName As String, ByRef Stream As IO.Stream)
+        'Save the data in the Stream to a file named SystemFileName in the System location.
+
+        Select Case SystemLocn.Type
+            Case FileLocation.Types.Directory
+
+                'Dim fileStream As New IO.FileStream(DataLocn.Path & "\" & DataFileName, IO.FileMode.OpenOrCreate) 'THIS RESULTED IN SOME OLD DATA IN THE ORIGINAL FILE REMAINING.
+                Dim fileStream As New IO.FileStream(SystemLocn.Path & "\" & SystemFileName, IO.FileMode.Create) 'This creates a new file or completely overwrites an existing file.
+
+                If IsNothing(Stream) Then
+                    RaiseEvent ErrorMessage("Project.SaveSystemFile error: Stream is Nothing." & vbCrLf)
+                Else
+                    Stream.Position = 0
+                    Dim streamReader As New IO.BinaryReader(Stream)
+                    fileStream.Write(streamReader.ReadBytes(Stream.Length), 0, Stream.Length)
+                End If
+
+                fileStream.Close()
 
             Case FileLocation.Types.Archive
 
         End Select
+
+    End Sub
+
+    Public Sub SaveXmlSystemFile(ByVal SystemFileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
+        'Save the XML data in the System location.
+
+        If SystemFileName = "" Then
+            RaiseEvent ErrorMessage("SystemFileName is blank." & vbCrLf)
+            Exit Sub
+        End If
+
+        Select Case SystemLocn.Type
+            Case FileLocation.Types.Directory
+                Try
+                    'Save the data XML document in the directory at DataLocn.Path
+                    XmlDoc.Save(SystemLocn.Path & "\" & SystemFileName)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage("Error saving XML file. " & ex.Message & vbCrLf)
+                End Try
+
+            Case FileLocation.Types.Archive
+                'Save the data XML document in the archive at SystemLocn.Path
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = SystemLocn.Path
+                Zip.AddText(SystemFileName, XmlDoc.ToString)
+        End Select
+    End Sub
+
+    Public Sub RenameSystemFile(ByVal OldFilename, ByVal NewFilename)
+        'Rename a System file.
+        Select Case SystemLocn.Type
+            Case FileLocation.Types.Directory
+                'Remove any file named NewFileName:
+                If System.IO.File.Exists(SystemLocn.Path & "\" & NewFilename) Then
+                    System.IO.File.Delete(SystemLocn.Path & "\" & NewFilename)
+                End If
+                If System.IO.File.Exists(SystemLocn.Path & "\" & OldFilename) Then
+                    System.IO.File.Move(SystemLocn.Path & "\" & OldFilename, SystemLocn.Path & "\" & NewFilename)
+                End If
+            Case FileLocation.Types.Archive
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = SystemLocn.Path
+                Zip.RenameEntry(OldFilename, NewFilename)
+        End Select
+    End Sub
+
+    Public Sub DeleteSystemFile(ByVal SystemFileName As String)
+        Select Case SystemLocn.Type
+            Case FileLocation.Types.Directory
+                Try
+                    System.IO.File.Delete(SystemLocn.Path & "\" & SystemFileName)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage("Error deleting System file: " & SystemFileName & "  Error message: " & ex.Message & vbCrLf)
+                End Try
+            Case FileLocation.Types.Archive
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = SystemLocn.Path
+                Zip.RemoveEntry(SystemFileName)
+        End Select
+    End Sub
+
+    Public Function SelectSystemFile(ByVal SystemFileType As String, ByVal SystemFileExtension As String) As String
+        'Displays a list of System files with the specified extension for selection.
+        'The SystemFileType string is used to display a description of the type of System file.
+        'Eg: SelectSystemFile("Text files", "txt")
+
+        'Select Case Type
+        Select Case SystemLocn.Type
+            'Case Types.Archive
+            Case FileLocation.Types.Archive
+                'The data files are stored in an archive file.
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = SystemLocn.Path
+                'Zip.SelectFile()
+                'Zip.frm
+                'Dim OpenFileDialog As New Zip.frmZipSelectFile
+                Return Zip.SelectFileModal(SystemFileExtension)
+
+                'Case Types.Directory
+            Case FileLocation.Types.Directory
+                'The data files are stored in a directory.
+                Dim OpenFileDialog As New System.Windows.Forms.OpenFileDialog
+                OpenFileDialog.InitialDirectory = SystemLocn.Path
+                OpenFileDialog.Filter = SystemFileType & " | *." & SystemFileExtension
+                If OpenFileDialog.ShowDialog = Windows.Forms.DialogResult.OK Then
+                    Return System.IO.Path.GetFileName(OpenFileDialog.FileName)
+                Else
+                    Return ""
+                End If
+
+                'Case Types.None
+                '    'The data files are stored in the application directory.
+                '    Dim OpenFileDialog As New System.Windows.Forms.OpenFileDialog
+                '    OpenFileDialog.InitialDirectory = DataLocn.Path
+                '    OpenFileDialog.Filter = DataFileType & " | *." & DataFileExtension
+                '    If OpenFileDialog.ShowDialog = Windows.Forms.DialogResult.OK Then
+                '        Return System.IO.Path.GetFileName(OpenFileDialog.FileName)
+                '    Else
+                '        Return ""
+                '    End If
+
+                'Case Types.Hybrid
+
+        End Select
+
+    End Function
+
+    Public Function GetSystemFileList(ByVal DataFileExtension As String, ByRef FilenameList As ArrayList)
+        'Returns a list of data files with the specified extension.
+
+        'Select Case Type
+        Select Case SystemLocn.Type
+            'Case Types.Archive
+            Case FileLocation.Types.Archive
+                'The data files are stored in an archive file.
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+
+                'Case Types.Directory
+            Case FileLocation.Types.Directory
+                'The data files are stored in a directory.
+                FilenameList.Clear()
+                For Each foundFile As String In IO.Directory.GetFiles(DataLocn.Path, "*." & DataFileExtension)
+                    'FilenameList.Add(foundFile)
+                    FilenameList.Add(IO.Path.GetFileName(foundFile))
+                Next
+
+                'Case Types.None
+                '    'The data files are stored in the application directory.
+                '    FilenameList.Clear()
+                '    For Each foundFile As String In IO.Directory.GetFiles(DataLocn.Path, "*." & DataFileExtension)
+                '        'FilenameList.Add(foundFile)
+                '        FilenameList.Add(IO.Path.GetFileName(foundFile))
+                '    Next
+
+        End Select
+
+    End Function
+
+    Public Sub ReadSystemFile(ByVal SystemFileName As String, ByRef Stream As IO.Stream)
+        'Read the data in the file named SystemFileName in the System location into the Stream.
+
+        Select Case SystemLocn.Type
+            Case FileLocation.Types.Directory
+                Try
+                    Dim fileStream As New IO.FileStream(SystemLocn.Path & "\" & SystemFileName, System.IO.FileMode.Open)
+
+                    'Dim myData As New Byte()
+                    Dim myData(fileStream.Length) As Byte
+
+                    fileStream.Read(myData, 0, fileStream.Length) 'Additional information: Buffer cannot be null.
+
+                    Dim streamWriter As New IO.BinaryWriter(Stream)
+                    streamWriter.Write(myData)
+
+                    fileStream.Close()
+
+                    'fileStream3.Read(Stream, 0, fileStream3.Length)
+
+                    'fileStream2.Read(Stream, 0, fileStream.Length)
+
+
+
+                    'Dim fileStream As New IO.FileStream(DataLocn.Path & "\" & DataFileName, IO.FileMode.Open)
+
+                    'Dim streamWriter As New IO.BinaryWriter(Stream)
+
+                    'Dim myData As Byte()
+
+                    'fileStream.Read(myData, 0, fileStream.Length) 'ERROR: Additional information: Buffer cannot be null.
+                    'streamWriter.Write(myData)
+
+                    'fileStream.Read(Stream, 0, fileStream.Length)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage(ex.Message & vbCrLf)
+                End Try
+
+            Case FileLocation.Types.Archive
+
+        End Select
+
+    End Sub
+
+    'Read and write Project files: -------------------------------------------------------------------------------------
+    'ReadXmlProjectFile     - Read data into an XDocument
+    'ReadXmlDocProjectFile  - Read data into an XmlDocument
+    'SaveProjectFile        - Save data from a Stream into a Data file
+    'SaveXmlProjectFile     - Save data from an XDocument
+    'RenameProjectFile      - Rename a data file
+    'DeleteProjectFile      - Delete a data file
+    'SelectProjectFile      - Display a list of data files for selection
+    'GetProjectFileList     - Returns a list of data files
+    'ReadProjectFile        - Read the data in a file into a Stream
+
+    Public Sub SaveXmlProjectFile(ByVal ProjectFileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
+        'Save the XML data in the Project location.
+
+        If ProjectFileName = "" Then
+            RaiseEvent ErrorMessage("ProjectFileName is blank." & vbCrLf)
+            Exit Sub
+        End If
+
+        'Select Case SystemLocn.Type 'As FileLocation.Types
+        Select Case LocnType 'As FileLocation.Types
+            Case FileLocation.Types.Directory
+                Try
+                    'Save the XML document in the directory at Path
+                    XmlDoc.Save(Path & "\" & ProjectFileName)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage("Error saving XML file. " & ex.Message & vbCrLf)
+                End Try
+
+            Case FileLocation.Types.Archive
+                'Save the data XML document in the archive at Path
+                Dim Zip As New ZipComp
+                'Zip.ArchivePath = SystemLocn.Path
+                Zip.ArchivePath = Path
+                Zip.AddText(ProjectFileName, XmlDoc.ToString)
+        End Select
+    End Sub
+
+
+    Public Function OpenProject(ByVal ProjectName As String) As Boolean
+        'Open the project with the name ProjectName.
+
+        Dim ProjectFound As Boolean = False
+
+        Dim ProjectListXDoc As System.Xml.Linq.XDocument
+        Dim ProjectListFound As Boolean = False
+
+        If System.IO.File.Exists(ApplicationDir & "\Project_List_ADVL_2.xml") Then 'The latest ADVL_2 format version of the Project 
+            'Dim ProjectListXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\Project_List_ADVL_2.xml")
+            'ReadProjectListAdvl_2(ProjectListXDoc)
+            ProjectListXDoc = XDocument.Load(ApplicationDir & "\Project_List_ADVL_2.xml")
+            ProjectListFound = True
+
+        ElseIf System.IO.File.Exists(ApplicationDir & "\Project_List.xml") Then 'The original ADVL_1 format version of the Project 
+            RaiseEvent Message("Converting Project_List.xml to Project_List_ADVL_2.xml." & vbCrLf)
+            'Convert the file to the latest ADVL_2 format:
+            Dim Conversion As New ADVL_Utilities_Library_1.FormatConvert.ProjectListFileConversion
+            Conversion.DirectoryPath = ApplicationDir
+            Conversion.InputFileName = "Project_List.xml"
+            Conversion.InputFormatCode = FormatConvert.ProjectListFileConversion.FormatCodes.ADVL_1
+            Conversion.OutputFormatCode = FormatConvert.ProjectListFileConversion.FormatCodes.ADVL_2
+            Conversion.Convert()
+            If System.IO.File.Exists(ApplicationDir & "\Project_List_ADVL_2.xml") Then
+                'ReadProjectList() 'Try ReadProjectList again. This time Project_List_ADVL_2.xml should be found
+                ProjectListXDoc = XDocument.Load(ApplicationDir & "\Project_List_ADVL_2.xml")
+                ProjectListFound = True
+            Else
+                RaiseEvent ErrorMessage("Error converting Project_List.xml to Project_List_ADVL_2.xml." & vbCrLf)
+                ProjectListFound = False
+            End If
+        Else
+            RaiseEvent ErrorMessage("No versions of the Project List were found." & vbCrLf)
+            ProjectListFound = False
+        End If
+
+        If ProjectListFound = True Then
+            Dim Projects = From item In ProjectListXDoc.<ProjectList>.<Project>
+
+            For Each item In Projects
+                If item.<Name>.Value = ProjectName Then
+                    'Project name found in the project list.
+
+                    'Unlock the current project:
+                    If ProjectLocked() Then
+                        UnlockProject()
+                    End If
+
+                    'Get the project settings.
+                    'Only need to read the SettingsLocnType and SettingsLocnPath and then run ReadProjectInfoFile()
+                    'ReadProjectInfoFile reads all the other project settings.
+                    'SettingsLocn.Path = item.<SettingsLocationPath>.Value
+                    'ProjectLocn.Path = item.<Path>.Value
+                    Path = item.<Path>.Value
+                    'Select Case item.<SettingsLocationType>.Value
+                    Select Case item.<Type>.Value
+                        Case "Directory"
+                            'SettingsLocn.Type = FileLocation.Types.Directory
+                            Type = Types.Directory
+                            'Usage.SaveLocn.Path = SettingsLocn.Path
+                            Usage.SaveLocn.Path = Path
+                        Case "Archive"
+                            'SettingsLocn.Type = FileLocation.Types.Archive
+                            Type = Types.Archive
+                            'Usage.SaveLocn.Path = SettingsLocn.Path
+                            Usage.SaveLocn.Path = Path
+                        Case "None"
+                            Type = Types.None
+                            Usage.SaveLocn.Path = Path
+                        Case "Hybrid"
+                            Type = Types.Hybrid
+                            Usage.SaveLocn.Path = Path
+                    End Select
+                    ReadProjectInfoFile()
+                    'LockProject() 'Lock the project. NOTE: THIS IS LOCKED LATER!
+                    ProjectFound = True
+                    Exit For
+                End If
+            Next
+            If ProjectFound = False And ProjectName = "Default" Then
+                'The Default project is contained in the directory "Default_Project" in the Application Directory.
+                If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
+                    'Default project directory exists.
+                    'SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                    'SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
+                    'ProjectLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                    'Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                    Type = Types.Directory
+                    'ProjectLocn.Path = ApplicationDir & "\" & "Default_Project"
+                    Path = ApplicationDir & "\" & "Default_Project"
+
+                    'Check if the Default project is locked:
+                    If ProjectLocked() Then
+                        RaiseEvent ErrorMessage("The Default project is locked." & vbCrLf)
+                        ProjectFound = False
+                    Else
+                        'Check if the settings file exists:
+                        If ProjectFileExists("Project_Info_ADVL_2.xml") Then 'The Project Information file exists (ADVL_2 format version).
+                            ReadProjectInfoFile()
+                            ProjectFound = True
+                        ElseIf ProjectFileExists("ADVL_Project_Info.xml") Then ''The original ADVL_1 format version of the Project Information file exists.
+                            ReadProjectInfoFile() 'This will automatically convert the ADVL_Project_Info.xml file to the Project_Info_ADVL_2.xml version.
+                            ProjectFound = True
+                        Else
+                            'The project directory is missing the settings file!
+                            ProjectFound = False
+                            RaiseEvent ErrorMessage("The Default project directory was found but it is missing the information file." & vbCrLf)
+                        End If
+                        'xxx
+                        'If SettingsFileExists("ADVL_Project_Info.xml") Then
+                        '    ReadProjectInfoFile()
+                        '    ProjectFound = True
+                        'Else
+                        '    'The project directory is missing the settings file!
+                        '    ProjectFound = False
+                        '    RaiseEvent ErrorMessage("The Default project is not in the Project list." & vbCrLf)
+                        '    RaiseEvent ErrorMessage("The Default project directory was found but it is missing the settings file." & vbCrLf)
+                        'End If
+                    End If
+                Else
+                    'Create the Default project.
+                    CreateDefaultProject() 'This also adds the project to the project list.
+                    Type = Types.Directory
+                    Path = ApplicationDir & "\" & "Default_Project"
+                    Usage.SaveLocn.Path = SettingsLocn.Path
+                    ReadProjectInfoFile()
+                    ProjectFound = True
+                End If
+            End If
+            Return ProjectFound
+        Else
+            RaiseEvent ErrorMessage("There is no project list." & vbCrLf)
+            Return False
+        End If
+
+
+        'ORIGINAL CODE BELOW:
+        'If System.IO.File.Exists(ApplicationDir & "\Project_List.xml") Then 'Read the Project List.
+        '    Dim ProjectListXDoc As System.Xml.Linq.XDocument
+        '    ProjectListXDoc = XDocument.Load(ApplicationDir & "\Project_List.xml")
+
+        '    Dim Projects = From item In ProjectListXDoc.<ProjectList>.<Project>
+
+        '    For Each item In Projects
+        '        If item.<Name>.Value = ProjectName Then
+        '            'Project name found in the project list.
+
+        '            'Unlock the current project:
+        '            If ProjectLocked() Then
+        '                UnlockProject()
+        '            End If
+
+        '            'Get the project settings.
+        '            'Only need to read the SettingsLocnType and SettingsLocnPath and then run ReadProjectInfoFile()
+        '            'ReadProjectInfoFile reads all the other project settings.
+        '            'SettingsLocn.Path = item.<SettingsLocationPath>.Value
+        '            'ProjectLocn.Path = item.<Path>.Value
+        '            Path = item.<Path>.Value
+        '            'Select Case item.<SettingsLocationType>.Value
+        '            Select Case item.<Type>.Value
+        '                Case "Directory"
+        '                    'SettingsLocn.Type = FileLocation.Types.Directory
+        '                    Type = Types.Directory
+        '                    'Usage.SaveLocn.Path = SettingsLocn.Path
+        '                    Usage.SaveLocn.Path = Path
+        '                Case "Archive"
+        '                    'SettingsLocn.Type = FileLocation.Types.Archive
+        '                    Type = Types.Archive
+        '                    'Usage.SaveLocn.Path = SettingsLocn.Path
+        '                    Usage.SaveLocn.Path = Path
+        '                Case "None"
+        '                    Type = Types.None
+        '                    Usage.SaveLocn.Path = Path
+        '                Case "Hybrid"
+        '                    Type = Types.Hybrid
+        '                    Usage.SaveLocn.Path = Path
+        '            End Select
+        '            ReadProjectInfoFile()
+        '            LockProject() 'Lock the project
+        '            ProjectFound = True
+        '            Exit For
+        '        End If
+        '    Next
+        '    If ProjectFound = False And ProjectName = "Default" Then
+        '        'The Default project is contained in the directory "Default_Project" in the Application Directory.
+        '        If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
+        '            'Default project directory exists.
+        '            'SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+        '            'SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
+        '            'ProjectLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+        '            'Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+        '            Type = Types.Directory
+        '            'ProjectLocn.Path = ApplicationDir & "\" & "Default_Project"
+        '            Path = ApplicationDir & "\" & "Default_Project"
+
+        '            'Check if the Default project is locked:
+        '            If ProjectLocked() Then
+        '                RaiseEvent ErrorMessage("The Default project is locked." & vbCrLf)
+        '                ProjectFound = False
+        '            Else
+        '                'Check if tghe settings file exists:
+        '                If SettingsFileExists("ADVL_Project_Info.xml") Then
+        '                    ReadProjectInfoFile()
+        '                    ProjectFound = True
+        '                Else
+        '                    'The project directory is missing the settings file!
+        '                    ProjectFound = False
+        '                    RaiseEvent ErrorMessage("The Default project is not in the Project list." & vbCrLf)
+        '                    RaiseEvent ErrorMessage("The Default project directory was found but it is missing the settings file." & vbCrLf)
+        '                End If
+        '            End If
+        '        Else
+        '            'Create the Default project.
+        '            CreateDefaultProject() 'This also adds the project to the project list.
+        '            'SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+        '            'SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
+        '            'ProjectLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+        '            'Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+        '            Type = Types.Directory
+        '            'ProjectLocn.Path = ApplicationDir & "\" & "Default_Project"
+        '            Path = ApplicationDir & "\" & "Default_Project"
+        '            Usage.SaveLocn.Path = SettingsLocn.Path
+        '            ReadProjectInfoFile()
+        '            ProjectFound = True
+        '        End If
+        '    End If
+        '    Return ProjectFound
+        'Else
+        '    RaiseEvent ErrorMessage("There is no project list." & vbCrLf)
+        '    Return False
+        'End If
+
+    End Function
+
+    Public Function OpenProjectPath(ByVal ProjectPath As String) As Boolean
+        'Open the project at the location ProjectPath.
+
+        'Dim ProjectFound As Boolean = False
+
+        'If ProjectPath.EndsWith(".AdvlProject") Then 'Archive project.
+
+        'Else 'Default, Directory or Hybrid project. 
+
+        'End If
+
+        Path = ProjectPath
+        Return ReadProjectInfoFileAtPath()
+
 
     End Function
 
@@ -2684,7 +5471,11 @@ Public Class Project '----------------------------------------------------------
         If IsNothing(ProjectForm) Then
             ProjectForm = New frmProject
             ProjectForm.ApplicationName = ApplicationName
-            ProjectForm.SettingsLocn = SettingsLocn
+            'ProjectForm.SettingsLocn = SettingsLocn
+            'ProjectForm.ProjectLocn = ProjectLocn
+            'ProjectForm.ProjectLocn.Type = Type
+            ProjectForm.ProjectLocn.Type = LocnType
+            ProjectForm.ProjectLocn.Path = Path
             ProjectForm.ApplicationDir = ApplicationDir
             ProjectForm.Show()
             ProjectForm.RestoreFormSettings()
@@ -2693,6 +5484,170 @@ Public Class Project '----------------------------------------------------------
             ProjectForm.BringToFront()
         End If
     End Sub
+
+    Public Sub ShowParameters() 'Open the ProjectParams Form an display the Project Parameters.
+        'Show the Project Params form:
+        If IsNothing(ProjectParamsForm) Then
+            ProjectParamsForm = New frmProjectParams
+            ProjectParamsForm.ApplicationName = ApplicationName
+            ProjectParamsForm.ProjectLocn.Type = LocnType
+            ProjectParamsForm.ProjectLocn.Path = Path
+            'ProjectParamsForm.ApplicationDir = ApplicationDir
+
+            'ProjectParamsForm.ParentProjectLocn.Type = FileLocation.Types.Directory
+            ProjectParamsForm.ParentProjectLocn.Type = Project.Types.Directory
+            ProjectParamsForm.ParentProjectLocn.Path = ParentProjectPath
+
+            ProjectParamsForm.Show()
+            ProjectParamsForm.RestoreFormSettings()
+            'UPDATED 3Feb19:
+            'ProjectParamsForm.ReadProjectParameters()
+            ProjectParamsForm.Parameter = Parameter
+            ProjectParamsForm.ParentParameter = ParentParameter
+            ProjectParamsForm.ShowProjectParameters()
+            ProjectParamsForm.DataGridView1.AutoResizeColumns()
+        Else
+            ProjectParamsForm.Show()
+            ProjectParamsForm.BringToFront()
+            'UPDATED 3Feb19:
+            'ProjectParamsForm.ReadProjectParameters()
+            ProjectParamsForm.ShowProjectParameters()
+            ProjectParamsForm.DataGridView1.AutoResizeColumns()
+        End If
+
+    End Sub
+
+    Public Sub SaveParameters()
+        'Save the Project Parameters in the Parameter dictionary in the Project_Params_ADVL_2.xml file.
+
+        Dim ProjectParamsXDoc = <?xml version="1.0" encoding="utf-8"?>
+                                <!---->
+                                <!--Project Parameter File-->
+                                <!---->
+                                <ProjectParameterList>
+                                    <%= From item In Parameter
+                                        Select
+                                            <Parameter>
+                                                <Name><%= item.Key %></Name>
+                                                <Value><%= item.Value.Value %></Value>
+                                                <Description><%= item.Value.Description %></Description>
+                                            </Parameter>
+                                    %>
+                                </ProjectParameterList>
+
+        '<%= From item In ProjectParam
+
+        SaveXmlProjectFile("Project_Params_ADVL_2.xml", ProjectParamsXDoc)
+
+    End Sub
+
+    Public Sub ReadParameters()
+        'Read the Project Parameters from the Project_Params_ADVL_2.xml file into the Parameter dictionary.
+
+        If ProjectFileExists("Project_Params_ADVL_2.xml") Then  'The Project Parameter file exists (ADVL_2 format version).
+            Dim ProjectParamsXDoc As System.Xml.Linq.XDocument
+            'ReadXmlProjectFile("Project_Info_ADVL_2.xml", ProjectParamsXDoc)
+            ReadXmlProjectFile("Project_Params_ADVL_2.xml", ProjectParamsXDoc)
+
+            Dim Params = From item In ProjectParamsXDoc.<ProjectParameterList>.<Parameter>
+            Dim Name As String
+            Parameter.Clear()
+
+            For Each item In Params
+                Name = item.<Name>.Value
+                Parameter.Add(Name, New ParamInfo)
+                Parameter(Name).Value = item.<Value>.Value
+                Parameter(Name).Description = item.<Description>.Value
+                'RaiseEvent Message("Parameter read: " & Name & vbCrLf)
+                'Debug.Print("Parameter read: " & Name)
+            Next
+        End If
+    End Sub
+
+    Public Sub ReadParentParameters()
+        'Read the Parent Project Parameters into the ParentParameter dictionary.
+
+        'ParentProjectPath contains the directory path of the parent project.
+        If System.IO.File.Exists(ParentProjectPath & "\Project_Params_ADVL_2.xml") Then
+            Dim ParentProjectParamsXDoc As System.Xml.Linq.XDocument
+
+            ParentProjectParamsXDoc = XDocument.Load(ParentProjectPath & "\Project_Params_ADVL_2.xml")
+
+            Dim Params = From item In ParentProjectParamsXDoc.<ProjectParameterList>.<Parameter>
+            Dim Name As String
+            ParentParameter.Clear()
+
+            For Each item In Params
+                Name = item.<Name>.Value
+                ParentParameter.Add(Name, New ParamInfo)
+                ParentParameter(Name).Value = item.<Value>.Value
+                ParentParameter(Name).Description = item.<Description>.Value
+            Next
+
+        Else
+            'Parent Project Parameter file not found.
+        End If
+
+    End Sub
+
+    Public Sub AddParameter(ByVal Name As String, ByVal Value As String, ByVal Description As String)
+        'Add a parameter to the ProjectParam dictionary.
+
+        'If ProjectParam.ContainsKey(Name) Then
+        If Parameter.ContainsKey(Name) Then
+            Parameter(Name).Value = Value
+            Parameter(Name).Description = Description
+        Else
+            Parameter.Add(Name, New ParamInfo)
+            Parameter(Name).Value = Value
+            Parameter(Name).Description = Description
+        End If
+
+    End Sub
+
+    Public Sub AddParameter(ByVal Name As String, ByVal Value As String)
+        'Version of the AddParameter method that does not specify a description.
+        'This can be used to update the value of an existing parameter.
+
+        'If ProjectParam.ContainsKey(Name) Then
+        If Parameter.ContainsKey(Name) Then
+            Parameter(Name).Value = Value
+        Else
+            Parameter.Add(Name, New ParamInfo)
+            Parameter(Name).Value = Value
+        End If
+
+    End Sub
+
+    Public Sub RemoveParameter(ByVal Name As String)
+        'Remove a parameter to the ProjectParam dictionary.
+        If Parameter.ContainsKey(Name) Then
+            Parameter.Remove(Name)
+        Else
+            'Parameter dictionary does not contain the Name Key.
+        End If
+
+    End Sub
+
+    Public Function ParameterExists(ByVal Name As String) As Boolean
+        'True if a Parameter with the specified Name exists.
+        Return Parameter.ContainsKey(Name)
+    End Function
+
+    Public Function GetParameter(ByVal Name As String) As String
+        'Return the parameter value with the specified name.
+        'If there is not parameter with that name, return ""
+        If ParameterExists(Name) Then
+            Return Parameter(Name).Value
+        Else
+            Return ""
+        End If
+    End Function
+
+    Public Function ParentParameterExists(ByVal Name As String) As Boolean
+        'True if a Parent Parameter with the specified Name exists.
+        Return ParentParameter.ContainsKey(Name)
+    End Function
 
     'Private Sub ProjectForm_ErrorMessage(Message As String) Handles ProjectForm.ErrorMessage
     Private Sub ProjectForm_ErrorMessage(Msg As String) Handles ProjectForm.ErrorMessage
@@ -2708,12 +5663,20 @@ Public Class Project '----------------------------------------------------------
         ProjectForm = Nothing
     End Sub
 
+    Private Sub ProjectParamsForm_FormClosed(sender As Object, e As FormClosedEventArgs) Handles ProjectParamsForm.FormClosed
+        ProjectParamsForm = Nothing
+    End Sub
+
     Private Sub ProjectForm_ProjectSelected(ByRef ProjectSummary As ProjectSummary) Handles ProjectForm.ProjectSelected
         'A project has been selected.
         'RaiseEvent ProjectChanging()
         RaiseEvent Closing() 'This event indicates that the current project is closing.
-        SettingsLocn.Path = ProjectSummary.SettingsLocnPath
-        SettingsLocn.Type = ProjectSummary.SettingsLocnType
+        'SettingsLocn.Path = ProjectSummary.SettingsLocnPath 'NOT USED = REPLACED BY PROJECTLOCATION.PATH
+        'SettingsLocn.Type = ProjectSummary.SettingsLocnType 'NOT USED = REPLACED BY PROJECTLOCATION.TYPE
+        'ProjectLocn.Type = ProjectSummary.Type
+        Type = ProjectSummary.Type
+        'ProjectLocn.Path = ProjectSummary.Path
+        Path = ProjectSummary.Path
         ReadProjectInfoFile()
         'RaiseEvent ProjectSelected()
         RaiseEvent Selected()
@@ -2724,100 +5687,173 @@ Public Class Project '----------------------------------------------------------
         'Create the default project.
         If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
             'The default project directory already exists.
-
+            'Add the Default project to the project list if it is not already present.
+            AddDefaultProjectToList()
         Else
             System.IO.Directory.CreateDirectory(ApplicationDir & "\" & "Default_Project")
 
             'Set the project properties --------------------------------------------------------------
             Name = "Default"
-            'Type = Types.Directory
             Type = Types.None
+            Path = ApplicationDir & "\" & "Default_Project"
+            'Type = Types.Directory
+
             Description = "Default project. Data and settings are stored in the Application Directory."
+            CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss") 'ADDED 22Aug18
+
+            'Generate the Project ID:
+            'Dim IDString As String = Name & " " & CreationDate
+            Dim IDString As String = Name & " " & Format(CreationDate, "d-MMM-yyyy H:mm:ss")
+            ID = IDString.GetHashCode
+
+            ''Host Project information code added 22Aug18
+            'HostProjectName = ""
+            'HostProjectDirectoryName = ""
+            'HostProjectCreationDate = "1-Jan-2000 12:00:00"
+            'HostProjectID = ""
+
+            'Parent Project information code added 24Sep18
+            ParentProjectName = ""
+            ParentProjectDirectoryName = ""
+            ParentProjectCreationDate = "1-Jan-2000 12:00:00" 'Use this as a default blank value.
+            ParentProjectID = ""
+
             Author.Name = ""
             Author.Description = ""
             Author.Contact = ""
             Type = ADVL_Utilities_Library_1.Project.Types.None
             'Project.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")
             'Project.LastUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
+            SettingsRelLocn.Type = FileLocation.Types.Directory
+            SettingsRelLocn.Path = ""
             SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
             SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
+            DataRelLocn.Type = FileLocation.Types.Directory
+            DataRelLocn.Path = ""
             DataLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
             DataLocn.Path = ApplicationDir & "\" & "Default_Project"
+
+            'Added 3Nov18:
+            SystemRelLocn.Type = FileLocation.Types.Directory
+            SystemRelLocn.Path = ""
+            SystemLocn.Type = FileLocation.Types.Directory
+            SystemLocn.Path = ApplicationDir & "\" & "Default_Project"
+
             Usage.SaveLocn.Type = FileLocation.Types.Directory
             Usage.SaveLocn.Path = ApplicationDir & "\" & "Default_Project"
             Usage.FirstUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
+
+            'Added 3Nov18:
+            Usage.LastUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
+
             Usage.StartTime = Format(Now, "d-MMM-yyyy H:mm:ss")
             Usage.SaveUsageInfo()
 
             'Set the ApplicationInfo properties ------------------------------------------------------
             'Check if the Application Info file exists:
-            If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml") Then
+            'If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml") Then
+            If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info_ADVL_2.xml") Then
                 'Read the Application Information:
-                Dim ApplicationInfo As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\Application_Info.xml")
+                'Dim ApplicationInfo As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\Application_Info.xml")
+                Dim ApplicationInfo As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\Application_Info_ADVL_2.xml")
 
                 If ApplicationInfo.<Application>.<Name>.Value = Nothing Then
-                    ApplicationSummary.Name = ""
+                    'ApplicationSummary.Name = ""
+                    'HostApplication.Name = ""
+                    Application.Name = ""
                 Else
-                    ApplicationSummary.Name = ApplicationInfo.<Application>.<Name>.Value
+                    'HostApplication.Name = ApplicationInfo.<Application>.<Name>.Value
+                    Application.Name = ApplicationInfo.<Application>.<Name>.Value
                 End If
                 If ApplicationInfo.<Application>.<Description>.Value = Nothing Then
-                    ApplicationSummary.Description = ""
+                    'HostApplication.Description = ""
+                    Application.Description = ""
                 Else
-                    ApplicationSummary.Description = ApplicationInfo.<Application>.<Description>.Value
+                    'HostApplication.Description = ApplicationInfo.<Application>.<Description>.Value
+                    Application.Description = ApplicationInfo.<Application>.<Description>.Value
                 End If
                 If ApplicationInfo.<Application>.<CreationDate>.Value = Nothing Then
-                    ApplicationSummary.CreationDate = "1-Jan-2000 12:00:00"
+                    'HostApplication.CreationDate = "1-Jan-2000 12:00:00"
+                    Application.CreationDate = "1-Jan-2000 12:00:00"
                 Else
-                    ApplicationSummary.CreationDate = ApplicationInfo.<Application>.<CreationDate>.Value
+                    'HostApplication.CreationDate = ApplicationInfo.<Application>.<CreationDate>.Value
+                    Application.CreationDate = ApplicationInfo.<Application>.<CreationDate>.Value
                 End If
                 If ApplicationInfo.<Application>.<Version>.<Major>.Value = Nothing Then
-                    ApplicationSummary.Version.Major = 1
+                    'HostApplication.Version.Major = 1
+                    Application.Version.Major = 1
                 Else
-                    ApplicationSummary.Version.Major = ApplicationInfo.<Application>.<Version>.<Major>.Value
+                    'HostApplication.Version.Major = ApplicationInfo.<Application>.<Version>.<Major>.Value
+                    Application.Version.Major = ApplicationInfo.<Application>.<Version>.<Major>.Value
                 End If
                 If ApplicationInfo.<Application>.<Version>.<Minor>.Value = Nothing Then
-                    ApplicationSummary.Version.Minor = 0
+                    'HostApplication.Version.Minor = 0
+                    Application.Version.Minor = 0
                 Else
-                    ApplicationSummary.Version.Minor = ApplicationInfo.<Application>.<Version>.<Minor>.Value
+                    'HostApplication.Version.Minor = ApplicationInfo.<Application>.<Version>.<Minor>.Value
+                    Application.Version.Minor = ApplicationInfo.<Application>.<Version>.<Minor>.Value
                 End If
                 If ApplicationInfo.<Application>.<Version>.<Build>.Value = Nothing Then
-                    ApplicationSummary.Version.Build = 1
+                    'HostApplication.Version.Build = 1
+                    Application.Version.Build = 1
                 Else
-                    ApplicationSummary.Version.Build = ApplicationInfo.<Application>.<Version>.<Build>.Value
+                    'HostApplication.Version.Build = ApplicationInfo.<Application>.<Version>.<Build>.Value
+                    Application.Version.Build = ApplicationInfo.<Application>.<Version>.<Build>.Value
                 End If
                 If ApplicationInfo.<Application>.<Version>.<Revision>.Value = Nothing Then
-                    ApplicationSummary.Version.Revision = 0
+                    'HostApplication.Version.Revision = 0
+                    Application.Version.Revision = 0
                 Else
-                    ApplicationSummary.Version.Revision = ApplicationInfo.<Application>.<Version>.<Revision>.Value
+                    'HostApplication.Version.Revision = ApplicationInfo.<Application>.<Version>.<Revision>.Value
+                    Application.Version.Revision = ApplicationInfo.<Application>.<Version>.<Revision>.Value
                 End If
                 If ApplicationInfo.<Application>.<Author>.<Name>.Value = Nothing Then
-                    ApplicationSummary.Author.Name = ""
+                    'HostApplication.Author.Name = ""
+                    Application.Author.Name = ""
                 Else
-                    ApplicationSummary.Author.Name = ApplicationInfo.<Application>.<Author>.<Name>.Value
+                    'HostApplication.Author.Name = ApplicationInfo.<Application>.<Author>.<Name>.Value
+                    Application.Author.Name = ApplicationInfo.<Application>.<Author>.<Name>.Value
                 End If
                 If ApplicationInfo.<Application>.<Author>.<Description>.Value = Nothing Then
-                    ApplicationSummary.Author.Description = ""
+                    'HostApplication.Author.Description = ""
+                    Application.Author.Description = ""
                 Else
-                    ApplicationSummary.Author.Description = ApplicationInfo.<Application>.<Author>.<Description>.Value
+                    'HostApplication.Author.Description = ApplicationInfo.<Application>.<Author>.<Description>.Value
+                    Application.Author.Description = ApplicationInfo.<Application>.<Author>.<Description>.Value
                 End If
                 If ApplicationInfo.<Application>.<Author>.<Contact>.Value = Nothing Then
-                    ApplicationSummary.Author.Contact = ""
+                    'HostApplication.Author.Contact = ""
+                    Application.Author.Contact = ""
                 Else
-                    ApplicationSummary.Author.Contact = ApplicationInfo.<Application>.<Author>.<Contact>.Value
+                    'HostApplication.Author.Contact = ApplicationInfo.<Application>.<Author>.<Contact>.Value
+                    Application.Author.Contact = ApplicationInfo.<Application>.<Author>.<Contact>.Value
                 End If
             Else
                 'RaiseEvent CreateProjectError("The Application Information file (Application_Info.xml) is missing from the Application Directory: " & ApplicationDir)
                 'Exit Sub
-                ApplicationSummary.Name = ""
-                ApplicationSummary.Description = ""
-                ApplicationSummary.CreationDate = "1-Jan-2000 12:00:00"
-                ApplicationSummary.Version.Major = 1
-                ApplicationSummary.Version.Minor = 0
-                ApplicationSummary.Version.Build = 1
-                ApplicationSummary.Version.Revision = 0
-                ApplicationSummary.Author.Name = ""
-                ApplicationSummary.Author.Description = ""
-                ApplicationSummary.Author.Contact = ""
+                'HostApplication.Name = ""
+                'HostApplication.Description = ""
+                'HostApplication.CreationDate = "1-Jan-2000 12:00:00"
+                'HostApplication.Version.Major = 1
+                'HostApplication.Version.Minor = 0
+                'HostApplication.Version.Build = 1
+                'HostApplication.Version.Revision = 0
+                'HostApplication.Author.Name = ""
+                'HostApplication.Author.Description = ""
+                'HostApplication.Author.Contact = ""
+
+                RaiseEvent ErrorMessage("The Application_Info_ADVL_2.xml file was not found. Blank values will be shown in the Project Information file." & vbCrLf)
+
+                Application.Name = ""
+                Application.Description = ""
+                Application.CreationDate = "1-Jan-2000 12:00:00"
+                Application.Version.Major = 1
+                Application.Version.Minor = 0
+                Application.Version.Build = 1
+                Application.Version.Revision = 0
+                Application.Author.Name = ""
+                Application.Author.Description = ""
+                Application.Author.Contact = ""
             End If
             SaveProjectInfoFile()
 
@@ -2826,16 +5862,22 @@ Public Class Project '----------------------------------------------------------
             ProjectSummary.Name = Name
             ProjectSummary.Description = Description
             ProjectSummary.Type = Type
-            ProjectSummary.SettingsLocnType = SettingsLocn.Type
-            ProjectSummary.SettingsLocnPath = SettingsLocn.Path
+            'ProjectSummary.SettingsLocnType = SettingsLocn.Type
+            'ProjectSummary.SettingsLocnPath = SettingsLocn.Path
+            'ProjectSummary.Type = ProjectLocn.Type
+            ProjectSummary.Type = Type
+            'ProjectSummary.Path = ProjectLocn.Path
+            ProjectSummary.Path = Path
             ProjectSummary.AuthorName = Author.Name
-            ProjectSummary.ApplicationName = ApplicationSummary.Name
+            'ProjectSummary.ApplicationName = HostApplication.Name 'NO LONGER USED - 29Jul18 - Application Name is stored once in the project list, not in each project entry.
 
             Dim ProjectList As New List(Of ProjectSummary)
 
-            If System.IO.File.Exists(ApplicationDir & "\Project_List.xml") Then 'Add the Default project to the existing Project List.
+            'If System.IO.File.Exists(ApplicationDir & "\Project_List.xml") Then 'Add the Default project to the existing Project List.
+            If System.IO.File.Exists(ApplicationDir & "\Project_List_ADVL_2.xml") Then 'Add the Default project to the existing Project List.
                 Dim ProjectListXDoc As System.Xml.Linq.XDocument
-                ProjectListXDoc = XDocument.Load(ApplicationDir & "\Project_List.xml")
+                'ProjectListXDoc = XDocument.Load(ApplicationDir & "\Project_List.xml")
+                ProjectListXDoc = XDocument.Load(ApplicationDir & "\Project_List_ADVL_2.xml")
 
                 Dim Projects = From item In ProjectListXDoc.<ProjectList>.<Project>
 
@@ -2855,79 +5897,213 @@ Public Class Project '----------------------------------------------------------
                             NewProject.Type = Project.Types.Hybrid
                     End Select
                     NewProject.CreationDate = item.<CreationDate>.Value
-                    Select Case item.<SettingsLocationType>.Value
-                        Case "Directory"
-                            NewProject.SettingsLocnType = ADVL_Utilities_Library_1.FileLocation.Types.Directory
-                        Case "Archive"
-                            NewProject.SettingsLocnType = ADVL_Utilities_Library_1.FileLocation.Types.Archive
-                    End Select
-                    NewProject.SettingsLocnPath = item.<SettingsLocationPath>.Value
+
+                    NewProject.Path = item.<Path>.Value
                     NewProject.AuthorName = item.<AuthorName>.Value
-                    NewProject.ApplicationName = item.<ApplicationName>.Value
 
                     ProjectList.Add(NewProject)
                 Next
 
                 ProjectList.Add(ProjectSummary)
 
-                'Dim ProjectListXDoc = <?xml version="1.0" encoding="utf-8"?>
                 ProjectListXDoc = <?xml version="1.0" encoding="utf-8"?>
                                   <!---->
                                   <!--Project List File-->
                                   <ProjectList>
+                                      <FormatCode>ADVL_2</FormatCode>
+                                      <ApplicationName><%= ApplicationName %></ApplicationName>
                                       <%= From item In ProjectList
                                           Select
                                       <Project>
                                           <Name><%= item.Name %></Name>
                                           <Description><%= item.Description %></Description>
-                                          <Type><%= item.Type %></Type>
                                           <CreationDate><%= Format(item.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-                                          <SettingsLocationType><%= item.SettingsLocnType %></SettingsLocationType>
-                                          <SettingsLocationPath><%= item.SettingsLocnPath %></SettingsLocationPath>
+                                          <Type><%= item.Type %></Type>
+                                          <Path><%= item.Path %></Path>
                                           <AuthorName><%= item.AuthorName %></AuthorName>
-                                          <ApplicationName><%= item.ApplicationName %></ApplicationName>
                                       </Project>
                                       %>
                                   </ProjectList>
 
-                ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
+
+                'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
+                ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
+
             Else 'Create a Project List containing the Default project.
+
                 Dim ProjectListXDoc = <?xml version="1.0" encoding="utf-8"?>
                                       <!---->
                                       <!--Project List File-->
                                       <ProjectList>
+                                          <FormatCode>ADVL_2</FormatCode>
+                                          <ApplicationName><%= ApplicationName %></ApplicationName>
                                           <Project>
                                               <Name><%= ProjectSummary.Name %></Name>
                                               <Description><%= ProjectSummary.Description %></Description>
-                                              <Type><%= ProjectSummary.Type %></Type>
                                               <CreationDate><%= Format(ProjectSummary.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-                                              <SettingsLocationType><%= ProjectSummary.SettingsLocnType %></SettingsLocationType>
-                                              <SettingsLocationPath><%= ProjectSummary.SettingsLocnPath %></SettingsLocationPath>
+                                              <Type><%= ProjectSummary.Type %></Type>
+                                              <Path><%= ProjectSummary.Path %></Path>
                                               <AuthorName><%= ProjectSummary.AuthorName %></AuthorName>
-                                              <ApplicationName><%= ProjectSummary.ApplicationName %></ApplicationName>
                                           </Project>
                                       </ProjectList>
 
-                ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
+                'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
+                ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
             End If
         End If
     End Sub
 
-    Public Sub OpenDefaultProject()
+    Private Sub AddDefaultProjectToList()
+        'Add the Default project to the list.
+
+        'Get the Default project information:
+        If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then 'The default project directory exists.
+            If System.IO.File.Exists(ApplicationDir & "\" & "Default_Project\Project_Info_ADVL_2.xml") Then 'The Project information file exists.
+                Dim ProjectSummary As New ProjectSummary
+                Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
+                ProjectInfoXDoc = XDocument.Load(ApplicationDir & "\" & "Default_Project\Project_Info_ADVL_2.xml")
+
+                If ProjectInfoXDoc.<Project>.<Name>.Value = Nothing Then
+                    ProjectSummary.Name = ""
+                Else
+                    ProjectSummary.Name = ProjectInfoXDoc.<Project>.<Name>.Value
+                End If
+
+                If ProjectInfoXDoc.<Project>.<Description>.Value = Nothing Then
+                    ProjectSummary.Description = ""
+                Else
+                    ProjectSummary.Description = ProjectInfoXDoc.<Project>.<Description>.Value
+                End If
+
+                If ProjectInfoXDoc.<Project>.<CreationDate>.Value = Nothing Then
+                    ProjectSummary.CreationDate = "1-Jan-2000 12:00:00"
+                Else
+                    ProjectSummary.CreationDate = ProjectInfoXDoc.<Project>.<CreationDate>.Value
+                End If
+
+                ProjectSummary.Path = ApplicationDir & "\" & "Default_Project"
+
+                If ProjectInfoXDoc.<Project>.<Author>.<Name>.Value = Nothing Then
+                    ProjectSummary.AuthorName = ""
+                Else
+                    ProjectSummary.AuthorName = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
+                End If
+
+                ProjectSummary.Type = Types.None 'A Default project always has the Type = None.
+
+
+                Dim ProjectList As New List(Of ProjectSummary)
+
+                'If System.IO.File.Exists(ApplicationDir & "\Project_List.xml") Then 'Add the Default project to the existing Project List.
+                If System.IO.File.Exists(ApplicationDir & "\Project_List_ADVL_2.xml") Then 'Add the Default project to the existing Project List.
+                    Dim ProjectListXDoc As System.Xml.Linq.XDocument
+                    'ProjectListXDoc = XDocument.Load(ApplicationDir & "\Project_List.xml")
+                    ProjectListXDoc = XDocument.Load(ApplicationDir & "\Project_List_ADVL_2.xml")
+
+                    Dim Projects = From item In ProjectListXDoc.<ProjectList>.<Project>
+
+                    ProjectList.Clear()
+                    For Each item In Projects
+                        Dim NewProject As New ProjectSummary
+                        NewProject.Name = item.<Name>.Value
+                        NewProject.Description = item.<Description>.Value
+                        Select Case item.<Type>.Value
+                            Case "None"
+                                NewProject.Type = Project.Types.None
+                            Case "Directory"
+                                NewProject.Type = Project.Types.Directory
+                            Case "Archive"
+                                NewProject.Type = Project.Types.Archive
+                            Case "Hybrid"
+                                NewProject.Type = Project.Types.Hybrid
+                        End Select
+                        NewProject.CreationDate = item.<CreationDate>.Value
+                        NewProject.Path = item.<Path>.Value
+                        NewProject.AuthorName = item.<AuthorName>.Value
+
+                        ProjectList.Add(NewProject)
+                    Next
+
+                    ProjectList.Add(ProjectSummary)
+
+                    ProjectListXDoc = <?xml version="1.0" encoding="utf-8"?>
+                                      <!---->
+                                      <!--Project List File-->
+                                      <ProjectList>
+                                          <FormatCode>ADVL_2</FormatCode>
+                                          <ApplicationName><%= ApplicationName %></ApplicationName>
+                                          <%= From item In ProjectList
+                                              Select
+                                      <Project>
+                                          <Name><%= item.Name %></Name>
+                                          <Description><%= item.Description %></Description>
+                                          <CreationDate><%= Format(item.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+                                          <Type><%= item.Type %></Type>
+                                          <Path><%= item.Path %></Path>
+                                          <AuthorName><%= item.AuthorName %></AuthorName>
+                                      </Project>
+                                          %>
+                                      </ProjectList>
+
+                    'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
+                    ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
+
+                Else 'Create a Project List containing the Default project.
+                    Dim ProjectListXDoc = <?xml version="1.0" encoding="utf-8"?>
+                                          <!---->
+                                          <!--Project List File-->
+                                          <ProjectList>
+                                              <FormatCode>ADVL_2</FormatCode>
+                                              <ApplicationName><%= ApplicationName %></ApplicationName>
+                                              <Project>
+                                                  <Name><%= ProjectSummary.Name %></Name>
+                                                  <Description><%= ProjectSummary.Description %></Description>
+                                                  <CreationDate><%= Format(ProjectSummary.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+                                                  <Type><%= ProjectSummary.Type %></Type>
+                                                  <Path><%= ProjectSummary.Path %></Path>
+                                                  <AuthorName><%= ProjectSummary.AuthorName %></AuthorName>
+                                              </Project>
+                                          </ProjectList>
+
+                    'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
+                    ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
+                End If
+
+            Else
+                'The Project information file does not exist.
+
+            End If
+        Else
+            'The Default project directory does not exist.
+        End If
+
+    End Sub
+
+    'UPDATE: Instead use: USEDEFAULTPROJECT() !!!
+    Public Sub OpenDefaultProject_Old()
         'Open the default project.
         'RaiseEvent ProjectChanging()
         RaiseEvent Closing() 'This event indicates that the current project is closing.
 
         If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then 'Open the default project.
-            SettingsLocn.Type = FileLocation.Types.Directory
-            SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
+            'SettingsLocn.Type = FileLocation.Types.Directory
+            'SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
+            'ProjectLocn.Type = FileLocation.Types.Directory
+            'Type = FileLocation.Types.Directory
+            Type = Types.Directory
+            'ProjectLocn.Path = ApplicationDir & "\" & "Default_Project"
+            Path = ApplicationDir & "\" & "Default_Project"
             ReadProjectInfoFile()
             'RaiseEvent ProjectSelected()
             RaiseEvent Selected()
         Else 'Create the default project and open it.
             CreateDefaultProject()
-            SettingsLocn.Type = FileLocation.Types.Directory
-            SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
+            'SettingsLocn.Type = FileLocation.Types.Directory
+            'SettingsLocn.Path = ApplicationDir & "\" & "Default_Project"
+            'ProjectLocn.Type = FileLocation.Types.Directory
+            Type = Types.Directory
+            'ProjectLocn.Path = ApplicationDir & "\" & "Default_Project"
+            Path = ApplicationDir & "\" & "Default_Project"
             ReadProjectInfoFile()
             'RaiseEvent ProjectSelected()
             RaiseEvent Selected()
@@ -2935,8 +6111,30 @@ Public Class Project '----------------------------------------------------------
     End Sub
 
     Private Sub ProjectForm_OpenDefaultProject() Handles ProjectForm.OpenDefaultProject
-        OpenDefaultProject()
+        'OpenDefaultProject()
+        UseDefaultProject()
     End Sub
+
+    Private Sub ProjectForm_CreateDefaultProject() Handles ProjectForm.CreateDefaultProject
+        CreateDefaultProject()
+    End Sub
+
+
+    Private Sub ProjInfoConversion_ErrorMessage(Message As String) Handles ProjInfoConversion.ErrorMessage
+        RaiseEvent ErrorMessage(Message)
+    End Sub
+
+    Private Sub ProjInfoConversion_Message(Message As String) Handles ProjInfoConversion.Message
+        RaiseEvent Message(Message)
+    End Sub
+
+    Private Sub Project_Selected() Handles Me.Selected
+
+    End Sub
+
+
+
+
 
 #End Region 'Project Methods -----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2957,19 +6155,46 @@ Public Class Project '----------------------------------------------------------
 
 End Class 'Project----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Public Class ParamInfo
+    'Stores information about a Project parameter.
+
+    'NOTE: The Name of the parameter is used as a dictionary key and is not included in the Parameter list.
+
+    Private _description As String = "" 'A description of the project parameter.
+    Property Description As String
+        Get
+            Return _description
+        End Get
+        Set(value As String)
+            _description = value
+        End Set
+    End Property
+
+    Private _value As String = "" 'The value of the project parameter.
+    Property Value As String
+        Get
+            Return _value
+        End Get
+        Set(value As String)
+            _value = value
+        End Set
+    End Property
+
+End Class
 
 'ProjectSummary stores a summary of an Andorville (TM) Application Project. ------------------------------------------------------------------------------------------------------------------
 Public Class ProjectSummary
     'Name
     'Description
     'Type                 (None, Directory, File, Hybrid)
+    'Path                 Added 29July18 - Replaces SettingsLocationPath
     'CreationDate
-    'SettingsLocationType
-    'SettingsLocationPath
+    'SettingsLocationType 'NOT USED - USE TYPE
+    'SettingsLocationPath 'NOT USED = USE PATH
     'DataLocationType 'DONT STORE THIS - IT MAY CHANGE 
     'DataLocationPath 'DONT STORE THIS - IT MAY CHANGE 
     'AuthorName
-    'ApplicationName
+    'ApplicationName  'NOT USED
 
 
     Private _name As String = "" 'The name of the current project.
@@ -3002,6 +6227,16 @@ Public Class ProjectSummary
         End Set
     End Property
 
+    Private _path As String = "" 'The path to the project directory or archive.
+    Property Path As String
+        Get
+            Return _path
+        End Get
+        Set(value As String)
+            _path = value
+        End Set
+    End Property
+
     Private _creationDate As DateTime = "1-Jan-2000 12:00:00" 'The creation date of the current project.
     Property CreationDate As DateTime
         Get
@@ -3012,25 +6247,25 @@ Public Class ProjectSummary
         End Set
     End Property
 
-    Private _settingsLocnType As FileLocation.Types = FileLocation.Types.Directory 'The location type used to store settings data (Directory or Archive)
-    Property SettingsLocnType As FileLocation.Types
-        Get
-            Return _settingsLocnType
-        End Get
-        Set(value As FileLocation.Types)
-            _settingsLocnType = value
-        End Set
-    End Property
+    'Private _settingsLocnType As FileLocation.Types = FileLocation.Types.Directory 'The location type used to store settings data (Directory or Archive)
+    'Property SettingsLocnType As FileLocation.Types
+    '    Get
+    '        Return _settingsLocnType
+    '    End Get
+    '    Set(value As FileLocation.Types)
+    '        _settingsLocnType = value
+    '    End Set
+    'End Property
 
-    Private _settingsLocnPath As String = "" 'The path of the location used to store settings data.
-    Property SettingsLocnPath As String
-        Get
-            Return _settingsLocnPath
-        End Get
-        Set(value As String)
-            _settingsLocnPath = value
-        End Set
-    End Property
+    'Private _settingsLocnPath As String = "" 'The path of the location used to store settings data.
+    'Property SettingsLocnPath As String
+    '    Get
+    '        Return _settingsLocnPath
+    '    End Get
+    '    Set(value As String)
+    '        _settingsLocnPath = value
+    '    End Set
+    'End Property
 
     Private _authorName As String = "" 'The name of the author of the project.
     Property AuthorName As String
@@ -3042,15 +6277,15 @@ Public Class ProjectSummary
         End Set
     End Property
 
-    Private _applicationName As String = "" 'The name of the application used to create the project.
-    Property ApplicationName As String
-        Get
-            Return _applicationName
-        End Get
-        Set(value As String)
-            _applicationName = value
-        End Set
-    End Property
+    'Private _applicationName As String = "" 'The name of the application used to create the project.
+    'Property ApplicationName As String
+    '    Get
+    '        Return _applicationName
+    '    End Get
+    '    Set(value As String)
+    '        _applicationName = value
+    '    End Set
+    'End Property
 
 End Class 'ProjectSummary -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -3124,7 +6359,7 @@ Public Class Message '----------------------------------------------------------
 
 #Region " Message Properties - Properties used to display application messages." '------------------------------------------------------------------------------------------------------------
 
-    Private _fontName As String = "Ariel" 'The name of the font used to display the message.
+    Private _fontName As String = "Arial" 'The name of the font used to display the message.
     Property FontName As String
         Get
             Return _fontName
@@ -3180,12 +6415,32 @@ Public Class Message '----------------------------------------------------------
     End Sub
 
     Public Sub SetWarningStyle()
-        'Set the message text properties for displaying warninge messages:
+        'Set the message text properties for displaying warning messages:
         SetFontName(FontList.Arial)
         Color = Drawing.Color.Red
         FontStyle = Drawing.FontStyle.Regular 'This removes the following font settings: Bold, Italic, Regular, Strikeout, Underline
         FontStyle = Drawing.FontStyle.Bold
 
+    End Sub
+
+    Public Sub SetBoldStyle()
+        'Set the message text to Bold:
+        FontStyle = Drawing.FontStyle.Bold
+    End Sub
+
+    Public Sub SetItalicStyle()
+        'Set the message text to Italic:
+        FontStyle = Drawing.FontStyle.Italic
+    End Sub
+
+    Public Sub SetUnderlineStyle()
+        'Set the message text to Underline:
+        FontStyle = Drawing.FontStyle.Underline
+    End Sub
+
+    Public Sub SetStrikeoutStyle()
+        'Set the message text to Underline:
+        FontStyle = Drawing.FontStyle.Strikeout
     End Sub
 
     'A list of text fonts. Used to set the MessageFontName property.
@@ -3224,8 +6479,10 @@ Public Class Message '----------------------------------------------------------
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.BringToFront()
         Else
             MessageForm.Show()
+            MessageForm.BringToFront()
         End If
     End Sub
 
@@ -3237,59 +6494,485 @@ Public Class Message '----------------------------------------------------------
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.BringToFront()
         Else
             MessageForm.Show()
+            MessageForm.BringToFront()
         End If
 
+        If IsNothing(StrMsg) Then
+            Exit Sub
+        End If
+
+        ''Old code - uses the rtbMessages richtextbox control on the MessageForm:
+        'Dim StrLen As Integer
+        'Dim StrStart As Integer
+
+        'StrStart = MessageForm.rtbMessages.TextLength
+        'StrLen = StrMsg.Length
+
+        'MessageForm.rtbMessages.AppendText(StrMsg)
+        'MessageForm.rtbMessages.Select(StrStart, StrLen)
+        'MessageForm.rtbMessages.SelectionColor = Color
+        'MessageForm.rtbMessages.SelectionFont = New System.Drawing.Font(FontName, FontSize, FontStyle)
+
+        ''Move to the end of the message
+        'MessageForm.rtbMessages.SelectionStart = MessageForm.rtbMessages.Text.Length
+        'MessageForm.rtbMessages.SelectionLength = 0
+        'MessageForm.rtbMessages.ScrollToCaret()
+
+        'New code - uses the XmlHtmDisplay1:
+        'StrStart = MessageForm.XmlHtmDisplay1.TextLength
+        'StrLen = StrMsg.Length
+        'MessageForm.XmlHtmDisplay1.SelectedRtf = MessageForm.XmlDisplay.TextToRtf(StrMsg, "Normal")
+
+        'MessageForm.XmlHtmDisplay1.SelectedRtf = MessageForm.XmlHtmDisplay1.TextToRtf(StrMsg, "Normal") 'TEST 23May18
         Dim StrLen As Integer
         Dim StrStart As Integer
-
-        StrStart = MessageForm.rtbMessages.TextLength
+        StrStart = MessageForm.XmlHtmDisplay1.TextLength
         StrLen = StrMsg.Length
-
-        MessageForm.rtbMessages.AppendText(StrMsg)
-        MessageForm.rtbMessages.Select(StrStart, StrLen)
-        MessageForm.rtbMessages.SelectionColor = Color
-        MessageForm.rtbMessages.SelectionFont = New System.Drawing.Font(FontName, FontSize, FontStyle)
+        MessageForm.XmlHtmDisplay1.AppendText(StrMsg)
+        MessageForm.XmlHtmDisplay1.Select(StrStart, StrLen)
+        MessageForm.XmlHtmDisplay1.SelectionColor = Color
+        MessageForm.XmlHtmDisplay1.SelectionFont = New System.Drawing.Font(FontName, FontSize, FontStyle)
 
         'Move to the end of the message
-        MessageForm.rtbMessages.SelectionStart = MessageForm.rtbMessages.Text.Length
-        MessageForm.rtbMessages.SelectionLength = 0
-        MessageForm.rtbMessages.ScrollToCaret()
+        MessageForm.XmlHtmDisplay1.SelectionStart = MessageForm.XmlHtmDisplay1.Text.Length
+        MessageForm.XmlHtmDisplay1.SelectionLength = 0
+        MessageForm.XmlHtmDisplay1.ScrollToCaret()
+
 
     End Sub
 
-    Public Sub XAdd(ByVal StrMsg As String)
-        'Add an XMessage to the Message form.
+    Public Sub AddWarning(ByVal StrMsg As String)
+        'Add a warning message to the Message form:
+
+        ''Old code - uses the rtbMessages richtextbox control on the MessageForm:
+        ''Save the Current settings:
+        'Dim OrigFontName As String = FontName
+        'Dim OrigColor As System.Drawing.Color = Color
+        'Dim OrigFontStyle As System.Drawing.FontStyle = FontStyle
+
+        ''Set the message text properties for displaying warning messages:
+        'SetFontName(FontList.Arial)
+        'Color = Drawing.Color.Red
+        'FontStyle = Drawing.FontStyle.Regular 'This removes the following font settings: Bold, Italic, Regular, Strikeout, Underline
+        'FontStyle = Drawing.FontStyle.Bold
+
+        ''Add(StrMsg) 'Add the message.
 
         If IsNothing(MessageForm) Then
             MessageForm = New frmMessages
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.BringToFront()
         Else
             MessageForm.Show()
+            MessageForm.BringToFront()
+        End If
+
+        If IsNothing(StrMsg) Then
+            Exit Sub
+        End If
+        'Dim StrLen As Integer
+        'Dim StrStart As Integer
+
+        'StrStart = MessageForm.rtbMessages.TextLength
+        'StrLen = StrMsg.Length
+
+        'MessageForm.rtbMessages.AppendText(StrMsg)
+        'MessageForm.rtbMessages.Select(StrStart, StrLen)
+        'MessageForm.rtbMessages.SelectionColor = Color
+        'MessageForm.rtbMessages.SelectionFont = New System.Drawing.Font(FontName, FontSize, FontStyle)
+
+        ''Move to the end of the message
+        'MessageForm.rtbMessages.SelectionStart = MessageForm.rtbMessages.Text.Length
+        'MessageForm.rtbMessages.SelectionLength = 0
+        'MessageForm.rtbMessages.ScrollToCaret()
+
+
+
+
+
+
+
+
+        ''Restore the original settings:
+        'FontName = OrigFontName
+        'Color = OrigColor
+        '_fontStyle = OrigFontStyle
+
+        'New code - uses the XmlHtmDisplay1:
+        MessageForm.XmlHtmDisplay1.SelectedRtf = MessageForm.XmlHtmDisplay1.TextToRtf(StrMsg, "Warning")
+        'Move to the end of the message
+        MessageForm.XmlHtmDisplay1.SelectionStart = MessageForm.XmlHtmDisplay1.Text.Length
+        MessageForm.XmlHtmDisplay1.SelectionLength = 0
+        MessageForm.XmlHtmDisplay1.ScrollToCaret()
+
+    End Sub
+
+    Public Sub AddXml(ByRef XDoc As System.Xml.XmlDocument)
+        'Add an XML message to the XMessage tab on the Message form.
+
+        If IsNothing(MessageForm) Then
+            MessageForm = New frmMessages
+            MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
+            MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
+            MessageForm.Show()
+            MessageForm.BringToFront()
+        Else
+            MessageForm.Show()
+            MessageForm.BringToFront()
         End If
 
         Dim StrLen As Integer
         Dim StrStart As Integer
 
-        StrStart = MessageForm.rtbInstructions.TextLength
-        StrLen = StrMsg.Length
+        StrStart = MessageForm.XmlHtmDisplay1.TextLength
+        StrLen = XDoc.InnerXml.Length
 
-        MessageForm.rtbInstructions.AppendText(StrMsg)
-        MessageForm.rtbInstructions.Select(StrStart, StrLen)
-        MessageForm.rtbInstructions.SelectionColor = Color ' Drawing.Color.Black 'Color
-        MessageForm.rtbInstructions.SelectionFont = New System.Drawing.Font(FontName, FontSize, FontStyle)
+        MessageForm.XmlHtmDisplay1.SelectedRtf = MessageForm.XmlHtmDisplay1.XmlToRtf(XDoc, False)
 
         'Move to the end of the message
-        MessageForm.rtbInstructions.SelectionStart = MessageForm.rtbInstructions.Text.Length
-        MessageForm.rtbInstructions.SelectionLength = 0
-        MessageForm.rtbInstructions.ScrollToCaret()
+        MessageForm.XmlHtmDisplay1.SelectionStart = MessageForm.XmlHtmDisplay1.Text.Length
+        MessageForm.XmlHtmDisplay1.SelectionLength = 0
+        MessageForm.XmlHtmDisplay1.ScrollToCaret()
+
     End Sub
+
+    Public Sub AddXml(ByRef XmlText As String)
+        'Version of the XAddXml subroutine that processes an XML string instead of an XMLDocument.
+        'Add an XML message to the XMessage tab on the Message form.
+
+        If IsNothing(MessageForm) Then
+            MessageForm = New frmMessages
+            MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
+            MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
+            MessageForm.Show()
+            'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
+        Else
+            MessageForm.Show()
+            'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
+        End If
+
+        Dim StrLen As Integer
+        Dim StrStart As Integer
+
+        StrStart = MessageForm.XmlHtmDisplay1.TextLength
+        StrLen = XmlText.Length 'NOT SURE IF THIS WILL BE THE CORRECT LENGTH AFTER THE TEXT HAS BEEN CONVERTED TO AN XMLDOCUMENT AND WRITTEN TO THE RICHTEXTBOX!!!
+
+        MessageForm.XmlHtmDisplay1.SelectedRtf = MessageForm.XmlHtmDisplay1.XmlToRtf(XmlText, False)
+
+        'Move to the end of the message
+        MessageForm.XmlHtmDisplay1.SelectionStart = MessageForm.XmlHtmDisplay1.Text.Length
+        MessageForm.XmlHtmDisplay1.SelectionLength = 0
+        MessageForm.XmlHtmDisplay1.ScrollToCaret()
+
+    End Sub
+
+    'Public Sub XAdd(ByVal StrMsg As String)
+    '    'Add an XMessage to the Message form.
+
+    '    If IsNothing(MessageForm) Then
+    '        MessageForm = New frmMessages
+    '        MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
+    '        MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
+    '        MessageForm.Show()
+    '    Else
+    '        MessageForm.Show()
+    '    End If
+
+    '    Dim StrLen As Integer
+    '    Dim StrStart As Integer
+
+    '    StrStart = MessageForm.rtbInstructions.TextLength
+    '    StrLen = StrMsg.Length
+
+    '    MessageForm.rtbInstructions.AppendText(StrMsg)
+    '    MessageForm.rtbInstructions.Select(StrStart, StrLen)
+    '    MessageForm.rtbInstructions.SelectionColor = Color ' Drawing.Color.Black 'Color
+    '    MessageForm.rtbInstructions.SelectionFont = New System.Drawing.Font(FontName, FontSize, FontStyle)
+
+    '    'Move to the end of the message
+    '    MessageForm.rtbInstructions.SelectionStart = MessageForm.rtbInstructions.Text.Length
+    '    MessageForm.rtbInstructions.SelectionLength = 0
+    '    MessageForm.rtbInstructions.ScrollToCaret()
+
+
+    '    StrStart = MessageForm.XmlDisplay.TextLength
+    '    StrLen = StrMsg.Length
+
+    '    'MessageForm.XmlDisplay.AppendText(StrMsg)
+    '    MessageForm.XmlDisplay.TextToRtf(StrMsg, "Message")
+
+
+    '    MessageForm.XmlDisplay.Select(StrStart, StrLen)
+    '    MessageForm.XmlDisplay.SelectionColor = Color ' Drawing.Color.Black 'Color
+    '    MessageForm.XmlDisplay.SelectionFont = New System.Drawing.Font(FontName, FontSize, FontStyle)
+
+    '    'Move to the end of the message
+    '    MessageForm.XmlDisplay.SelectionStart = MessageForm.rtbInstructions.Text.Length
+    '    MessageForm.XmlDisplay.SelectionLength = 0
+    '    MessageForm.XmlDisplay.ScrollToCaret()
+
+    'End Sub
+
+    Public Sub XAddXml(ByRef XDoc As System.Xml.XmlDocument)
+        'Add an XML message to the XMessage tab on the Message form.
+
+        If IsNothing(MessageForm) Then
+            MessageForm = New frmMessages
+            MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
+            MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
+            MessageForm.Show()
+            'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
+        Else
+            MessageForm.Show()
+            'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
+        End If
+
+        Dim StrLen As Integer
+        Dim StrStart As Integer
+
+        'StrStart = MessageForm.rtbInstructions.TextLength
+        '     StrLen = StrMsg.Length
+        StrStart = MessageForm.XmlDisplay.TextLength
+        'StrLen = StrMsg.Length
+        'StrLen = XDoc.ToString.Length
+        StrLen = XDoc.InnerXml.Length
+
+        'Add("XAddXml: StrStart = " & StrStart & vbCrLf)
+        ''Add("XAddXml: StrMsg = " & StrMsg & vbCrLf)
+        ''Add("XAddXml: XDoc.ToString = " & XDoc.ToString & vbCrLf) 'NOTE: THIS DISPLAYS: System.Xml.XmlDocument
+        'Add("XAddXml: XDoc.InnerXml = " & XDoc.InnerXml & vbCrLf)
+        'Add("XAddXml: StrLen = " & StrLen & vbCrLf)
+        ''Add("XAddXml: TextType = " & TextType & vbCrLf & vbCrLf)
+
+        'FOR DEBUGGING:
+        'SHOW THE RTF in the message tab:
+        'Add("MessageForm.XmlDisplay.XmlToRtf(XDoc, False) = " & MessageForm.XmlDisplay.XmlToRtf(XDoc, False) & vbCrLf)
+
+        MessageForm.XmlDisplay.SelectedRtf = MessageForm.XmlDisplay.XmlToRtf(XDoc, False)
+
+        'Move to the end of the message
+        MessageForm.XmlDisplay.SelectionStart = MessageForm.XmlDisplay.Text.Length
+        MessageForm.XmlDisplay.SelectionLength = 0
+        MessageForm.XmlDisplay.ScrollToCaret()
+
+    End Sub
+
+    Public Sub XAddXml(ByRef XmlText As String)
+        'Version of the XAddXml subroutine that processes an XML string instead of an XMLDocument.
+        'Add an XML message to the XMessage tab on the Message form.
+
+        If IsNothing(MessageForm) Then
+            MessageForm = New frmMessages
+            MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
+            MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
+            MessageForm.Show()
+            'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
+        Else
+            MessageForm.Show()
+            'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
+        End If
+
+        Dim StrLen As Integer
+        Dim StrStart As Integer
+
+        'StrStart = MessageForm.rtbInstructions.TextLength
+        '     StrLen = StrMsg.Length
+        StrStart = MessageForm.XmlDisplay.TextLength
+        'StrLen = StrMsg.Length
+        'StrLen = XDoc.ToString.Length
+        StrLen = XmlText.Length 'NOT SURE IF THIS WILL BE THE CORRECT LENGTH AFTER THE TEXT HAS BEEN CONVERTED TO AN XMLDOCUMENT AND WRITTEN TO THE RICHTEXTBOX!!!
+
+        'Add("XAddXml: StrStart = " & StrStart & vbCrLf)
+        ''Add("XAddXml: StrMsg = " & StrMsg & vbCrLf)
+        ''Add("XAddXml: StrMsg = " & XDoc.ToString & vbCrLf)
+        'Add("XAddXml: StrMsg = " & XmlText & vbCrLf)
+        'Add("XAddXml: StrLen = " & StrLen & vbCrLf)
+        ''Add("XAddXml: TextType = " & TextType & vbCrLf & vbCrLf)
+
+        'FOR DEBUGGING:
+        'SHOW THE RTF in the message tab:
+        'Add("MessageForm.XmlDisplay.XmlToRtf(XmlText, False) = " & MessageForm.XmlDisplay.XmlToRtf(XmlText, False) & vbCrLf)
+
+        MessageForm.XmlDisplay.SelectedRtf = MessageForm.XmlDisplay.XmlToRtf(XmlText, False)
+
+        'Move to the end of the message
+        MessageForm.XmlDisplay.SelectionStart = MessageForm.XmlDisplay.Text.Length
+        MessageForm.XmlDisplay.SelectionLength = 0
+        MessageForm.XmlDisplay.ScrollToCaret()
+
+
+    End Sub
+
+    Public Sub XAddText(ByVal StrMsg As String, ByVal TextType As String)
+        'Add a Text message to the XMessage tab on the Message form.
+
+        If IsNothing(MessageForm) Then
+            MessageForm = New frmMessages
+            MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
+            MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
+            MessageForm.Show()
+            'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
+        Else
+            MessageForm.Show()
+            'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
+        End If
+
+        Dim StrLen As Integer
+        Dim StrStart As Integer
+
+        'StrStart = MessageForm.rtbInstructions.TextLength
+        StrStart = MessageForm.XmlDisplay.TextLength
+        StrLen = StrMsg.Length
+
+        'Debug.Print("XAddText: StrStart = " & StrStart)
+        'Debug.Print("XAddText: StrMsg = " & StrMsg)
+        'Debug.Print("XAddText: StrLen = " & StrLen)
+        'Debug.Print("XAddText: TextType = " & TextType)
+
+        'Add("XAddText: StrStart = " & StrStart & vbCrLf)
+        'Add("XAddText: StrMsg = " & StrMsg & vbCrLf)
+        'Add("XAddText: StrLen = " & StrLen & vbCrLf)
+        'Add("XAddText: TextType = " & TextType & vbCrLf & vbCrLf)
+
+        MessageForm.XmlDisplay.SelectedRtf = MessageForm.XmlDisplay.TextToRtf(StrMsg, TextType)
+
+        'Move to the end of the message
+        MessageForm.XmlDisplay.SelectionStart = MessageForm.XmlDisplay.Text.Length
+        MessageForm.XmlDisplay.SelectionLength = 0
+        MessageForm.XmlDisplay.ScrollToCaret()
+
+    End Sub
+
+    Public Sub AddText(ByVal StrMsg As String, ByVal TextType As String)
+        'Add a Text message to the Message tab on the Message form.
+
+        If IsNothing(MessageForm) Then
+            MessageForm = New frmMessages
+            MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
+            MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
+            MessageForm.Show()
+            MessageForm.BringToFront()
+        Else
+            MessageForm.Show()
+            MessageForm.BringToFront()
+        End If
+
+        'Dim StrLen As Integer
+        'Dim StrStart As Integer
+
+        ''StrStart = MessageForm.rtbInstructions.TextLength
+        'StrStart = MessageForm.rtbMessages.TextLength
+        'StrLen = StrMsg.Length
+
+        ''Debug.Print("XAddText: StrStart = " & StrStart)
+        ''Debug.Print("XAddText: StrMsg = " & StrMsg)
+        ''Debug.Print("XAddText: StrLen = " & StrLen)
+        ''Debug.Print("XAddText: TextType = " & TextType)
+
+        ''Add("XAddText: StrStart = " & StrStart & vbCrLf)
+        ''Add("XAddText: StrMsg = " & StrMsg & vbCrLf)
+        ''Add("XAddText: StrLen = " & StrLen & vbCrLf)
+        ''Add("XAddText: TextType = " & TextType & vbCrLf & vbCrLf)
+
+        'MessageForm.rtbMessages.SelectedRtf = MessageForm.XmlDisplay.TextToRtf(StrMsg, TextType)
+
+        ''Move to the end of the message
+        'MessageForm.rtbMessages.SelectionStart = MessageForm.XmlDisplay.Text.Length
+        'MessageForm.rtbMessages.SelectionLength = 0
+        'MessageForm.rtbMessages.ScrollToCaret()
+
+        'New code - uses the XmlHtmDisplay1:
+        ''If MessageForm.XmlHtmDisplay1.SelectedRtf Is Nothing Then
+        'If IsNothing(MessageForm.XmlHtmDisplay1.SelectedRtf) Then
+        '    'Move to the end of the message
+        '    MessageForm.XmlHtmDisplay1.SelectionStart = MessageForm.XmlHtmDisplay1.Text.Length
+        '    MessageForm.XmlHtmDisplay1.SelectionLength = 0
+        '    MessageForm.XmlHtmDisplay1.ScrollToCaret()
+        'End If
+        MessageForm.XmlHtmDisplay1.SelectedRtf = MessageForm.XmlHtmDisplay1.TextToRtf(StrMsg, TextType)
+        'Move to the end of the message
+        MessageForm.XmlHtmDisplay1.SelectionStart = MessageForm.XmlHtmDisplay1.Text.Length
+        MessageForm.XmlHtmDisplay1.SelectionLength = 0
+        MessageForm.XmlHtmDisplay1.ScrollToCaret()
+
+
+    End Sub
+
+    Public Sub ShowTextTypes()
+        'Show the list of text types in Settings.TestType
+
+        Dim NTypes As Integer = MessageForm.XmlHtmDisplay1.Settings.TextType.Count
+
+        Dim I As Integer
+
+        Add(vbCrLf & "List of Message text types:" & vbCrLf)
+
+        For I = 0 To NTypes - 1
+            AddText(MessageForm.XmlHtmDisplay1.Settings.TextType.Keys(I) & vbCrLf, MessageForm.XmlHtmDisplay1.Settings.TextType.Keys(I))
+        Next
+
+    End Sub
+
+    Public Sub XShowTextTypes()
+        'Show the list of text types in Settings.TestType
+
+        Dim NTypes As Integer = MessageForm.XmlDisplay.Settings.TextType.Count
+
+        Dim I As Integer
+
+        'Add(vbCrLf & "List of text types:" & vbCrLf)
+        XAddText(vbCrLf & "List of XMessage text types:" & vbCrLf, "Normal")
+
+
+        For I = 0 To NTypes - 1
+            'AddText(MessageForm.XmlDisplay.Settings.TextType.Keys(I) & vbCrLf, MessageForm.XmlDisplay.Settings.TextType.Keys(I))
+            XAddText(MessageForm.XmlDisplay.Settings.TextType.Keys(I) & vbCrLf, MessageForm.XmlDisplay.Settings.TextType.Keys(I))
+        Next
+
+    End Sub
+
+    ''Public Sub XAddXml(ByVal XmlDoc As System.Xml.XmlDocument)
+    'Public Sub XmlAdd(ByVal XmlDoc As System.Xml.XmlDocument)
+    '    'MessageForm.XmlDisplay.Rtf = MessageForm.XmlDisplay.XmlToRtf(XmlDoc, False)
+
+    '    'MessageForm.XmlDisplay.SelectedRtf = MessageForm.XmlDisplay.XmlToRtf(XmlDoc, False)
+    '    MessageForm.XmlDisplay.Rtf = MessageForm.XmlDisplay.XmlToRtf(XmlDoc, False)
+
+    'End Sub
+
+    'Public Sub XmlAdd(ByVal XmlDoc As System.Xml.Linq.XDocument)
+    '    'Version of XmlAdd that processes and XDocument instead of an XmlDocument.
+
+    '    Dim XDoc As New System.Xml.XmlDocument
+    '    XDoc.LoadXml(XmlDoc.ToString)
+
+    '    MessageForm.XmlDisplay.Rtf = MessageForm.XmlDisplay.XmlToRtf(XDoc, False)
+
+    'End Sub
 
     Private Sub MessageForm_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles MessageForm.FormClosed
         MessageForm = Nothing
+    End Sub
+
+    Private Sub MessageForm_ErrorMessage(Message As String) Handles MessageForm.ErrorMessage
+        RaiseEvent ErrorMessage(Message)
+    End Sub
+
+    Private Sub MessageForm_Message(Message As String) Handles MessageForm.Message
+        RaiseEvent Message(Message)
+    End Sub
+
+    Private Sub MessageForm_ShowTextTypes() Handles MessageForm.ShowTextTypes
+        ShowTextTypes()
+    End Sub
+
+    Private Sub MessageForm_XShowTextTypes() Handles MessageForm.XShowTextTypes
+        XShowTextTypes()
     End Sub
 
     'Private Sub MessageForm_SaveFormSettings(FormName As String, ByRef Settings As XDocument) Handles MessageForm.SaveFormSettings
@@ -3301,6 +6984,8 @@ Public Class Message '----------------------------------------------------------
 #Region " Events" '--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     'Public Event SaveFormSettings(ByVal FormName As String, ByRef Settings As System.Xml.Linq.XDocument) 'Raise an event to save the form settings. The settings are contained in the Settings XML document.
+    Event ErrorMessage(ByVal Message As String)
+    Event Message(ByVal Message As String)
 
 #End Region 'Events -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -3793,13 +7478,25 @@ Public Class ApplicationInfo '--------------------------------------------------
         End Set
     End Property
 
+    'ADDED 20Feb19
+    Private _connectOnStartup As Boolean = True 'If True, the application will connect to the Message Service on startup.
+    Property ConnectOnStartup As Boolean
+        Get
+            Return _connectOnStartup
+        End Get
+        Set(value As Boolean)
+            _connectOnStartup = value
+        End Set
+    End Property
+
 #End Region 'Properties ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #Region " Methods" '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     Public Function ApplicationLocked() As Boolean
         'Returns True if a lock file is found.
-        If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.lock") Then
+        'If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.lock") Then
+        If System.IO.File.Exists(ApplicationDir & "\" & "Application.Lock") Then
             Return True
         Else
             Return False
@@ -3811,14 +7508,16 @@ Public Class ApplicationInfo '--------------------------------------------------
             RaiseEvent ErrorMessage("Application already locked." & vbCrLf)
         Else
             'Create a lock file:
-            Dim fs = System.IO.File.Create(ApplicationDir & "\" & "Application_Info.lock")
+            'Dim fs = System.IO.File.Create(ApplicationDir & "\" & "Application_Info.lock")
+            Dim fs = System.IO.File.Create(ApplicationDir & "\" & "Application.Lock")
             fs.Dispose() 'This closes the file.
         End If
     End Sub
 
     Public Sub UnlockApplication()
         If ApplicationLocked() Then
-            System.IO.File.Delete(ApplicationDir & "\" & "Application_Info.lock")
+            'System.IO.File.Delete(ApplicationDir & "\" & "Application_Info.lock")
+            System.IO.File.Delete(ApplicationDir & "\" & "Application.Lock")
         Else
             RaiseEvent ErrorMessage("Application already unlocked." & vbCrLf)
         End If
@@ -3826,7 +7525,9 @@ Public Class ApplicationInfo '--------------------------------------------------
 
     Public Function FileExists() As Boolean
         'Returns True if the Application Info File exists in the Application Directory.
-        Return System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml")
+        'Return System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml")
+        'Return System.IO.File.Exists(ApplicationDir & "\" & "Application.xml")
+        Return System.IO.File.Exists(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
     End Function
 
 
@@ -3838,188 +7539,88 @@ Public Class ApplicationInfo '--------------------------------------------------
     '    'Return the Application Information in an XDocument.
 
     '    ApplicationInfoXDoc = <?xml version="1.0" encoding="utf-8"?>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <!---->
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <!--Application Information-->
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <!---->
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Application>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Name><%= Name %></Name>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <ExecutablePath><%= ExecutablePath %></ExecutablePath>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Description><%= Description %></Description>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <CreationDate><%= Format(CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <FileAssociationList>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <%= From item In FileAssociations
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Select
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <FileAssociation>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Extension><%= item.Extension %></Extension>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Description><%= item.Description %></Description>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </FileAssociation>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      %>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </FileAssociationList>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Version>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Major><%= Version.Major %></Major>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Minor><%= Version.Minor %></Minor>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Build><%= Version.Build %></Build>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Revision><%= Version.Revision %></Revision>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </Version>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Author>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Name><%= Author.Name %></Name>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Description><%= Author.Description %></Description>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Contact><%= Author.Contact %></Contact>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </Author>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Copyright>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <OwnerName><%= Copyright.OwnerName %></OwnerName>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <PublicationYear><%= Copyright.PublicationYear %></PublicationYear>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Notice><%= Copyright.Notice %></Notice>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </Copyright>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <TrademarkList>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <%= From item In Trademarks
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Select
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <Trademark>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Text><%= item.Text %></Text>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <OwnerName><%= item.OwnerName %></OwnerName>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Registered><%= item.Registered %></Registered>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <GenericTerm><%= item.GenericTerm %></GenericTerm>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </Trademark>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      %>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </TrademarkList>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <License>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Type><%= License.Type.ToString %></Type>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Notice><%= License.Notice %></Notice>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Text><%= License.Text %></Text>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </License>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <SourceCode>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Language><%= SourceCode.Language %></Language>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <FileName><%= SourceCode.FileName %></FileName>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <FileSize><%= SourceCode.FileSize %></FileSize>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <FileHash><%= SourceCode.FileHash %></FileHash>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <WebLink><%= SourceCode.WebLink %></WebLink>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Contact><%= SourceCode.Contact %></Contact>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Comments><%= SourceCode.Comments %></Comments>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </SourceCode>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <ModificationSummary>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <BaseCodeName><%= ModificationSummary.BaseCodeName %></BaseCodeName>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <BaseCodeDescription><%= ModificationSummary.BaseCodeDescription %></BaseCodeDescription>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <BaseCodeVersion>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <Major><%= ModificationSummary.BaseCodeVersion.Major %></Major>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <Minor><%= ModificationSummary.BaseCodeVersion.Minor %></Minor>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <Build><%= ModificationSummary.BaseCodeVersion.Build %></Build>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <Revision><%= ModificationSummary.BaseCodeVersion.Revision %></Revision>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      </BaseCodeVersion>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Description><%= ModificationSummary.Description %></Description>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </ModificationSummary>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <LibraryList>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <%= From item In Libraries
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Select
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <Library>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Name><%= item.Name %></Name>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Description><%= item.Description %></Description>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <CreationDate><%= Format(item.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <LicenseNotice><%= item.LicenseNotice %></LicenseNotice>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <CopyrightNotice><%= item.CopyrightNotice %></CopyrightNotice>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Version>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Major><%= item.Version.Major %></Major>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Minor><%= item.Version.Minor %></Minor>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Build><%= item.Version.Build %></Build>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Revision><%= item.Version.Revision %></Revision>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              </Version>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Author>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Name><%= item.Author.Name %></Name>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Description><%= item.Author.Description %></Description>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Contact><%= item.Author.Contact %></Contact>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              </Author>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <ClassList>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <%= From classItem In item.Classes
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      Select
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <Class>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <Name><%= classItem.Name %></Name>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <Description><%= classItem.Description %></Description>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      </Class>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  %>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              </ClassList>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </Library>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      %>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </LibraryList>
-    '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              </Application>
+
 
     'End Function
 
-    '
 
-    Public Function ApplicationInfoXDoc() As System.Xml.Linq.XDocument
-        'Return the Application Information in an XDocument.
 
-        ApplicationInfoXDoc = <?xml version="1.0" encoding="utf-8"?>
-                              <!---->
-                              <!--Application Information for Application: ADVL_Zip-->
-                              <!---->
-                              <Application>
-                                  <Name><%= Name %></Name>
-                                  <Description><%= Description %></Description>
-                                  <CreationDate><%= Format(CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-                                  <FileAssociationList>
-                                      <%= From item In FileAssociations
-                                          Select
+    Public Function ApplicationInfoAdvl_1XDoc() As System.Xml.Linq.XDocument
+        'Return the Application Information in an XDocument. (ADVL_1 format.)
+
+        ApplicationInfoAdvl_1XDoc = <?xml version="1.0" encoding="utf-8"?>
+                                    <!---->
+                                    <!--Application Information for Application: ADVL_Zip-->
+                                    <!---->
+                                    <Application>
+                                        <Name><%= Name %></Name>
+                                        <ExecutablePath><%= ExecutablePath %></ExecutablePath>
+                                        <Description><%= Description %></Description>
+                                        <CreationDate><%= Format(CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+                                        <FileAssociationList>
+                                            <%= From item In FileAssociations
+                                                Select
                                           <FileAssociation>
                                               <Extension><%= item.Extension %></Extension>
                                               <Description><%= item.Description %></Description>
                                           </FileAssociation>
-                                      %>
-                                  </FileAssociationList>
-                                  <Version>
-                                      <Major><%= Version.Major %></Major>
-                                      <Minor><%= Version.Minor %></Minor>
-                                      <Build><%= Version.Build %></Build>
-                                      <Revision><%= Version.Revision %></Revision>
-                                  </Version>
-                                  <Author>
-                                      <Name><%= Author.Name %></Name>
-                                      <Description><%= Author.Description %></Description>
-                                      <Contact><%= Author.Contact %></Contact>
-                                  </Author>
-                                  <Copyright>
-                                      <OwnerName><%= Copyright.OwnerName %></OwnerName>
-                                      <PublicationYear><%= Copyright.PublicationYear %></PublicationYear>
-                                      <Notice><%= Copyright.Notice %></Notice>
-                                  </Copyright>
-                                  <TrademarkList>
-                                      <%= From item In Trademarks
-                                          Select
+                                            %>
+                                        </FileAssociationList>
+                                        <Version>
+                                            <Major><%= Version.Major %></Major>
+                                            <Minor><%= Version.Minor %></Minor>
+                                            <Build><%= Version.Build %></Build>
+                                            <Revision><%= Version.Revision %></Revision>
+                                        </Version>
+                                        <Author>
+                                            <Name><%= Author.Name %></Name>
+                                            <Description><%= Author.Description %></Description>
+                                            <Contact><%= Author.Contact %></Contact>
+                                        </Author>
+                                        <Copyright>
+                                            <OwnerName><%= Copyright.OwnerName %></OwnerName>
+                                            <PublicationYear><%= Copyright.PublicationYear %></PublicationYear>
+                                            <Notice><%= Copyright.Notice %></Notice>
+                                        </Copyright>
+                                        <TrademarkList>
+                                            <%= From item In Trademarks
+                                                Select
                                           <Trademark>
                                               <Text><%= item.Text %></Text>
                                               <OwnerName><%= item.OwnerName %></OwnerName>
                                               <Registered><%= item.Registered %></Registered>
                                               <GenericTerm><%= item.GenericTerm %></GenericTerm>
                                           </Trademark>
-                                      %>
-                                  </TrademarkList>
-                                  <License>
-                                      <Type><%= License.Type.ToString %></Type>
-                                      <Notice><%= License.Notice %></Notice>
-                                      <Text><%= License.Text %></Text>
-                                  </License>
-                                  <SourceCode>
-                                      <Language><%= SourceCode.Language %></Language>
-                                      <FileName><%= SourceCode.FileName %></FileName>
-                                      <FileSize><%= SourceCode.FileSize %></FileSize>
-                                      <FileHash><%= SourceCode.FileHash %></FileHash>
-                                      <WebLink><%= SourceCode.WebLink %></WebLink>
-                                      <Contact><%= SourceCode.Contact %></Contact>
-                                      <Comments><%= SourceCode.Comments %></Comments>
-                                  </SourceCode>
-                                  <ModificationSummary>
-                                      <BaseCodeName><%= ModificationSummary.BaseCodeName %></BaseCodeName>
-                                      <BaseCodeDescription><%= ModificationSummary.BaseCodeDescription %></BaseCodeDescription>
-                                      <BaseCodeVersion>
-                                          <Major><%= ModificationSummary.BaseCodeVersion.Major %></Major>
-                                          <Minor><%= ModificationSummary.BaseCodeVersion.Minor %></Minor>
-                                          <Build><%= ModificationSummary.BaseCodeVersion.Build %></Build>
-                                          <Revision><%= ModificationSummary.BaseCodeVersion.Revision %></Revision>
-                                      </BaseCodeVersion>
-                                      <Description><%= ModificationSummary.Description %></Description>
-                                  </ModificationSummary>
-                                  <LibraryList>
-                                      <%= From item In Libraries
-                                          Select
+                                            %>
+                                        </TrademarkList>
+                                        <License>
+                                            <Code><%= License.Code.ToString %></Code>
+                                            <Notice><%= License.Notice %></Notice>
+                                            <Text><%= License.Text %></Text>
+                                        </License>
+                                        <SourceCode>
+                                            <Language><%= SourceCode.Language %></Language>
+                                            <FileName><%= SourceCode.FileName %></FileName>
+                                            <FileSize><%= SourceCode.FileSize %></FileSize>
+                                            <FileHash><%= SourceCode.FileHash %></FileHash>
+                                            <WebLink><%= SourceCode.WebLink %></WebLink>
+                                            <Contact><%= SourceCode.Contact %></Contact>
+                                            <Comments><%= SourceCode.Comments %></Comments>
+                                        </SourceCode>
+                                        <ModificationSummary>
+                                            <BaseCodeName><%= ModificationSummary.BaseCodeName %></BaseCodeName>
+                                            <BaseCodeDescription><%= ModificationSummary.BaseCodeDescription %></BaseCodeDescription>
+                                            <BaseCodeVersion>
+                                                <Major><%= ModificationSummary.BaseCodeVersion.Major %></Major>
+                                                <Minor><%= ModificationSummary.BaseCodeVersion.Minor %></Minor>
+                                                <Build><%= ModificationSummary.BaseCodeVersion.Build %></Build>
+                                                <Revision><%= ModificationSummary.BaseCodeVersion.Revision %></Revision>
+                                            </BaseCodeVersion>
+                                            <Description><%= ModificationSummary.Description %></Description>
+                                        </ModificationSummary>
+                                        <LibraryList>
+                                            <%= From item In Libraries
+                                                Select
                                           <Library>
                                               <Name><%= item.Name %></Name>
                                               <Description><%= item.Description %></Description>
@@ -4047,9 +7648,122 @@ Public Class ApplicationInfo '--------------------------------------------------
                                                   %>
                                               </ClassList>
                                           </Library>
-                                      %>
-                                  </LibraryList>
-                              </Application>
+                                            %>
+                                        </LibraryList>
+                                    </Application>
+
+    End Function
+
+    Public Function ApplicationInfoAdvl_2XDoc() As System.Xml.Linq.XDocument
+        'Return the Application Information in an XDocument. (ADVL_2 format.)
+
+        ApplicationInfoAdvl_2XDoc = <?xml version="1.0" encoding="utf-8"?>
+                                    <!---->
+                                    <!--Application Information File-->
+                                    <!---->
+                                    <Application>
+                                        <FormatCode>ADVL_2</FormatCode>
+                                        <Name><%= Name %></Name>
+                                        <ExecutablePath><%= ExecutablePath %></ExecutablePath>
+                                        <Description><%= Description %></Description>
+                                        <CreationDate><%= Format(CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+                                        <FileAssociationList>
+                                            <%= From item In FileAssociations
+                                                Select
+                                          <FileAssociation>
+                                              <Extension><%= item.Extension %></Extension>
+                                              <Description><%= item.Description %></Description>
+                                          </FileAssociation>
+                                            %>
+                                        </FileAssociationList>
+                                        <Version>
+                                            <Major><%= Version.Major %></Major>
+                                            <Minor><%= Version.Minor %></Minor>
+                                            <Build><%= Version.Build %></Build>
+                                            <Revision><%= Version.Revision %></Revision>
+                                        </Version>
+                                        <Author>
+                                            <Name><%= Author.Name %></Name>
+                                            <Description><%= Author.Description %></Description>
+                                            <Contact><%= Author.Contact %></Contact>
+                                        </Author>
+                                        <Copyright>
+                                            <OwnerName><%= Copyright.OwnerName %></OwnerName>
+                                            <PublicationYear><%= Copyright.PublicationYear %></PublicationYear>
+                                            <Notice><%= Copyright.Notice %></Notice>
+                                        </Copyright>
+                                        <TrademarkList>
+                                            <%= From item In Trademarks
+                                                Select
+                                          <Trademark>
+                                              <Text><%= item.Text %></Text>
+                                              <OwnerName><%= item.OwnerName %></OwnerName>
+                                              <Registered><%= item.Registered %></Registered>
+                                              <GenericTerm><%= item.GenericTerm %></GenericTerm>
+                                          </Trademark>
+                                            %>
+                                        </TrademarkList>
+                                        <License>
+                                            <Code><%= License.Code.ToString %></Code>
+                                            <Notice><%= License.Notice %></Notice>
+                                            <Text><%= License.Text %></Text>
+                                        </License>
+                                        <SourceCode>
+                                            <Language><%= SourceCode.Language %></Language>
+                                            <FileName><%= SourceCode.FileName %></FileName>
+                                            <FileSize><%= SourceCode.FileSize %></FileSize>
+                                            <FileHash><%= SourceCode.FileHash %></FileHash>
+                                            <WebLink><%= SourceCode.WebLink %></WebLink>
+                                            <Contact><%= SourceCode.Contact %></Contact>
+                                            <Comments><%= SourceCode.Comments %></Comments>
+                                        </SourceCode>
+                                        <ModificationSummary>
+                                            <BaseCodeName><%= ModificationSummary.BaseCodeName %></BaseCodeName>
+                                            <BaseCodeDescription><%= ModificationSummary.BaseCodeDescription %></BaseCodeDescription>
+                                            <BaseCodeVersion>
+                                                <Major><%= ModificationSummary.BaseCodeVersion.Major %></Major>
+                                                <Minor><%= ModificationSummary.BaseCodeVersion.Minor %></Minor>
+                                                <Build><%= ModificationSummary.BaseCodeVersion.Build %></Build>
+                                                <Revision><%= ModificationSummary.BaseCodeVersion.Revision %></Revision>
+                                            </BaseCodeVersion>
+                                            <Description><%= ModificationSummary.Description %></Description>
+                                        </ModificationSummary>
+                                        <LibraryList>
+                                            <%= From item In Libraries
+                                                Select
+                                          <Library>
+                                              <Name><%= item.Name %></Name>
+                                              <Description><%= item.Description %></Description>
+                                              <CreationDate><%= Format(item.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+                                              <LicenseNotice><%= item.LicenseNotice %></LicenseNotice>
+                                              <CopyrightNotice><%= item.CopyrightNotice %></CopyrightNotice>
+                                              <Version>
+                                                  <Major><%= item.Version.Major %></Major>
+                                                  <Minor><%= item.Version.Minor %></Minor>
+                                                  <Build><%= item.Version.Build %></Build>
+                                                  <Revision><%= item.Version.Revision %></Revision>
+                                              </Version>
+                                              <Author>
+                                                  <Name><%= item.Author.Name %></Name>
+                                                  <Description><%= item.Author.Description %></Description>
+                                                  <Contact><%= item.Author.Contact %></Contact>
+                                              </Author>
+                                              <ClassList>
+                                                  <%= From classItem In item.Classes
+                                                      Select
+                                                      <Class>
+                                                          <Name><%= classItem.Name %></Name>
+                                                          <Description><%= classItem.Description %></Description>
+                                                      </Class>
+                                                  %>
+                                              </ClassList>
+                                          </Library>
+                                            %>
+                                        </LibraryList>
+                                        <ConnectOnStartup><%= ConnectOnStartup %></ConnectOnStartup>
+                                    </Application>
+
+        '<ConnectOnStartup><%= ConnectOnStartup %></ConnectOnStartup> ADDED 20Feb19
 
     End Function
 
@@ -4057,340 +7771,659 @@ Public Class ApplicationInfo '--------------------------------------------------
         'Read the Application Info properties from the Application_Info.xml file.
         'This file is in the Application Directory.
 
-        If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml") Then
-            'The Application_Info.xml file exists.
+        'If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml") Then
+        If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info_ADVL_2.xml") Then
+            'The Application_Info_ADVL_2.xml file exists.
             'Check if it is locked:
-            If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.lock") Then
-                'The Application_Info.xml file has been locked.
+            'If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.lock") Then
+            If System.IO.File.Exists(ApplicationDir & "\" & "Application.Lock") Then
+                'The Application has been locked.
                 'It may be being used by another instance of the application.
                 'Wait a while and try again.
 
-                'MessageBox.Show("The Application Info file is locked.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-                'Application.Exit()
-
-                RaiseEvent ErrorMessage("The Application Info file is locked. Check if the application is already running." & vbCrLf)
-                RaiseEvent ErrorMessage("If required deleted the 'Application_Info.lock' file in the application directory: " & ApplicationDir & vbCrLf)
+                'RaiseEvent ErrorMessage("The Application Info file is locked. Check if the application is already running." & vbCrLf)
+                RaiseEvent ErrorMessage("The Application is locked. Check if the application is already running." & vbCrLf)
+                'RaiseEvent ErrorMessage("If required delete the 'Application_Info.lock' file in the application directory: " & ApplicationDir & vbCrLf)
+                RaiseEvent ErrorMessage("If required delete the 'Application.Lock' file in the application directory: " & ApplicationDir & vbCrLf)
 
             Else
                 'The Application_Info.xml file is not locked.
                 'Read the Appllication information:
-                Dim applicationInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Application_Info.xml")
+                'Dim applicationInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Application_Info.xml")
+                Dim AppInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
 
-                'Read Application Name:
-                If applicationInfoXDoc.<Application>.<Name>.Value = Nothing Then
-                    Name = ""
-                Else
-                    Name = applicationInfoXDoc.<Application>.<Name>.Value
-                End If
-
-                ''Read the Application Executable File Name:
-                'If applicationInfoXDoc.<Application>.<ExeFilename>.Value = Nothing Then
-                '    ExeFileName = ""
-                'Else
-                '    ExeFileName = applicationInfoXDoc.<Application>.<ExeFilename>.Value
-                'End If
-
-                'Read the Applications Executable Path:
-                If applicationInfoXDoc.<Application>.<ExecutablePath>.Value = Nothing Then
-                    ExecutablePath = ""
-                Else
-                    ExecutablePath = applicationInfoXDoc.<Application>.<ExecutablePath>.Value
-                End If
-
-
-                'Read Application Description:
-                If applicationInfoXDoc.<Application>.<Description>.Value = Nothing Then
-                    Description = ""
-                Else
-                    Description = applicationInfoXDoc.<Application>.<Description>.Value
-                End If
-
-                'Read Application Creation Date:
-                If applicationInfoXDoc.<Application>.<CreationDate>.Value = Nothing Then
-                    CreationDate = "1-Jan-2000 12:00:00"
-                Else
-                    CreationDate = applicationInfoXDoc.<Application>.<CreationDate>.Value
-                End If
-
-
-                'Read File Association(s): -------------------------------------------------------------------------------------
-                If applicationInfoXDoc.<Application>.<FileAssociationList>.<FileAssociation> Is Nothing Then
-
-                Else
-                    Dim Assns = From item In applicationInfoXDoc.<Application>.<FileAssociationList>.<FileAssociation>
-
-                    FileAssociations.Clear()
-                    For Each item In Assns
-                        Dim NewAssoc As New FileAssociation
-                        NewAssoc.Extension = item.<Extension>.Value
-                        NewAssoc.Description = item.<Description>.Value
-                        FileAssociations.Add(NewAssoc)
-                    Next
-                End If
-
-                'Read Author Information ------------------------------------------------------------------------------
-                'Read Application Author - Name
-                If applicationInfoXDoc.<Application>.<Author>.<Name>.Value = Nothing Then
-                    Author.Name = ""
-                Else
-                    Author.Name = applicationInfoXDoc.<Application>.<Author>.<Name>.Value
-                End If
-
-                'Read Application Author - Description
-                If applicationInfoXDoc.<Application>.<Author>.<Description>.Value = Nothing Then
-                    Author.Description = ""
-                Else
-                    Author.Description = applicationInfoXDoc.<Application>.<Author>.<Description>.Value
-                End If
-
-                'Read Application Author - Contact
-                If applicationInfoXDoc.<Application>.<Author>.<Contact>.Value = Nothing Then
-                    Author.Contact = ""
-                Else
-                    Author.Contact = applicationInfoXDoc.<Application>.<Author>.<Contact>.Value
-                End If
-
-
-                'Read Version Information ---------------------------------------------------------------------------
-                'Read Application Version - Major
-                If applicationInfoXDoc.<Application>.<Version>.<Major>.Value = Nothing Then
-                    Version.Major = 1
-                Else
-                    Version.Major = applicationInfoXDoc.<Application>.<Version>.<Major>.Value
-                End If
-
-                'Read Application Version - Minor
-                If applicationInfoXDoc.<Application>.<Version>.<Minor>.Value = Nothing Then
-                    Version.Minor = 0
-                Else
-                    Version.Minor = applicationInfoXDoc.<Application>.<Version>.<Minor>.Value
-                End If
-
-                'Read Application Version - Build
-                If applicationInfoXDoc.<Application>.<Version>.<Build>.Value = Nothing Then
-                    Version.Build = 1
-                Else
-                    Version.Build = applicationInfoXDoc.<Application>.<Version>.<Build>.Value
-                End If
-
-                'Read Application Version - Revision
-                If applicationInfoXDoc.<Application>.<Version>.<Revision>.Value = Nothing Then
-                    Version.Revision = 0
-                Else
-                    Version.Revision = applicationInfoXDoc.<Application>.<Version>.<Revision>.Value
-                End If
-
-
-                'Read Copyright Information ------------------------------------------------------------------------
-                'Read Copyright Owner Name
-                If applicationInfoXDoc.<Application>.<Copyright>.<OwnerName>.Value = Nothing Then
-                    Copyright.OwnerName = ""
-                Else
-                    Copyright.OwnerName = applicationInfoXDoc.<Application>.<Copyright>.<OwnerName>.Value
-                End If
-
-                'Read Copyright Publication Year
-                If applicationInfoXDoc.<Application>.<Copyright>.<PublicationYear>.Value = Nothing Then
-                    Copyright.PublicationYear = ""
-                Else
-                    Copyright.PublicationYear = applicationInfoXDoc.<Application>.<Copyright>.<PublicationYear>.Value
-                End If
-
-                'Read Copyright Notice
-                'NOTE: Copyright Notice is read only (it is automatically generated from the OwnerName and the PublicationYear.)
-
-                'Read Trademarks ---------------------------------------------------------------------------------
-                If applicationInfoXDoc.<Application>.<TrademarkList>.<Trademark> Is Nothing Then
-
-                Else
-                    Dim TMarks = From item In applicationInfoXDoc.<Application>.<TrademarkList>.<Trademark>
-
-                    Trademarks.Clear()
-                    For Each item In TMarks
-                        Dim NewTMark As New Trademark
-                        NewTMark.Text = item.<Text>.Value
-                        NewTMark.OwnerName = item.<OwnerName>.Value
-                        Select Case item.<Registered>.Value
-                            Case "True"
-                                NewTMark.Registered = True
-                            Case "False"
-                                NewTMark.Registered = False
-                        End Select
-                        NewTMark.GenericTerm = item.<GenericTerm>.Value
-                        Trademarks.Add(NewTMark)
-                    Next
-                End If
-
-                'Read License Information ------------------------------------------------------------------------
-                'Read License Type:
-                If applicationInfoXDoc.<Application>.<License>.<Type>.Value = Nothing Then
-                    License.Type = ADVL_Utilities_Library_1.License.Types.Unknown
-                Else
-                    Select Case applicationInfoXDoc.<Application>.<License>.<Type>.Value
-                        Case "None"
-                            License.Type = ADVL_Utilities_Library_1.License.Types.None
-                        Case "Apache_License_2_0"
-                            License.Type = ADVL_Utilities_Library_1.License.Types.Apache_License_2_0
-                        Case "GNU_GPL_V3_0"
-                            License.Type = ADVL_Utilities_Library_1.License.Types.GNU_GPL_V3_0
-                        Case "Unknown"
-                            License.Type = ADVL_Utilities_Library_1.License.Types.Unknown
-                        Case Else
-                            License.Type = ADVL_Utilities_Library_1.License.Types.Unknown
-                    End Select
-                End If
-
-                'Read License Notice
-                If applicationInfoXDoc.<Application>.<License>.<Notice>.Value = Nothing Then
-                    License.Notice = ""
-                Else
-                    License.Notice = applicationInfoXDoc.<Application>.<License>.<Notice>.Value
-                End If
-
-                'Read License Text
-                If applicationInfoXDoc.<Application>.<License>.<Text>.Value = Nothing Then
-                    License.Text = ""
-                Else
-                    License.Text = applicationInfoXDoc.<Application>.<License>.<Text>.Value
-                End If
-
-
-                'Read Source Code Information ---------------------------------------------------------------------
-                'Read Source Code Language
-                If applicationInfoXDoc.<Application>.<SourceCode>.<Language>.Value = Nothing Then
-                    SourceCode.Language = ""
-                Else
-                    SourceCode.Language = applicationInfoXDoc.<Application>.<SourceCode>.<Language>.Value
-                End If
-
-                'Read Source Code File Name
-                If applicationInfoXDoc.<Application>.<SourceCode>.<FileName>.Value = Nothing Then
-                    SourceCode.FileName = ""
-                Else
-                    SourceCode.FileName = applicationInfoXDoc.<Application>.<SourceCode>.<FileName>.Value
-                End If
-
-                'Read Source Code File Size
-                If applicationInfoXDoc.<Application>.<SourceCode>.<FileSize>.Value = Nothing Then
-                    SourceCode.FileSize = 0
-                Else
-                    SourceCode.FileSize = applicationInfoXDoc.<Application>.<SourceCode>.<FileSize>.Value
-                End If
-
-                'Read Source Code File Hash
-                If applicationInfoXDoc.<Application>.<SourceCode>.<FileHash>.Value = Nothing Then
-                    SourceCode.FileHash = ""
-                Else
-                    SourceCode.FileHash = applicationInfoXDoc.<Application>.<SourceCode>.<FileHash>.Value
-                End If
-
-                'Read Source Code Web Link
-                If applicationInfoXDoc.<Application>.<SourceCode>.<WebLink>.Value = Nothing Then
-                    SourceCode.WebLink = ""
-                Else
-                    SourceCode.WebLink = applicationInfoXDoc.<Application>.<SourceCode>.<WebLink>.Value
-                End If
-
-                'Read Source Code Contact
-                If applicationInfoXDoc.<Application>.<SourceCode>.<Contact>.Value = Nothing Then
-                    SourceCode.Contact = ""
-                Else
-                    SourceCode.Contact = applicationInfoXDoc.<Application>.<SourceCode>.<Contact>.Value
-                End If
-
-                'Read Source Code Comments
-                If applicationInfoXDoc.<Application>.<SourceCode>.<Comments>.Value = Nothing Then
-                    SourceCode.Comments = ""
-                Else
-                    SourceCode.Comments = applicationInfoXDoc.<Application>.<SourceCode>.<Comments>.Value
-                End If
-
-                'Read Modification Summary: -----------------------------------------------------------------------
-                'Read Base Code Name:
-                If applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeName>.Value = Nothing Then
-                    ModificationSummary.BaseCodeName = ""
-                Else
-                    ModificationSummary.BaseCodeName = applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeName>.Value
-                End If
-                'Read Base Code Description:
-                If applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeDescription>.Value = Nothing Then
-                    ModificationSummary.BaseCodeDescription = ""
-                Else
-                    ModificationSummary.BaseCodeDescription = applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeDescription>.Value
-                End If
-                'Read Base Code Version:
-                'Major:
-                If applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Major>.Value = Nothing Then
-                    ModificationSummary.BaseCodeVersion.Major = 0
-                Else
-                    ModificationSummary.BaseCodeVersion.Major = applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Major>.Value
-                End If
-                'Minor:
-                If applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Minor>.Value = Nothing Then
-                    ModificationSummary.BaseCodeVersion.Minor = 0
-                Else
-                    ModificationSummary.BaseCodeVersion.Minor = applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Minor>.Value
-                End If
-                'Build:
-                If applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Build>.Value = Nothing Then
-                    ModificationSummary.BaseCodeVersion.Build = 0
-                Else
-                    ModificationSummary.BaseCodeVersion.Build = applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Build>.Value
-                End If
-                'Revision:
-                If applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Revision>.Value = Nothing Then
-                    ModificationSummary.BaseCodeVersion.Revision = 0
-                Else
-                    ModificationSummary.BaseCodeVersion.Revision = applicationInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Revision>.Value
-                End If
-                'Read Description:
-                If applicationInfoXDoc.<Application>.<ModificationSummary>.<Description>.Value = Nothing Then
-                    ModificationSummary.Description = ""
-                Else
-                    ModificationSummary.Description = applicationInfoXDoc.<Application>.<ModificationSummary>.<Description>.Value
-                End If
-
-                'Read Library List information:
-                If applicationInfoXDoc.<Application>.<LibraryList>.<Library> Is Nothing Then
-
-                Else
-                    Dim Libs = From item In applicationInfoXDoc.<Application>.<LibraryList>.<Library>
-
-                    Libraries.Clear()
-                    For Each item In Libs
-                        Dim NewLib As New LibrarySummary
-                        NewLib.Name = item.<Name>.Value
-                        NewLib.Description = item.<Description>.Value
-                        NewLib.CreationDate = item.<CreationDate>.Value
-                        NewLib.LicenseNotice = item.<LicenseNotice>.Value
-                        NewLib.CopyrightNotice = item.<CopyrightNotice>.Value
-                        NewLib.Version.Major = item.<Version>.<Major>.Value
-                        NewLib.Version.Minor = item.<Version>.<Minor>.Value
-                        NewLib.Version.Build = item.<Version>.<Build>.Value
-                        NewLib.Version.Revision = item.<Version>.<Revision>.Value
-                        NewLib.Author.Name = item.<Author>.<Name>.Value
-                        NewLib.Author.Description = item.<Author>.<Description>.Value
-                        NewLib.Author.Contact = item.<Author>.<Contact>.Value
-                        For Each classItem In item.<ClassList>.<Class>
-                            Dim NewClass As New ClassSummary
-                            NewClass.Name = classItem.<Name>.Value
-                            NewClass.Description = classItem.<Description>.Value
-                            NewLib.Classes.Add(NewClass)
-                        Next
-                        Libraries.Add(NewLib)
-                    Next
-                End If
+                ReadAppInfoAdvl_2(AppInfoXDoc)
 
             End If
-        Else 'The Application_Info.xml file does not exist.
-
+        Else 'The Application_Info_ADVL_2.xml file does not exist.
+            'Check if the previous format version of the file exists:
+            If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml") Then 'The orignal ADVL_1 format version found.
+                RaiseEvent Message("Converting Application_Info.xml to Application_Info_ADVL_2.xml." & vbCrLf)
+                'Convert the file to the latest ADVL_2 format:
+                Dim Conversion As New ADVL_Utilities_Library_1.FormatConvert.AppInfoFileConversion
+                Conversion.DirectoryPath = ApplicationDir
+                Conversion.InputFileName = "Application_Info.xml"
+                Conversion.InputFormatCode = FormatConvert.AppInfoFileConversion.FormatCodes.ADVL_1
+                Conversion.OutputFormatCode = FormatConvert.AppInfoFileConversion.FormatCodes.ADVL_2
+                Conversion.Convert()
+                If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info_ADVL_2.xml") Then
+                    ReadFile() 'Try ReadFile again. This time Application_Info_ADVL_2.xml should be found
+                Else
+                    RaiseEvent ErrorMessage("Error converting Application_Info.xml to Application_Info_ADVL_2.xml." & vbCrLf)
+                End If
+            End If
         End If
+    End Sub
+
+    Private Sub ReadAppInfoAdvl_1(ByRef AppInfoXDoc As System.Xml.Linq.XDocument)
+        'Read the the ADVL_1 format version of the Application Information file.
+
+        'Read Application Name:
+        If AppInfoXDoc.<Application>.<Name>.Value = Nothing Then
+            Name = ""
+        Else
+            Name = AppInfoXDoc.<Application>.<Name>.Value
+        End If
+
+        'Read the Applications Executable Path:
+        If AppInfoXDoc.<Application>.<ExecutablePath>.Value = Nothing Then
+            ExecutablePath = ""
+        Else
+            ExecutablePath = AppInfoXDoc.<Application>.<ExecutablePath>.Value
+        End If
+
+        'Read Application Description:
+        If AppInfoXDoc.<Application>.<Description>.Value = Nothing Then
+            Description = ""
+        Else
+            Description = AppInfoXDoc.<Application>.<Description>.Value
+        End If
+
+        'Read Application Creation Date:
+        If AppInfoXDoc.<Application>.<CreationDate>.Value = Nothing Then
+            CreationDate = "1-Jan-2000 12:00:00"
+        Else
+            CreationDate = AppInfoXDoc.<Application>.<CreationDate>.Value
+        End If
+
+        'Read File Association(s): -------------------------------------------------------------------------------------
+        If AppInfoXDoc.<Application>.<FileAssociationList>.<FileAssociation> Is Nothing Then
+
+        Else
+            Dim Assns = From item In AppInfoXDoc.<Application>.<FileAssociationList>.<FileAssociation>
+
+            FileAssociations.Clear()
+            For Each item In Assns
+                Dim NewAssoc As New FileAssociation
+                NewAssoc.Extension = item.<Extension>.Value
+                NewAssoc.Description = item.<Description>.Value
+                FileAssociations.Add(NewAssoc)
+            Next
+        End If
+
+        'Read Author Information ------------------------------------------------------------------------------
+        'Read Application Author - Name
+        If AppInfoXDoc.<Application>.<Author>.<Name>.Value = Nothing Then
+            Author.Name = ""
+        Else
+            Author.Name = AppInfoXDoc.<Application>.<Author>.<Name>.Value
+        End If
+
+        'Read Application Author - Description
+        If AppInfoXDoc.<Application>.<Author>.<Description>.Value = Nothing Then
+            Author.Description = ""
+        Else
+            Author.Description = AppInfoXDoc.<Application>.<Author>.<Description>.Value
+        End If
+
+        'Read Application Author - Contact
+        If AppInfoXDoc.<Application>.<Author>.<Contact>.Value = Nothing Then
+            Author.Contact = ""
+        Else
+            Author.Contact = AppInfoXDoc.<Application>.<Author>.<Contact>.Value
+        End If
+
+        'Read Version Information ---------------------------------------------------------------------------
+        'Read Application Version - Major
+        If AppInfoXDoc.<Application>.<Version>.<Major>.Value = Nothing Then
+            Version.Major = 1
+        Else
+            Version.Major = AppInfoXDoc.<Application>.<Version>.<Major>.Value
+        End If
+
+        'Read Application Version - Minor
+        If AppInfoXDoc.<Application>.<Version>.<Minor>.Value = Nothing Then
+            Version.Minor = 0
+        Else
+            Version.Minor = AppInfoXDoc.<Application>.<Version>.<Minor>.Value
+        End If
+
+        'Read Application Version - Build
+        If AppInfoXDoc.<Application>.<Version>.<Build>.Value = Nothing Then
+            Version.Build = 1
+        Else
+            Version.Build = AppInfoXDoc.<Application>.<Version>.<Build>.Value
+        End If
+
+        'Read Application Version - Revision
+        If AppInfoXDoc.<Application>.<Version>.<Revision>.Value = Nothing Then
+            Version.Revision = 0
+        Else
+            Version.Revision = AppInfoXDoc.<Application>.<Version>.<Revision>.Value
+        End If
+
+        'Read Copyright Information ------------------------------------------------------------------------
+        'Read Copyright Owner Name
+        If AppInfoXDoc.<Application>.<Copyright>.<OwnerName>.Value = Nothing Then
+            Copyright.OwnerName = ""
+        Else
+            Copyright.OwnerName = AppInfoXDoc.<Application>.<Copyright>.<OwnerName>.Value
+        End If
+
+        'Read Copyright Publication Year
+        If AppInfoXDoc.<Application>.<Copyright>.<PublicationYear>.Value = Nothing Then
+            Copyright.PublicationYear = ""
+        Else
+            Copyright.PublicationYear = AppInfoXDoc.<Application>.<Copyright>.<PublicationYear>.Value
+        End If
+
+        'Read Copyright Notice
+        'NOTE: Copyright Notice is read only (it is automatically generated from the OwnerName and the PublicationYear.)
+
+        'Read Trademarks ---------------------------------------------------------------------------------
+        If AppInfoXDoc.<Application>.<TrademarkList>.<Trademark> Is Nothing Then
+
+        Else
+            Dim TMarks = From item In AppInfoXDoc.<Application>.<TrademarkList>.<Trademark>
+
+            Trademarks.Clear()
+            For Each item In TMarks
+                Dim NewTMark As New Trademark
+                NewTMark.Text = item.<Text>.Value
+                NewTMark.OwnerName = item.<OwnerName>.Value
+                Select Case item.<Registered>.Value
+                    Case "True"
+                        NewTMark.Registered = True
+                    Case "False"
+                        NewTMark.Registered = False
+                End Select
+                NewTMark.GenericTerm = item.<GenericTerm>.Value
+                Trademarks.Add(NewTMark)
+            Next
+        End If
+
+        'Read License Information ------------------------------------------------------------------------
+        'Read License Code:
+        If AppInfoXDoc.<Application>.<License>.<Code>.Value = Nothing Then
+            License.Code = ADVL_Utilities_Library_1.License.Codes.Unknown
+        Else
+            Select Case AppInfoXDoc.<Application>.<License>.<Code>.Value
+                Case "None"
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.None
+                Case "Apache_License_2_0"
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.Apache_License_2_0
+                Case "GNU_GPL_V3_0"
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.GNU_GPL_V3_0
+                Case "Unknown"
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.Unknown
+                Case Else
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.Unknown
+            End Select
+        End If
+
+        'Read License Notice
+        If AppInfoXDoc.<Application>.<License>.<Notice>.Value = Nothing Then
+            License.Notice = ""
+        Else
+            License.Notice = AppInfoXDoc.<Application>.<License>.<Notice>.Value
+        End If
+
+        'Read License Text
+        If AppInfoXDoc.<Application>.<License>.<Text>.Value = Nothing Then
+            License.Text = ""
+        Else
+            License.Text = AppInfoXDoc.<Application>.<License>.<Text>.Value
+        End If
+
+        'Read Source Code Information ---------------------------------------------------------------------
+        'Read Source Code Language
+        If AppInfoXDoc.<Application>.<SourceCode>.<Language>.Value = Nothing Then
+            SourceCode.Language = ""
+        Else
+            SourceCode.Language = AppInfoXDoc.<Application>.<SourceCode>.<Language>.Value
+        End If
+
+        'Read Source Code File Name
+        If AppInfoXDoc.<Application>.<SourceCode>.<FileName>.Value = Nothing Then
+            SourceCode.FileName = ""
+        Else
+            SourceCode.FileName = AppInfoXDoc.<Application>.<SourceCode>.<FileName>.Value
+        End If
+
+        'Read Source Code File Size
+        If AppInfoXDoc.<Application>.<SourceCode>.<FileSize>.Value = Nothing Then
+            SourceCode.FileSize = 0
+        Else
+            SourceCode.FileSize = AppInfoXDoc.<Application>.<SourceCode>.<FileSize>.Value
+        End If
+
+        'Read Source Code File Hash
+        If AppInfoXDoc.<Application>.<SourceCode>.<FileHash>.Value = Nothing Then
+            SourceCode.FileHash = ""
+        Else
+            SourceCode.FileHash = AppInfoXDoc.<Application>.<SourceCode>.<FileHash>.Value
+        End If
+
+        'Read Source Code Web Link
+        If AppInfoXDoc.<Application>.<SourceCode>.<WebLink>.Value = Nothing Then
+            SourceCode.WebLink = ""
+        Else
+            SourceCode.WebLink = AppInfoXDoc.<Application>.<SourceCode>.<WebLink>.Value
+        End If
+
+        'Read Source Code Contact
+        If AppInfoXDoc.<Application>.<SourceCode>.<Contact>.Value = Nothing Then
+            SourceCode.Contact = ""
+        Else
+            SourceCode.Contact = AppInfoXDoc.<Application>.<SourceCode>.<Contact>.Value
+        End If
+
+        'Read Source Code Comments
+        If AppInfoXDoc.<Application>.<SourceCode>.<Comments>.Value = Nothing Then
+            SourceCode.Comments = ""
+        Else
+            SourceCode.Comments = AppInfoXDoc.<Application>.<SourceCode>.<Comments>.Value
+        End If
+
+        'Read Modification Summary: -----------------------------------------------------------------------
+        'Read Base Code Name:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeName>.Value = Nothing Then
+            ModificationSummary.BaseCodeName = ""
+        Else
+            ModificationSummary.BaseCodeName = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeName>.Value
+        End If
+        'Read Base Code Description:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeDescription>.Value = Nothing Then
+            ModificationSummary.BaseCodeDescription = ""
+        Else
+            ModificationSummary.BaseCodeDescription = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeDescription>.Value
+        End If
+        'Read Base Code Version:
+        'Major:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Major>.Value = Nothing Then
+            ModificationSummary.BaseCodeVersion.Major = 0
+        Else
+            ModificationSummary.BaseCodeVersion.Major = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Major>.Value
+        End If
+        'Minor:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Minor>.Value = Nothing Then
+            ModificationSummary.BaseCodeVersion.Minor = 0
+        Else
+            ModificationSummary.BaseCodeVersion.Minor = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Minor>.Value
+        End If
+        'Build:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Build>.Value = Nothing Then
+            ModificationSummary.BaseCodeVersion.Build = 0
+        Else
+            ModificationSummary.BaseCodeVersion.Build = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Build>.Value
+        End If
+        'Revision:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Revision>.Value = Nothing Then
+            ModificationSummary.BaseCodeVersion.Revision = 0
+        Else
+            ModificationSummary.BaseCodeVersion.Revision = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Revision>.Value
+        End If
+        'Read Description:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<Description>.Value = Nothing Then
+            ModificationSummary.Description = ""
+        Else
+            ModificationSummary.Description = AppInfoXDoc.<Application>.<ModificationSummary>.<Description>.Value
+        End If
+
+        'Read Library List information:
+        If AppInfoXDoc.<Application>.<LibraryList>.<Library> Is Nothing Then
+
+        Else
+            Dim Libs = From item In AppInfoXDoc.<Application>.<LibraryList>.<Library>
+
+            Libraries.Clear()
+            For Each item In Libs
+                Dim NewLib As New LibrarySummary
+                NewLib.Name = item.<Name>.Value
+                NewLib.Description = item.<Description>.Value
+                NewLib.CreationDate = item.<CreationDate>.Value
+                NewLib.LicenseNotice = item.<LicenseNotice>.Value
+                NewLib.CopyrightNotice = item.<CopyrightNotice>.Value
+                NewLib.Version.Major = item.<Version>.<Major>.Value
+                NewLib.Version.Minor = item.<Version>.<Minor>.Value
+                NewLib.Version.Build = item.<Version>.<Build>.Value
+                NewLib.Version.Revision = item.<Version>.<Revision>.Value
+                NewLib.Author.Name = item.<Author>.<Name>.Value
+                NewLib.Author.Description = item.<Author>.<Description>.Value
+                NewLib.Author.Contact = item.<Author>.<Contact>.Value
+                For Each classItem In item.<ClassList>.<Class>
+                    Dim NewClass As New ClassSummary
+                    NewClass.Name = classItem.<Name>.Value
+                    NewClass.Description = classItem.<Description>.Value
+                    NewLib.Classes.Add(NewClass)
+                Next
+                Libraries.Add(NewLib)
+            Next
+        End If
+    End Sub
+
+    Private Sub ReadAppInfoAdvl_2(ByRef AppInfoXDoc As System.Xml.Linq.XDocument)
+        'Read the the ADVL_2 format version of the Application Information file.
+
+        'Read Application Name:
+        If AppInfoXDoc.<Application>.<Name>.Value = Nothing Then
+            Name = ""
+        Else
+            Name = AppInfoXDoc.<Application>.<Name>.Value
+        End If
+
+        'Read the Applications Executable Path:
+        If AppInfoXDoc.<Application>.<ExecutablePath>.Value = Nothing Then
+            ExecutablePath = ""
+        Else
+            ExecutablePath = AppInfoXDoc.<Application>.<ExecutablePath>.Value
+        End If
+
+        'Read Application Description:
+        If AppInfoXDoc.<Application>.<Description>.Value = Nothing Then
+            Description = ""
+        Else
+            Description = AppInfoXDoc.<Application>.<Description>.Value
+        End If
+
+        'Read Application Creation Date:
+        If AppInfoXDoc.<Application>.<CreationDate>.Value = Nothing Then
+            CreationDate = "1-Jan-2000 12:00:00"
+        Else
+            CreationDate = AppInfoXDoc.<Application>.<CreationDate>.Value
+        End If
+
+        'Read File Association(s): -------------------------------------------------------------------------------------
+        If AppInfoXDoc.<Application>.<FileAssociationList>.<FileAssociation> Is Nothing Then
+
+        Else
+            Dim Assns = From item In AppInfoXDoc.<Application>.<FileAssociationList>.<FileAssociation>
+
+            FileAssociations.Clear()
+            For Each item In Assns
+                Dim NewAssoc As New FileAssociation
+                NewAssoc.Extension = item.<Extension>.Value
+                NewAssoc.Description = item.<Description>.Value
+                FileAssociations.Add(NewAssoc)
+            Next
+        End If
+
+        'Read Author Information ------------------------------------------------------------------------------
+        'Read Application Author - Name
+        If AppInfoXDoc.<Application>.<Author>.<Name>.Value = Nothing Then
+            Author.Name = ""
+        Else
+            Author.Name = AppInfoXDoc.<Application>.<Author>.<Name>.Value
+        End If
+
+        'Read Application Author - Description
+        If AppInfoXDoc.<Application>.<Author>.<Description>.Value = Nothing Then
+            Author.Description = ""
+        Else
+            Author.Description = AppInfoXDoc.<Application>.<Author>.<Description>.Value
+        End If
+
+        'Read Application Author - Contact
+        If AppInfoXDoc.<Application>.<Author>.<Contact>.Value = Nothing Then
+            Author.Contact = ""
+        Else
+            Author.Contact = AppInfoXDoc.<Application>.<Author>.<Contact>.Value
+        End If
+
+        'Read Version Information ---------------------------------------------------------------------------
+        'Read Application Version - Major
+        If AppInfoXDoc.<Application>.<Version>.<Major>.Value = Nothing Then
+            Version.Major = 1
+        Else
+            Version.Major = AppInfoXDoc.<Application>.<Version>.<Major>.Value
+        End If
+
+        'Read Application Version - Minor
+        If AppInfoXDoc.<Application>.<Version>.<Minor>.Value = Nothing Then
+            Version.Minor = 0
+        Else
+            Version.Minor = AppInfoXDoc.<Application>.<Version>.<Minor>.Value
+        End If
+
+        'Read Application Version - Build
+        If AppInfoXDoc.<Application>.<Version>.<Build>.Value = Nothing Then
+            Version.Build = 1
+        Else
+            Version.Build = AppInfoXDoc.<Application>.<Version>.<Build>.Value
+        End If
+
+        'Read Application Version - Revision
+        If AppInfoXDoc.<Application>.<Version>.<Revision>.Value = Nothing Then
+            Version.Revision = 0
+        Else
+            Version.Revision = AppInfoXDoc.<Application>.<Version>.<Revision>.Value
+        End If
+
+        'Read Copyright Information ------------------------------------------------------------------------
+        'Read Copyright Owner Name
+        If AppInfoXDoc.<Application>.<Copyright>.<OwnerName>.Value = Nothing Then
+            Copyright.OwnerName = ""
+        Else
+            Copyright.OwnerName = AppInfoXDoc.<Application>.<Copyright>.<OwnerName>.Value
+        End If
+
+        'Read Copyright Publication Year
+        If AppInfoXDoc.<Application>.<Copyright>.<PublicationYear>.Value = Nothing Then
+            Copyright.PublicationYear = ""
+        Else
+            Copyright.PublicationYear = AppInfoXDoc.<Application>.<Copyright>.<PublicationYear>.Value
+        End If
+
+        'Read Copyright Notice
+        'NOTE: Copyright Notice is read only (it is automatically generated from the OwnerName and the PublicationYear.)
+
+        'Read Trademarks ---------------------------------------------------------------------------------
+        If AppInfoXDoc.<Application>.<TrademarkList>.<Trademark> Is Nothing Then
+
+        Else
+            Dim TMarks = From item In AppInfoXDoc.<Application>.<TrademarkList>.<Trademark>
+
+            Trademarks.Clear()
+            For Each item In TMarks
+                Dim NewTMark As New Trademark
+                NewTMark.Text = item.<Text>.Value
+                NewTMark.OwnerName = item.<OwnerName>.Value
+                Select Case item.<Registered>.Value
+                    Case "True"
+                        NewTMark.Registered = True
+                    Case "False"
+                        NewTMark.Registered = False
+                End Select
+                NewTMark.GenericTerm = item.<GenericTerm>.Value
+                Trademarks.Add(NewTMark)
+            Next
+        End If
+
+        'Read License Information ------------------------------------------------------------------------
+        'Read License Code:
+        If AppInfoXDoc.<Application>.<License>.<Code>.Value = Nothing Then
+            License.Code = ADVL_Utilities_Library_1.License.Codes.Unknown
+        Else
+            Select Case AppInfoXDoc.<Application>.<License>.<Code>.Value
+                Case "None"
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.None
+                Case "Apache_License_2_0"
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.Apache_License_2_0
+                Case "GNU_GPL_V3_0"
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.GNU_GPL_V3_0
+                Case "Unknown"
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.Unknown
+                Case Else
+                    License.Code = ADVL_Utilities_Library_1.License.Codes.Unknown
+            End Select
+        End If
+
+        'Read License Notice
+        If AppInfoXDoc.<Application>.<License>.<Notice>.Value = Nothing Then
+            License.Notice = ""
+        Else
+            License.Notice = AppInfoXDoc.<Application>.<License>.<Notice>.Value
+        End If
+
+        'Read License Text
+        If AppInfoXDoc.<Application>.<License>.<Text>.Value = Nothing Then
+            License.Text = ""
+        Else
+            License.Text = AppInfoXDoc.<Application>.<License>.<Text>.Value
+        End If
+
+        'Read Source Code Information ---------------------------------------------------------------------
+        'Read Source Code Language
+        If AppInfoXDoc.<Application>.<SourceCode>.<Language>.Value = Nothing Then
+            SourceCode.Language = ""
+        Else
+            SourceCode.Language = AppInfoXDoc.<Application>.<SourceCode>.<Language>.Value
+        End If
+
+        'Read Source Code File Name
+        If AppInfoXDoc.<Application>.<SourceCode>.<FileName>.Value = Nothing Then
+            SourceCode.FileName = ""
+        Else
+            SourceCode.FileName = AppInfoXDoc.<Application>.<SourceCode>.<FileName>.Value
+        End If
+
+        'Read Source Code File Size
+        If AppInfoXDoc.<Application>.<SourceCode>.<FileSize>.Value = Nothing Then
+            SourceCode.FileSize = 0
+        Else
+            SourceCode.FileSize = AppInfoXDoc.<Application>.<SourceCode>.<FileSize>.Value
+        End If
+
+        'Read Source Code File Hash
+        If AppInfoXDoc.<Application>.<SourceCode>.<FileHash>.Value = Nothing Then
+            SourceCode.FileHash = ""
+        Else
+            SourceCode.FileHash = AppInfoXDoc.<Application>.<SourceCode>.<FileHash>.Value
+        End If
+
+        'Read Source Code Web Link
+        If AppInfoXDoc.<Application>.<SourceCode>.<WebLink>.Value = Nothing Then
+            SourceCode.WebLink = ""
+        Else
+            SourceCode.WebLink = AppInfoXDoc.<Application>.<SourceCode>.<WebLink>.Value
+        End If
+
+        'Read Source Code Contact
+        If AppInfoXDoc.<Application>.<SourceCode>.<Contact>.Value = Nothing Then
+            SourceCode.Contact = ""
+        Else
+            SourceCode.Contact = AppInfoXDoc.<Application>.<SourceCode>.<Contact>.Value
+        End If
+
+        'Read Source Code Comments
+        If AppInfoXDoc.<Application>.<SourceCode>.<Comments>.Value = Nothing Then
+            SourceCode.Comments = ""
+        Else
+            SourceCode.Comments = AppInfoXDoc.<Application>.<SourceCode>.<Comments>.Value
+        End If
+
+        'Read Modification Summary: -----------------------------------------------------------------------
+        'Read Base Code Name:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeName>.Value = Nothing Then
+            ModificationSummary.BaseCodeName = ""
+        Else
+            ModificationSummary.BaseCodeName = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeName>.Value
+        End If
+        'Read Base Code Description:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeDescription>.Value = Nothing Then
+            ModificationSummary.BaseCodeDescription = ""
+        Else
+            ModificationSummary.BaseCodeDescription = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeDescription>.Value
+        End If
+        'Read Base Code Version:
+        'Major:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Major>.Value = Nothing Then
+            ModificationSummary.BaseCodeVersion.Major = 0
+        Else
+            ModificationSummary.BaseCodeVersion.Major = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Major>.Value
+        End If
+        'Minor:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Minor>.Value = Nothing Then
+            ModificationSummary.BaseCodeVersion.Minor = 0
+        Else
+            ModificationSummary.BaseCodeVersion.Minor = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Minor>.Value
+        End If
+        'Build:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Build>.Value = Nothing Then
+            ModificationSummary.BaseCodeVersion.Build = 0
+        Else
+            ModificationSummary.BaseCodeVersion.Build = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Build>.Value
+        End If
+        'Revision:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Revision>.Value = Nothing Then
+            ModificationSummary.BaseCodeVersion.Revision = 0
+        Else
+            ModificationSummary.BaseCodeVersion.Revision = AppInfoXDoc.<Application>.<ModificationSummary>.<BaseCodeVersion>.<Revision>.Value
+        End If
+        'Read Description:
+        If AppInfoXDoc.<Application>.<ModificationSummary>.<Description>.Value = Nothing Then
+            ModificationSummary.Description = ""
+        Else
+            ModificationSummary.Description = AppInfoXDoc.<Application>.<ModificationSummary>.<Description>.Value
+        End If
+
+        'Read Library List information:
+        If AppInfoXDoc.<Application>.<LibraryList>.<Library> Is Nothing Then
+
+        Else
+            Dim Libs = From item In AppInfoXDoc.<Application>.<LibraryList>.<Library>
+
+            Libraries.Clear()
+            For Each item In Libs
+                Dim NewLib As New LibrarySummary
+                NewLib.Name = item.<Name>.Value
+                NewLib.Description = item.<Description>.Value
+                NewLib.CreationDate = item.<CreationDate>.Value
+                NewLib.LicenseNotice = item.<LicenseNotice>.Value
+                NewLib.CopyrightNotice = item.<CopyrightNotice>.Value
+                NewLib.Version.Major = item.<Version>.<Major>.Value
+                NewLib.Version.Minor = item.<Version>.<Minor>.Value
+                NewLib.Version.Build = item.<Version>.<Build>.Value
+                NewLib.Version.Revision = item.<Version>.<Revision>.Value
+                NewLib.Author.Name = item.<Author>.<Name>.Value
+                NewLib.Author.Description = item.<Author>.<Description>.Value
+                NewLib.Author.Contact = item.<Author>.<Contact>.Value
+                For Each classItem In item.<ClassList>.<Class>
+                    Dim NewClass As New ClassSummary
+                    NewClass.Name = classItem.<Name>.Value
+                    NewClass.Description = classItem.<Description>.Value
+                    NewLib.Classes.Add(NewClass)
+                Next
+                Libraries.Add(NewLib)
+            Next
+        End If
+
+        'ADDED 20Feb18
+        'Read ConnectOnStartup:
+        If AppInfoXDoc.<Application>.<ConnectOnStartup>.Value Is Nothing Then
+            ConnectOnStartup = True
+        Else
+            ConnectOnStartup = AppInfoXDoc.<Application>.<ConnectOnStartup>.Value
+            Debug.Print("ConnectOnStartup:  " & ConnectOnStartup.ToString)
+        End If
+
     End Sub
 
     Public Sub WriteFile()
         'Write the Application Info propserties to the Application_Info.xml file.
 
-        ApplicationInfoXDoc.Save(ApplicationDir & "\" & "Application_Info.xml")
+        'ApplicationInfoAdvl_1XDoc.Save(ApplicationDir & "\" & "Application_Info.xml")
+        ApplicationInfoAdvl_2XDoc.Save(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
 
     End Sub
 
@@ -4405,102 +8438,189 @@ Public Class ApplicationInfo '--------------------------------------------------
             AppInfoForm.SettingsLocn = SettingsLocn
             AppInfoForm.RestoreFormSettings()
 
-            'Show the Application Summary information: ------------------------------------------------------
-            AppInfoForm.txtAppName.Text = Name
-            'AppInfoForm.txtExeFileName.Text = ExeFileName
-            AppInfoForm.txtExecutablePath.Text = ExecutablePath
-            AppInfoForm.txtDescription.Text = Description
-            AppInfoForm.txtCreationDate.Text = CreationDate
-            AppInfoForm.txtMajor.Text = Version.Major
-            AppInfoForm.txtMinor.Text = Version.Minor
-            AppInfoForm.txtBuild.Text = Version.Build
-            AppInfoForm.txtRevision.Text = Version.Revision
-            AppInfoForm.txtAuthorName.Text = Author.Name
-            'AppInfoForm.txtAuthorDesc.Text = Author.Description
-            AppInfoForm.rtbAuthorDesc.Text = Author.Description
-            AppInfoForm.txtAuthorContact.Text = Author.Contact
-            AppInfoForm.txtCopyrightNotice.Text = Copyright.Notice
+            ''Show the Application Summary information: ------------------------------------------------------
+            'AppInfoForm.txtAppName.Text = Name
+            'AppInfoForm.txtExecutablePath.Text = ExecutablePath
+            'AppInfoForm.txtDescription.Text = Description
+            'AppInfoForm.txtCreationDate.Text = CreationDate
+            'AppInfoForm.txtMajor.Text = Version.Major
+            'AppInfoForm.txtMinor.Text = Version.Minor
+            'AppInfoForm.txtBuild.Text = Version.Build
+            'AppInfoForm.txtRevision.Text = Version.Revision
+            'AppInfoForm.txtAuthorName.Text = Author.Name
+            'AppInfoForm.rtbAuthorDesc.Text = Author.Description
+            'AppInfoForm.txtAuthorContact.Text = Author.Contact
+            'AppInfoForm.txtCopyrightNotice.Text = Copyright.Notice
 
-            'Show the first file association record: ------------------------------------------------------
-            AppInfoForm.NAssoc = FileAssociations.Count
-            If FileAssociations.Count > 0 Then
-                'ShowFileAssociation(1)
-                AppInfoForm.SelectedAssocNo = 1
-            Else
+            ''Show the first file association record: ------------------------------------------------------
+            'AppInfoForm.NAssoc = FileAssociations.Count
+            'If FileAssociations.Count > 0 Then
+            '    AppInfoForm.SelectedAssocNo = 1
+            'Else
 
-            End If
+            'End If
 
+            ''Show the Application License information: ----------------------------------------------------
+            'AppInfoForm.rtbLicenceNotice.Text = License.Notice
+            'AppInfoForm.rtbLicenseText.Text = License.Text
 
-            'Show the Application License information: ----------------------------------------------------
-            AppInfoForm.rtbLicenceNotice.Text = License.Notice
-            AppInfoForm.rtbLicenseText.Text = License.Text
+            ''Show trademark information: ------------------------------------------------------------------
+            'AppInfoForm.rtbTrademarks.Clear()
+            ''Add the Trademarks title to the page
+            'AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 11, Drawing.FontStyle.Bold Or Drawing.FontStyle.Underline)
+            'AppInfoForm.rtbTrademarks.SelectionColor = Drawing.Color.Black
+            'AppInfoForm.rtbTrademarks.SelectedText = "Trademarks" & vbCrLf & vbCrLf
 
-            'Show trademark information: ------------------------------------------------------------------
-            AppInfoForm.rtbTrademarks.Clear()
-            'Add the Trademarks title to the page
-            AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 11, Drawing.FontStyle.Bold Or Drawing.FontStyle.Underline)
-            AppInfoForm.rtbTrademarks.SelectionColor = Drawing.Color.Black
-            AppInfoForm.rtbTrademarks.SelectedText = "Trademarks" & vbCrLf & vbCrLf
+            'For Each item In Trademarks
+            '    AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Bold)
+            '    AppInfoForm.rtbTrademarks.SelectionColor = Drawing.Color.Black
+            '    AppInfoForm.rtbTrademarks.SelectedText = item.Text
+            '    If item.Registered = True Then
+            '        'Add the ® superscript:
+            '        AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Bold)
+            '        AppInfoForm.rtbTrademarks.SelectionCharOffset = 10
+            '        AppInfoForm.rtbTrademarks.SelectedText = "® "
+            '        'Add the trademark owner name:
+            '        AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Regular)
+            '        AppInfoForm.rtbTrademarks.SelectionCharOffset = 0
+            '        AppInfoForm.rtbTrademarks.SelectedText = "is a registered trademark of " & item.OwnerName & vbCrLf & vbCrLf
+            '    Else
+            '        'Add the TM superscript:
+            '        AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 7, Drawing.FontStyle.Bold)
+            '        AppInfoForm.rtbTrademarks.SelectionCharOffset = 10
+            '        AppInfoForm.rtbTrademarks.SelectedText = "TM "
+            '        'Add the trademark owner name:
+            '        AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Regular)
+            '        AppInfoForm.rtbTrademarks.SelectionCharOffset = 0
+            '        AppInfoForm.rtbTrademarks.SelectedText = "is a trademark of " & item.OwnerName & vbCrLf & vbCrLf
 
-            For Each item In Trademarks
-                AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Bold)
-                AppInfoForm.rtbTrademarks.SelectionColor = Drawing.Color.Black
-                AppInfoForm.rtbTrademarks.SelectedText = item.Text
-                If item.Registered = True Then
-                    'Add the ® superscript:
-                    AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Bold)
-                    AppInfoForm.rtbTrademarks.SelectionCharOffset = 10
-                    AppInfoForm.rtbTrademarks.SelectedText = "® "
-                    'Add the trademark owner name:
-                    AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Regular)
-                    AppInfoForm.rtbTrademarks.SelectionCharOffset = 0
-                    AppInfoForm.rtbTrademarks.SelectedText = "is a registered trademark of " & item.OwnerName & vbCrLf & vbCrLf
-                Else
-                    'Add the TM superscript:
-                    AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 7, Drawing.FontStyle.Bold)
-                    AppInfoForm.rtbTrademarks.SelectionCharOffset = 10
-                    AppInfoForm.rtbTrademarks.SelectedText = "TM "
-                    'Add the trademark owner name:
-                    AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Regular)
-                    AppInfoForm.rtbTrademarks.SelectionCharOffset = 0
-                    AppInfoForm.rtbTrademarks.SelectedText = "is a trademark of " & item.OwnerName & vbCrLf & vbCrLf
+            '    End If
+            'Next
 
-                End If
-            Next
+            ''Show Source Code information: --------------------------------------------------------------------------------
+            'AppInfoForm.txtLanguage.Text = SourceCode.Language
+            'AppInfoForm.txtSourceFileName.Text = SourceCode.FileName
+            'AppInfoForm.txtSourceFileSize.Text = SourceCode.FileSize
+            'AppInfoForm.txtSourceFileHash.Text = SourceCode.FileHash
+            'AppInfoForm.txtSourceWebLink.Text = SourceCode.WebLink
+            'AppInfoForm.txtSourceContact.Text = SourceCode.Contact
+            'AppInfoForm.txtSourceComments.Text = SourceCode.Comments
 
-            'Show Source Code information: --------------------------------------------------------------------------------
-            AppInfoForm.txtLanguage.Text = SourceCode.Language
-            AppInfoForm.txtSourceFileName.Text = SourceCode.FileName
-            AppInfoForm.txtSourceFileSize.Text = SourceCode.FileSize
-            AppInfoForm.txtSourceFileHash.Text = SourceCode.FileHash
-            AppInfoForm.txtSourceWebLink.Text = SourceCode.WebLink
-            AppInfoForm.txtSourceContact.Text = SourceCode.Contact
-            AppInfoForm.txtSourceComments.Text = SourceCode.Comments
+            ''Show Modifications: -----------------------------------------------------------------------------------------
+            'AppInfoForm.txtBaseCodeName.Text = ModificationSummary.BaseCodeName
+            'AppInfoForm.txtBaseCodeDescription.Text = ModificationSummary.BaseCodeDescription
+            'AppInfoForm.txtBaseCodeVersionMajor.Text = ModificationSummary.BaseCodeVersion.Major
+            'AppInfoForm.txtBaseCodeVersionMinor.Text = ModificationSummary.BaseCodeVersion.Minor
+            'AppInfoForm.txtBaseCodeVersionBuild.Text = ModificationSummary.BaseCodeVersion.Build
+            'AppInfoForm.txtBaseCodeVersionRevision.Text = ModificationSummary.BaseCodeVersion.Revision
+            'AppInfoForm.rtbModifications.Text = ModificationSummary.Description
 
+            ''Show the first software library record: ------------------------------------------------------
+            'AppInfoForm.NLibraries = Libraries.Count
+            'If Libraries.Count > 0 Then
+            '    AppInfoForm.SelectedLibraryNo = 1
+            'Else
 
-            'Show Modifications: -----------------------------------------------------------------------------------------
-            AppInfoForm.txtBaseCodeName.Text = ModificationSummary.BaseCodeName
-            AppInfoForm.txtBaseCodeDescription.Text = ModificationSummary.BaseCodeDescription
-            AppInfoForm.txtBaseCodeVersionMajor.Text = ModificationSummary.BaseCodeVersion.Major
-            AppInfoForm.txtBaseCodeVersionMinor.Text = ModificationSummary.BaseCodeVersion.Minor
-            AppInfoForm.txtBaseCodeVersionBuild.Text = ModificationSummary.BaseCodeVersion.Build
-            AppInfoForm.txtBaseCodeVersionRevision.Text = ModificationSummary.BaseCodeVersion.Revision
-            AppInfoForm.rtbModifications.Text = ModificationSummary.Description
-
-            'Show the first software library record: ------------------------------------------------------
-            AppInfoForm.NLibraries = Libraries.Count
-            If Libraries.Count > 0 Then
-                'ShowLibraryInfo(1)
-                AppInfoForm.SelectedLibraryNo = 1
-
-            Else
-
-            End If
-
+            'End If
 
         Else
             AppInfoForm.Show()
             AppInfoForm.BringToFront()
+        End If
+
+        'UPDATE THE INFORMATION EVERY TIME SHOWINFO() IS CALLED.
+        'WHEN APPINTO.RESTOREDEFAULTS IS CALLED, THE DISPLAYED PARAMETERS WILL NEED TO BE UPDATED.
+
+        'Show the Application Summary information: ------------------------------------------------------
+        AppInfoForm.txtAppName.Text = Name
+        AppInfoForm.txtExecutablePath.Text = ExecutablePath
+        AppInfoForm.txtDescription.Text = Description
+        AppInfoForm.txtCreationDate.Text = CreationDate
+        AppInfoForm.txtMajor.Text = Version.Major
+        AppInfoForm.txtMinor.Text = Version.Minor
+        AppInfoForm.txtBuild.Text = Version.Build
+        AppInfoForm.txtRevision.Text = Version.Revision
+        AppInfoForm.txtAuthorName.Text = Author.Name
+        AppInfoForm.rtbAuthorDesc.Text = Author.Description
+        AppInfoForm.txtAuthorContact.Text = Author.Contact
+        AppInfoForm.txtCopyrightNotice.Text = Copyright.Notice
+
+        'Show the first file association record: ------------------------------------------------------
+        AppInfoForm.NAssoc = FileAssociations.Count
+        If FileAssociations.Count > 0 Then
+            AppInfoForm.SelectedAssocNo = 1
+        Else
+
+        End If
+
+        'Show the Application License information: ----------------------------------------------------
+        AppInfoForm.rtbLicenceNotice.Text = License.Notice
+        AppInfoForm.rtbLicenseText.Text = License.Text
+
+        'Show trademark information: ------------------------------------------------------------------
+        AppInfoForm.rtbTrademarks.Clear()
+        'Add the Trademarks title to the page
+        AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 11, Drawing.FontStyle.Bold Or Drawing.FontStyle.Underline)
+        AppInfoForm.rtbTrademarks.SelectionColor = Drawing.Color.Black
+        AppInfoForm.rtbTrademarks.SelectedText = "Trademarks" & vbCrLf & vbCrLf
+
+        For Each item In Trademarks
+            AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Bold)
+            AppInfoForm.rtbTrademarks.SelectionColor = Drawing.Color.Black
+            AppInfoForm.rtbTrademarks.SelectedText = item.Text
+            If item.Registered = True Then
+                'Add the ® superscript:
+                AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Bold)
+                AppInfoForm.rtbTrademarks.SelectionCharOffset = 10
+                AppInfoForm.rtbTrademarks.SelectedText = "® "
+                'Add the trademark owner name:
+                AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Regular)
+                AppInfoForm.rtbTrademarks.SelectionCharOffset = 0
+                AppInfoForm.rtbTrademarks.SelectedText = "is a registered trademark of " & item.OwnerName & vbCrLf & vbCrLf
+            Else
+                'Add the TM superscript:
+                AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 7, Drawing.FontStyle.Bold)
+                AppInfoForm.rtbTrademarks.SelectionCharOffset = 10
+                AppInfoForm.rtbTrademarks.SelectedText = "TM "
+                'Add the trademark owner name:
+                AppInfoForm.rtbTrademarks.SelectionFont = New Drawing.Font("Arial", 10, Drawing.FontStyle.Regular)
+                AppInfoForm.rtbTrademarks.SelectionCharOffset = 0
+                AppInfoForm.rtbTrademarks.SelectedText = "is a trademark of " & item.OwnerName & vbCrLf & vbCrLf
+
+            End If
+        Next
+
+        'Show Source Code information: --------------------------------------------------------------------------------
+        AppInfoForm.txtLanguage.Text = SourceCode.Language
+        AppInfoForm.txtSourceFileName.Text = SourceCode.FileName
+        AppInfoForm.txtSourceFileSize.Text = SourceCode.FileSize
+        AppInfoForm.txtSourceFileHash.Text = SourceCode.FileHash
+        AppInfoForm.txtSourceWebLink.Text = SourceCode.WebLink
+        AppInfoForm.txtSourceContact.Text = SourceCode.Contact
+        AppInfoForm.txtSourceComments.Text = SourceCode.Comments
+
+        'Show Modifications: -----------------------------------------------------------------------------------------
+        AppInfoForm.txtBaseCodeName.Text = ModificationSummary.BaseCodeName
+        AppInfoForm.txtBaseCodeDescription.Text = ModificationSummary.BaseCodeDescription
+        AppInfoForm.txtBaseCodeVersionMajor.Text = ModificationSummary.BaseCodeVersion.Major
+        AppInfoForm.txtBaseCodeVersionMinor.Text = ModificationSummary.BaseCodeVersion.Minor
+        AppInfoForm.txtBaseCodeVersionBuild.Text = ModificationSummary.BaseCodeVersion.Build
+        AppInfoForm.txtBaseCodeVersionRevision.Text = ModificationSummary.BaseCodeVersion.Revision
+        AppInfoForm.rtbModifications.Text = ModificationSummary.Description
+
+        'Show the first software library record: ------------------------------------------------------
+        AppInfoForm.NLibraries = Libraries.Count
+        If Libraries.Count > 0 Then
+            AppInfoForm.SelectedLibraryNo = 1
+        Else
+
+        End If
+
+        'Show the ConnectOnStartup setting: ------------------------------------------------------------
+        If ConnectOnStartup Then
+            AppInfoForm.chkConnect.Checked = True
+        Else
+            AppInfoForm.chkConnect.Checked = False
         End If
 
     End Sub
@@ -4613,12 +8733,26 @@ Public Class ApplicationInfo '--------------------------------------------------
         Summary.Author = Author
     End Function
 
-#Region " Display Information Methods - Methods for displaying license and trademark information."
+    Private Sub AppInfoForm_UpdateExePath() Handles AppInfoForm.UpdateExePath
+        'Update the Executable path.
+        RaiseEvent UpdateExePath()
+        AppInfoForm.txtExecutablePath.Text = ExecutablePath
+    End Sub
+
+    Private Sub AppInfoForm_RestoreDefaults() Handles AppInfoForm.RestoreDefaults
+        'Restore the default parameters.
+        RaiseEvent RestoreDefaults()
+        ShowInfo()
+    End Sub
+
+    Private Sub AppInfoForm_ConnectOnStartupChanged(Connect As Boolean) Handles AppInfoForm.ConnectOnStartupChanged
+        ConnectOnStartup = Connect
+        WriteFile() 'Save the updated settings.
+    End Sub
 
 
 
 
-#End Region
 
 
 
@@ -4634,6 +8768,8 @@ Public Class ApplicationInfo '--------------------------------------------------
 
     Event ErrorMessage(ByVal Message As String)
     Event Message(ByVal Message As String)
+    Event UpdateExePath()
+    Event RestoreDefaults()
 
 #End Region 'Events ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -4825,27 +8961,98 @@ Public Class License '----------------------------------------------------------
     'http://choosealicense.com/
     'http://www.apache.org/licenses/
     'http://opensource.org/
+    'https://creativecommons.org/choose/
 
-#Region "License Properties" '---------------------------------------------------------------------------------------------------------------------------------------------------------------
+    Public dictLicenses As New Dictionary(Of Codes, LicenseInfo) 'Dictionary of information about each license. (Type, Abbreviation, Name)
 
-    Public Enum Types
-        None               'No license type defined.
-        Unknown            'Unknown license type
+#Region "License Properties" '===============================================================================================================================================================
+
+    'Public Enum Types
+    '    None               'No license type defined.
+    '    Unknown            'Unknown license type
+    '    Apache_License_2_0 'Apache License 2.0.
+    '    GNU_GPL_V3_0       'GNU General Public License v3.0
+    '    MIT_License        'MIT License
+    '    The_Unlicense      'The Unlicense
+    'End Enum
+
+    'NOTE: Using an Enum for license names limits the characters that can be used in the name. (The following characters cannot be used: " ", "-", "&", ".")
+    'However, this makes some of the coding easier.
+    'The Enum will be changed from "Names" to "Codes".
+    'A separate dictionary will include the license names and other information.
+    'Public Enum Names
+    Public Enum Codes
+        None               'No license defined.
+        Unknown            'Unknown license
+        'Software licenses
         Apache_License_2_0 'Apache License 2.0.
         GNU_GPL_V3_0       'GNU General Public License v3.0
         MIT_License        'MIT License
         The_Unlicense      'The Unlicense
+        'Data licenses:
+        CC0_1_0            'Creative Commons Zero v1.0 Universal
+        CC_BY_4_0          'Creative Commons Attribution 4.0
+        CC_BY_SA_4_0       'Creative Commons Attribution Share Alike 4.0
     End Enum
 
-    Private _type As Types 'The software license type.
-    Property Type As Types
+    Public Enum Types 'The types of license.
+        Software
+        Data
+        Any
+    End Enum
+
+    'Private _type As Types 'The software license type.
+    'Property Type As Types
+    '    Get
+    '        Return _type
+    '    End Get
+    '    Set(value As Types)
+    '        _type = value
+    '    End Set
+    'End Property
+
+    'Private _name As Names 'The software license name (Abbreviated code).
+    'Property Name As Names
+    '    Get
+    '        Return _name
+    '    End Get
+    '    Set(value As Names)
+    '        _name = value
+    '    End Set
+    'End Property
+
+    Private _code As Codes = Codes.Unknown 'The software license code.
+    Property Code As Codes
         Get
-            Return _type
+            Return _code
         End Get
-        Set(value As Types)
-            _type = value
+        Set(value As Codes)
+            _code = value
         End Set
     End Property
+
+    'NOTE: The license type is now stored in dictLicenses
+    'USAGE: LicenseType = dictLicenses(Code).Type
+    'Private _type As Types = Types.Any 'The type of license (Software, Data or Any)
+    'Property Type As Types
+    '    Get
+    '        Return _type
+    '    End Get
+    '    Set(value As Types)
+    '        _type = value
+    '    End Set
+    'End Property
+
+    'NOTE: Fix all earlier software to handle the changed license properties!!!
+    'Private _name As String = "" 'The name of the license.
+    'Property Name As String
+    '    Get
+    '        Return _name
+    '    End Get
+    '    Set(value As String)
+    '        _name = value
+    '    End Set
+    'End Property
 
 
     Private _copyrightOwnerName As String 'The name of the copywrite owner.
@@ -4871,6 +9078,7 @@ Public Class License '----------------------------------------------------------
         End Set
     End Property
 
+    'NOTE: The license notice can be generated by the GetNotice function.
     Private _notice As String 'License notice.
     Property Notice As String
         Get
@@ -4896,6 +9104,7 @@ Public Class License '----------------------------------------------------------
     'See the License for the specific language governing permissions and
     'limitations under the License.
 
+    'NOTE: The license text can be generated by the GetText function.
     Private _text As String 'The license text.
     Property Text As String
         Get
@@ -4909,6 +9118,56 @@ Public Class License '----------------------------------------------------------
 #End Region 'License Properties -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #Region "License Methods" '------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    Public Function GetNotice()
+        'Returns the License Notice corresponding to the License Code in the Code property.
+
+        Select Case Code
+            Case Codes.Apache_License_2_0
+                Return ApacheLicenseNotice()
+            Case Codes.CC0_1_0
+                Return "To Do"
+            Case Codes.CC_BY_4_0
+                Return "To Do"
+            Case Codes.CC_BY_SA_4_0
+                Return "To Do"
+            Case Codes.GNU_GPL_V3_0
+                Return "To Do"
+            Case Codes.MIT_License
+                Return MITLicenseNotice()
+            Case Codes.None
+                Return "No license specified"
+            Case Codes.The_Unlicense
+                Return UnLicenseNotice()
+            Case Codes.Unknown
+                Return "Unknown license"
+        End Select
+    End Function
+
+    Public Function GetText()
+        'Returns the License Text corresponding to the License Code in the Code property.
+
+        Select Case Code
+            Case Codes.Apache_License_2_0
+                Return ApacheLicenseText()
+            Case Codes.CC0_1_0
+                Return "To Do"
+            Case Codes.CC_BY_4_0
+                Return "To Do"
+            Case Codes.CC_BY_SA_4_0
+                Return "To Do"
+            Case Codes.GNU_GPL_V3_0
+                Return "To Do"
+            Case Codes.MIT_License
+                Return MITLicenseText()
+            Case Codes.None
+                Return "No license specified"
+            Case Codes.The_Unlicense
+                Return UnLicenseText()
+            Case Codes.Unknown
+                Return "Unknown license"
+        End Select
+    End Function
 
     Public Function ApacheLicenseNotice() As String
         'Returns the Apache License notice.
@@ -5235,9 +9494,157 @@ Public Class License '----------------------------------------------------------
     End Function
 
 
+
+    Public Sub LoadDefaultLicenseDictionary()
+        'Constructs the default license dictionary.
+
+        dictLicenses.Clear() 'Clear the license dictionary.
+
+        'Add the None license (No license specified.)
+        dictLicenses.Add(Codes.None, New LicenseInfo)
+        dictLicenses(Codes.None).Name = "None"
+        dictLicenses(Codes.None).Abbreviation = "None"
+        dictLicenses(Codes.None).Type = Types.Any
+        dictLicenses(Codes.None).Description = "No license specified."
+
+        'Add the Unknown license (License not known)
+        dictLicenses.Add(Codes.Unknown, New LicenseInfo)
+        dictLicenses(Codes.Unknown).Name = "Unknown"
+        dictLicenses(Codes.Unknown).Abbreviation = "Unknown"
+        dictLicenses(Codes.Unknown).Type = Types.Any
+        dictLicenses(Codes.Unknown).Description = "License not known."
+
+        'Add the Apache License 2.0
+        dictLicenses.Add(Codes.Apache_License_2_0, New LicenseInfo)
+        dictLicenses(Codes.Apache_License_2_0).Name = "Apache License 2.0"
+        dictLicenses(Codes.Apache_License_2_0).Abbreviation = "Apache License 2.0"
+        dictLicenses(Codes.Apache_License_2_0).Type = Types.Software
+        dictLicenses(Codes.Apache_License_2_0).Description = "A permissive license whose main conditions require preservation of copyright and license notices. Contributors provide an express grant of patent rights. Licensed works, modifications, and larger works may be distributed under different terms and without source code. License description provided by GitHub, Inc. at https://choosealicense.com/ under the Creative Commons Atribution 3.0 Unported License: https://creativecommons.org/licenses/by/3.0/"
+
+        'Add the GNU General Public License v3.0
+        dictLicenses.Add(Codes.GNU_GPL_V3_0, New LicenseInfo)
+        dictLicenses(Codes.GNU_GPL_V3_0).Name = "GNU General Public License v3.0"
+        dictLicenses(Codes.GNU_GPL_V3_0).Abbreviation = "GNU GPLv3"
+        dictLicenses(Codes.GNU_GPL_V3_0).Type = Types.Software
+        dictLicenses(Codes.GNU_GPL_V3_0).Description = "Permissions of this strong copyleft license are conditioned on making available complete source code of licensed works and modifications, which include larger works using a licensed work, under the same license. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights. License description provided by GitHub, Inc. at https://choosealicense.com/ under the Creative Commons Atribution 3.0 Unported License: https://creativecommons.org/licenses/by/3.0/"
+
+        'Add the MIT License
+        dictLicenses.Add(Codes.MIT_License, New LicenseInfo)
+        dictLicenses(Codes.MIT_License).Name = "MIT License"
+        dictLicenses(Codes.MIT_License).Abbreviation = "MIT License"
+        dictLicenses(Codes.MIT_License).Type = Types.Software
+        dictLicenses(Codes.MIT_License).Description = "A short and simple permissive license with conditions only requiring preservation of copyright and license notices. Licensed works, modifications, and larger works may be distributed under different terms and without source code. License description provided by GitHub, Inc. at https://choosealicense.com/ under the Creative Commons Atribution 3.0 Unported License: https://creativecommons.org/licenses/by/3.0/"
+
+        'Add the Unicense
+        dictLicenses.Add(Codes.The_Unlicense, New LicenseInfo)
+        dictLicenses(Codes.The_Unlicense).Name = "The Unlicense"
+        dictLicenses(Codes.The_Unlicense).Abbreviation = "The Unlicense"
+        dictLicenses(Codes.The_Unlicense).Type = Types.Software
+        dictLicenses(Codes.The_Unlicense).Description = "A license with no conditions whatsoever which dedicates works to the public domain. Unlicensed works, modifications, and larger works may be distributed under different terms and without source code. License description provided by GitHub, Inc. at https://choosealicense.com/ under the Creative Commons Atribution 3.0 Unported License: https://creativecommons.org/licenses/by/3.0/"
+
+        'Add the CC0 1.0 Universal
+        dictLicenses.Add(Codes.CC0_1_0, New LicenseInfo)
+        dictLicenses(Codes.CC0_1_0).Name = "Creative Commons Zero v1.0 Universal"
+        dictLicenses(Codes.CC0_1_0).Abbreviation = "CC0 1.0 Universal"
+        dictLicenses(Codes.CC0_1_0).Type = Types.Data
+        dictLicenses(Codes.CC0_1_0).Description = "The Creative Commons CC0 Public Domain Dedication waives copyright interest in any a work you've created and dedicates it to the world-wide public domain. Use CC0 to opt out of copyright entirely and ensure your work has the widest reach. As with the Unlicense and typical software licenses, CC0 disclaims warranties. CC0 is very similar to the Unlicense. License description provided by GitHub, Inc. at https://choosealicense.com/ under the Creative Commons Atribution 3.0 Unported License: https://creativecommons.org/licenses/by/3.0/"
+
+        'Add the CC-BY-4.0
+        dictLicenses.Add(Codes.CC_BY_4_0, New LicenseInfo)
+        dictLicenses(Codes.CC_BY_4_0).Name = "Creative Commons Attribution 4.0"
+        dictLicenses(Codes.CC_BY_4_0).Abbreviation = "CC-BY-4.0"
+        dictLicenses(Codes.CC_BY_4_0).Type = Types.Data
+        dictLicenses(Codes.CC_BY_4_0).Description = "Permits almost any use subject to providing credit and license notice. Frequently used for media assets and educational materials. The most common license for Open Access scientific publications. Not recommended for software. License description provided by GitHub, Inc. at https://choosealicense.com/ under the Creative Commons Atribution 3.0 Unported License: https://creativecommons.org/licenses/by/3.0/"
+
+        'Add the CC-BY-SA-4.0
+        dictLicenses.Add(Codes.CC_BY_SA_4_0, New LicenseInfo)
+        dictLicenses(Codes.CC_BY_SA_4_0).Name = "Creative Commons Attribution Share Alike 4.0"
+        dictLicenses(Codes.CC_BY_SA_4_0).Abbreviation = "CC-BY-SA-4.0"
+        dictLicenses(Codes.CC_BY_SA_4_0).Type = Types.Data
+        dictLicenses(Codes.CC_BY_SA_4_0).Description = "Similar to CC-BY-4.0 but requires derivatives be distributed under the same or a similar, compatible license. Frequently used for media assets and educational materials. A previous version is the default license for Wikipedia and other Wikimedia projects. Not recommended for software. License description provided by GitHub, Inc. at https://choosealicense.com/ under the Creative Commons Atribution 3.0 Unported License: https://creativecommons.org/licenses/by/3.0/"
+    End Sub
+
+
 #End Region 'License Methods ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 End Class 'License --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Public Class LicenseInfo
+    'Information about software and data licenses.
+    'This is used in the dictionary of licenses in the License class.
+
+    Private _type As License.Types 'The type of license (Software, Data or Any).
+    Property Type As License.Types
+        Get
+            Return _type
+        End Get
+        Set(value As License.Types)
+            _type = value
+        End Set
+    End Property
+
+    Private _abbreviation As String = "" 'The abbreviated name of the license. (eg CC BY-SA)
+    Property Abbreviation As String
+        Get
+            Return _abbreviation
+        End Get
+        Set(value As String)
+            _abbreviation = value
+        End Set
+    End Property
+
+    Private _name As String = "" 'The name of the license. (eg Creative Commons Attribution-ShareAlike)
+    Property Name As String
+        Get
+            Return _name
+        End Get
+        Set(value As String)
+            _name = value
+        End Set
+    End Property
+
+    Private _description As String = "" 'A desription of the license.
+    Property Description As String
+        Get
+            Return _description
+        End Get
+        Set(value As String)
+            _description = value
+        End Set
+    End Property
+
+    'NOTE: This is now generated within the License class.
+    'Public Function LicenseNotice() As String
+    '    'Returns the license notice corresponding to the license specified in the Abbreviation property.
+
+    '    'For testing only: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    '    'Return ""
+
+    '    Select Case Abbreviation
+    '        Case "None"
+    '            Return "No license specified."
+    '        Case "Unknown"
+    '            Return "License is unknown."
+    '        Case "Apache License 2.0"
+
+    '            Return License.ApacheLicenseText
+    '        Case "GNU GPLv3"
+
+    '        Case "MIT License"
+
+    '        Case "The Unlicense"
+
+    '        Case "CC0 1.0 Universal"
+
+    '        Case "CC-BY-4.0"
+
+    '        Case "CC-BY-SA-4.0"
+
+    '    End Select
+
+    'End Function
+
+End Class
 
 
 'The SourceCode class stores information about the source code for the application.
@@ -5407,26 +9814,49 @@ Public Class Usage '------------------------------------------------------------
     Public Sub SaveUsageInfo()
         'Save the Usage information as an XML file named Usage_Info.xml in the location SaveLocn.
 
-        Dim UsageXml = <?xml version="1.0" encoding="utf-8"?>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <!---->
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <!--Usage Information-->
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <!---->
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Usage>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <FirstUsed><%= Format(FirstUsed, "d-MMM-yyyy H:mm:ss") %></FirstUsed>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <LastUsed><%= Format(Now, "d-MMM-yyyy H:mm:ss") %></LastUsed>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <LastDuration><%= CurrentDuration.ToString %></LastDuration>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <TotalDuration><%= TotalDuration.ToString %></TotalDuration>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </Usage>
-        'The "c" format specifies a constant (invariant) format for the TimeSpan string.
-        'The "G" format spacified a General Long Format: [-]d’:’hh’:’mm’:’ss.fffffff
-        'The "[-]{ d | [d.]hh:mm[:ss[.ff]] }" format is not valid
-        'The "d.hh:mm:ss.ff" format is not valid
-        '"{d\\.hh\\:mm\\:ss\\.ff}" not valid
-        '"d'.'hh':'mm':'ss'.'ff" 
-        '"d':'hh':'mm':'ss':'ff" not valid
-        '<LastDuration><%= CurrentDuration.ToString("d'.'hh':'mm':'ss'.'ff") %></LastDuration>
-        '<TotalDuration><%= TotalDuration.ToString("d'.'hh':'mm':'ss'.'ff") %></TotalDuration>
-        SaveLocn.SaveXmlData("Usage_Info.xml", UsageXml)
+        'UPDATE GET THE OLD TOTALDURATION AND ADD THE CURRENTDURATION TO PRODUCE THE NEW TOTALDURATION
+        '  This will produce the correct total duration for the case where multiple instances of the application or project are used at the same time.
+
+        Dim OldUsageXml As System.Xml.Linq.XDocument
+
+        SaveLocn.ReadXmlData("Usage_Info.xml", OldUsageXml)
+
+        If OldUsageXml Is Nothing Then
+            Dim UsageXml = <?xml version="1.0" encoding="utf-8"?>
+                           <!---->
+                           <!--Usage Information-->
+                           <!---->
+                           <Usage>
+                               <FirstUsed><%= Format(FirstUsed, "d-MMM-yyyy H:mm:ss") %></FirstUsed>
+                               <LastUsed><%= Format(Now, "d-MMM-yyyy H:mm:ss") %></LastUsed>
+                               <LastDuration><%= CurrentDuration.ToString %></LastDuration>
+                               <TotalDuration><%= TotalDuration.ToString %></TotalDuration>
+                           </Usage>
+            'The "c" format specifies a constant (invariant) format for the TimeSpan string.
+            'The "G" format spacified a General Long Format: [-]d’:’hh’:’mm’:’ss.fffffff
+            'The "[-]{ d | [d.]hh:mm[:ss[.ff]] }" format is not valid
+            'The "d.hh:mm:ss.ff" format is not valid
+            '"{d\\.hh\\:mm\\:ss\\.ff}" not valid
+            '"d'.'hh':'mm':'ss'.'ff" 
+            '"d':'hh':'mm':'ss':'ff" not valid
+            '<LastDuration><%= CurrentDuration.ToString("d'.'hh':'mm':'ss'.'ff") %></LastDuration>
+            '<TotalDuration><%= TotalDuration.ToString("d'.'hh':'mm':'ss'.'ff") %></TotalDuration>
+            SaveLocn.SaveXmlData("Usage_Info.xml", UsageXml)
+        Else
+            Dim OldTotalDuration As TimeSpan = System.TimeSpan.Parse(OldUsageXml.<Usage>.<TotalDuration>.Value)
+            Dim NewTotalDuration As TimeSpan = OldTotalDuration.Add(CurrentDuration)
+            Dim UsageXml = <?xml version="1.0" encoding="utf-8"?>
+                           <!---->
+                           <!--Usage Information-->
+                           <!---->
+                           <Usage>
+                               <FirstUsed><%= Format(FirstUsed, "d-MMM-yyyy H:mm:ss") %></FirstUsed>
+                               <LastUsed><%= Format(Now, "d-MMM-yyyy H:mm:ss") %></LastUsed>
+                               <LastDuration><%= CurrentDuration.ToString %></LastDuration>
+                               <TotalDuration><%= NewTotalDuration.ToString %></TotalDuration>
+                           </Usage>
+            SaveLocn.SaveXmlData("Usage_Info.xml", UsageXml)
+        End If
 
     End Sub
 

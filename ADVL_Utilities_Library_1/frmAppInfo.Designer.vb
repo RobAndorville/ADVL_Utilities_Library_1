@@ -25,6 +25,7 @@ Partial Class frmAppInfo
         Me.btnExit = New System.Windows.Forms.Button()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.btnUpdate = New System.Windows.Forms.Button()
         Me.txtExecutablePath = New System.Windows.Forms.TextBox()
         Me.Label47 = New System.Windows.Forms.Label()
         Me.txtCopyrightNotice = New System.Windows.Forms.TextBox()
@@ -140,6 +141,8 @@ Partial Class frmAppInfo
         Me.Label33 = New System.Windows.Forms.Label()
         Me.TabPage8 = New System.Windows.Forms.TabPage()
         Me.rtbClasses = New System.Windows.Forms.RichTextBox()
+        Me.btnRestoreDefaults = New System.Windows.Forms.Button()
+        Me.chkConnect = New System.Windows.Forms.CheckBox()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.GroupBox3.SuspendLayout()
@@ -163,7 +166,7 @@ Partial Class frmAppInfo
         'btnExit
         '
         Me.btnExit.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnExit.Location = New System.Drawing.Point(699, 12)
+        Me.btnExit.Location = New System.Drawing.Point(707, 12)
         Me.btnExit.Name = "btnExit"
         Me.btnExit.Size = New System.Drawing.Size(64, 22)
         Me.btnExit.TabIndex = 18
@@ -184,11 +187,13 @@ Partial Class frmAppInfo
         Me.TabControl1.Location = New System.Drawing.Point(12, 40)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(751, 510)
+        Me.TabControl1.Size = New System.Drawing.Size(759, 524)
         Me.TabControl1.TabIndex = 19
         '
         'TabPage1
         '
+        Me.TabPage1.Controls.Add(Me.chkConnect)
+        Me.TabPage1.Controls.Add(Me.btnUpdate)
         Me.TabPage1.Controls.Add(Me.txtExecutablePath)
         Me.TabPage1.Controls.Add(Me.Label47)
         Me.TabPage1.Controls.Add(Me.txtCopyrightNotice)
@@ -205,18 +210,28 @@ Partial Class frmAppInfo
         Me.TabPage1.Location = New System.Drawing.Point(4, 22)
         Me.TabPage1.Name = "TabPage1"
         Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage1.Size = New System.Drawing.Size(743, 484)
+        Me.TabPage1.Size = New System.Drawing.Size(751, 498)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Summary"
         Me.TabPage1.UseVisualStyleBackColor = True
+        '
+        'btnUpdate
+        '
+        Me.btnUpdate.Location = New System.Drawing.Point(9, 51)
+        Me.btnUpdate.Name = "btnUpdate"
+        Me.btnUpdate.Size = New System.Drawing.Size(54, 22)
+        Me.btnUpdate.TabIndex = 21
+        Me.btnUpdate.Text = "Update"
+        Me.btnUpdate.UseVisualStyleBackColor = True
         '
         'txtExecutablePath
         '
         Me.txtExecutablePath.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtExecutablePath.Location = New System.Drawing.Point(103, 32)
+        Me.txtExecutablePath.Multiline = True
         Me.txtExecutablePath.Name = "txtExecutablePath"
-        Me.txtExecutablePath.Size = New System.Drawing.Size(634, 20)
+        Me.txtExecutablePath.Size = New System.Drawing.Size(642, 39)
         Me.txtExecutablePath.TabIndex = 12
         '
         'Label47
@@ -234,7 +249,7 @@ Partial Class frmAppInfo
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtCopyrightNotice.Location = New System.Drawing.Point(98, 446)
         Me.txtCopyrightNotice.Name = "txtCopyrightNotice"
-        Me.txtCopyrightNotice.Size = New System.Drawing.Size(639, 20)
+        Me.txtCopyrightNotice.Size = New System.Drawing.Size(647, 20)
         Me.txtCopyrightNotice.TabIndex = 10
         '
         'Label13
@@ -258,7 +273,7 @@ Partial Class frmAppInfo
         Me.GroupBox3.Controls.Add(Me.Label10)
         Me.GroupBox3.Location = New System.Drawing.Point(141, 273)
         Me.GroupBox3.Name = "GroupBox3"
-        Me.GroupBox3.Size = New System.Drawing.Size(596, 167)
+        Me.GroupBox3.Size = New System.Drawing.Size(604, 167)
         Me.GroupBox3.TabIndex = 8
         Me.GroupBox3.TabStop = False
         Me.GroupBox3.Text = "Author:"
@@ -269,7 +284,7 @@ Partial Class frmAppInfo
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.rtbAuthorDesc.Location = New System.Drawing.Point(75, 45)
         Me.rtbAuthorDesc.Name = "rtbAuthorDesc"
-        Me.rtbAuthorDesc.Size = New System.Drawing.Size(515, 90)
+        Me.rtbAuthorDesc.Size = New System.Drawing.Size(523, 90)
         Me.rtbAuthorDesc.TabIndex = 11
         Me.rtbAuthorDesc.Text = ""
         '
@@ -279,7 +294,7 @@ Partial Class frmAppInfo
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtAuthorContact.Location = New System.Drawing.Point(75, 141)
         Me.txtAuthorContact.Name = "txtAuthorContact"
-        Me.txtAuthorContact.Size = New System.Drawing.Size(515, 20)
+        Me.txtAuthorContact.Size = New System.Drawing.Size(523, 20)
         Me.txtAuthorContact.TabIndex = 5
         '
         'txtAuthorName
@@ -288,7 +303,7 @@ Partial Class frmAppInfo
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtAuthorName.Location = New System.Drawing.Point(75, 19)
         Me.txtAuthorName.Name = "txtAuthorName"
-        Me.txtAuthorName.Size = New System.Drawing.Size(515, 20)
+        Me.txtAuthorName.Size = New System.Drawing.Size(523, 20)
         Me.txtAuthorName.TabIndex = 3
         '
         'Label12
@@ -424,7 +439,7 @@ Partial Class frmAppInfo
         Me.GroupBox1.Controls.Add(Me.Label4)
         Me.GroupBox1.Location = New System.Drawing.Point(9, 170)
         Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Size = New System.Drawing.Size(728, 97)
+        Me.GroupBox1.Size = New System.Drawing.Size(736, 97)
         Me.GroupBox1.TabIndex = 6
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "File associations:"
@@ -432,7 +447,7 @@ Partial Class frmAppInfo
         'btnNextExt
         '
         Me.btnNextExt.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnNextExt.Location = New System.Drawing.Point(685, 17)
+        Me.btnNextExt.Location = New System.Drawing.Point(693, 17)
         Me.btnNextExt.Name = "btnNextExt"
         Me.btnNextExt.Size = New System.Drawing.Size(37, 22)
         Me.btnNextExt.TabIndex = 20
@@ -442,7 +457,7 @@ Partial Class frmAppInfo
         'btnPrevExt
         '
         Me.btnPrevExt.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnPrevExt.Location = New System.Drawing.Point(642, 17)
+        Me.btnPrevExt.Location = New System.Drawing.Point(650, 17)
         Me.btnPrevExt.Name = "btnPrevExt"
         Me.btnPrevExt.Size = New System.Drawing.Size(37, 22)
         Me.btnPrevExt.TabIndex = 20
@@ -452,7 +467,7 @@ Partial Class frmAppInfo
         'txtNAssns
         '
         Me.txtNAssns.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtNAssns.Location = New System.Drawing.Point(604, 19)
+        Me.txtNAssns.Location = New System.Drawing.Point(612, 19)
         Me.txtNAssns.Name = "txtNAssns"
         Me.txtNAssns.Size = New System.Drawing.Size(32, 20)
         Me.txtNAssns.TabIndex = 7
@@ -461,7 +476,7 @@ Partial Class frmAppInfo
         '
         Me.Label25.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Label25.AutoSize = True
-        Me.Label25.Location = New System.Drawing.Point(582, 22)
+        Me.Label25.Location = New System.Drawing.Point(590, 22)
         Me.Label25.Name = "Label25"
         Me.Label25.Size = New System.Drawing.Size(16, 13)
         Me.Label25.TabIndex = 6
@@ -470,7 +485,7 @@ Partial Class frmAppInfo
         'txtAssnNo
         '
         Me.txtAssnNo.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtAssnNo.Location = New System.Drawing.Point(544, 19)
+        Me.txtAssnNo.Location = New System.Drawing.Point(552, 19)
         Me.txtAssnNo.Name = "txtAssnNo"
         Me.txtAssnNo.Size = New System.Drawing.Size(32, 20)
         Me.txtAssnNo.TabIndex = 5
@@ -479,7 +494,7 @@ Partial Class frmAppInfo
         '
         Me.Label24.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Label24.AutoSize = True
-        Me.Label24.Location = New System.Drawing.Point(514, 22)
+        Me.Label24.Location = New System.Drawing.Point(522, 22)
         Me.Label24.Name = "Label24"
         Me.Label24.Size = New System.Drawing.Size(24, 13)
         Me.Label24.TabIndex = 4
@@ -493,7 +508,7 @@ Partial Class frmAppInfo
         Me.txtFileAssocationDesc.Location = New System.Drawing.Point(75, 45)
         Me.txtFileAssocationDesc.Multiline = True
         Me.txtFileAssocationDesc.Name = "txtFileAssocationDesc"
-        Me.txtFileAssocationDesc.Size = New System.Drawing.Size(647, 46)
+        Me.txtFileAssocationDesc.Size = New System.Drawing.Size(655, 46)
         Me.txtFileAssocationDesc.TabIndex = 3
         '
         'txtExtension
@@ -502,7 +517,7 @@ Partial Class frmAppInfo
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtExtension.Location = New System.Drawing.Point(75, 19)
         Me.txtExtension.Name = "txtExtension"
-        Me.txtExtension.Size = New System.Drawing.Size(433, 20)
+        Me.txtExtension.Size = New System.Drawing.Size(441, 20)
         Me.txtExtension.TabIndex = 2
         '
         'Label5
@@ -543,16 +558,16 @@ Partial Class frmAppInfo
         '
         Me.txtDescription.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtDescription.Location = New System.Drawing.Point(103, 58)
+        Me.txtDescription.Location = New System.Drawing.Point(103, 77)
         Me.txtDescription.Multiline = True
         Me.txtDescription.Name = "txtDescription"
-        Me.txtDescription.Size = New System.Drawing.Size(634, 80)
+        Me.txtDescription.Size = New System.Drawing.Size(642, 61)
         Me.txtDescription.TabIndex = 3
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(6, 61)
+        Me.Label2.Location = New System.Drawing.Point(6, 77)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(63, 13)
         Me.Label2.TabIndex = 2
@@ -564,7 +579,7 @@ Partial Class frmAppInfo
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtAppName.Location = New System.Drawing.Point(103, 6)
         Me.txtAppName.Name = "txtAppName"
-        Me.txtAppName.Size = New System.Drawing.Size(634, 20)
+        Me.txtAppName.Size = New System.Drawing.Size(642, 20)
         Me.txtAppName.TabIndex = 1
         '
         'Label1
@@ -585,7 +600,7 @@ Partial Class frmAppInfo
         Me.TabPage2.Location = New System.Drawing.Point(4, 22)
         Me.TabPage2.Name = "TabPage2"
         Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage2.Size = New System.Drawing.Size(743, 484)
+        Me.TabPage2.Size = New System.Drawing.Size(751, 498)
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "License"
         Me.TabPage2.UseVisualStyleBackColor = True
@@ -634,7 +649,7 @@ Partial Class frmAppInfo
         Me.TabPage4.Controls.Add(Me.rtbTrademarks)
         Me.TabPage4.Location = New System.Drawing.Point(4, 22)
         Me.TabPage4.Name = "TabPage4"
-        Me.TabPage4.Size = New System.Drawing.Size(743, 484)
+        Me.TabPage4.Size = New System.Drawing.Size(751, 498)
         Me.TabPage4.TabIndex = 3
         Me.TabPage4.Text = "Trademarks"
         Me.TabPage4.UseVisualStyleBackColor = True
@@ -661,7 +676,7 @@ Partial Class frmAppInfo
         Me.TabPage3.Controls.Add(Me.Label16)
         Me.TabPage3.Location = New System.Drawing.Point(4, 22)
         Me.TabPage3.Name = "TabPage3"
-        Me.TabPage3.Size = New System.Drawing.Size(743, 484)
+        Me.TabPage3.Size = New System.Drawing.Size(751, 498)
         Me.TabPage3.TabIndex = 2
         Me.TabPage3.Text = "Source Code"
         Me.TabPage3.UseVisualStyleBackColor = True
@@ -828,7 +843,7 @@ Partial Class frmAppInfo
         Me.TabPage5.Controls.Add(Me.GroupBox5)
         Me.TabPage5.Location = New System.Drawing.Point(4, 22)
         Me.TabPage5.Name = "TabPage5"
-        Me.TabPage5.Size = New System.Drawing.Size(743, 484)
+        Me.TabPage5.Size = New System.Drawing.Size(751, 498)
         Me.TabPage5.TabIndex = 4
         Me.TabPage5.Text = "Modifications"
         Me.TabPage5.UseVisualStyleBackColor = True
@@ -1001,7 +1016,7 @@ Partial Class frmAppInfo
         Me.TabPage6.Controls.Add(Me.TabControl2)
         Me.TabPage6.Location = New System.Drawing.Point(4, 22)
         Me.TabPage6.Name = "TabPage6"
-        Me.TabPage6.Size = New System.Drawing.Size(743, 484)
+        Me.TabPage6.Size = New System.Drawing.Size(751, 498)
         Me.TabPage6.TabIndex = 5
         Me.TabPage6.Text = "Libraries"
         Me.TabPage6.UseVisualStyleBackColor = True
@@ -1379,11 +1394,31 @@ Partial Class frmAppInfo
         Me.rtbClasses.TabIndex = 0
         Me.rtbClasses.Text = ""
         '
+        'btnRestoreDefaults
+        '
+        Me.btnRestoreDefaults.Location = New System.Drawing.Point(12, 12)
+        Me.btnRestoreDefaults.Name = "btnRestoreDefaults"
+        Me.btnRestoreDefaults.Size = New System.Drawing.Size(101, 22)
+        Me.btnRestoreDefaults.TabIndex = 20
+        Me.btnRestoreDefaults.Text = "Restore Defaults"
+        Me.btnRestoreDefaults.UseVisualStyleBackColor = True
+        '
+        'chkConnect
+        '
+        Me.chkConnect.AutoSize = True
+        Me.chkConnect.Location = New System.Drawing.Point(385, 147)
+        Me.chkConnect.Name = "chkConnect"
+        Me.chkConnect.Size = New System.Drawing.Size(120, 17)
+        Me.chkConnect.TabIndex = 22
+        Me.chkConnect.Text = "Connect On Startup"
+        Me.chkConnect.UseVisualStyleBackColor = True
+        '
         'frmAppInfo
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(775, 562)
+        Me.ClientSize = New System.Drawing.Size(783, 576)
+        Me.Controls.Add(Me.btnRestoreDefaults)
         Me.Controls.Add(Me.TabControl1)
         Me.Controls.Add(Me.btnExit)
         Me.Name = "frmAppInfo"
@@ -1540,4 +1575,7 @@ Partial Class frmAppInfo
     Friend WithEvents rtbLibraryAuthorDesc As System.Windows.Forms.RichTextBox
     Friend WithEvents txtExecutablePath As Windows.Forms.TextBox
     Friend WithEvents Label47 As Windows.Forms.Label
+    Friend WithEvents btnUpdate As Windows.Forms.Button
+    Friend WithEvents btnRestoreDefaults As Windows.Forms.Button
+    Friend WithEvents chkConnect As Windows.Forms.CheckBox
 End Class

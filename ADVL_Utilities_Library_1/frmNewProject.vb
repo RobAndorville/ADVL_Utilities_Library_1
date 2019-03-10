@@ -8,7 +8,8 @@
 
     Public ApplicationSummary As New ApplicationSummary
 
-    Public SettingsLocn As ADVL_Utilities_Library_1.FileLocation 'The location used to store settings.
+    'Public SettingsLocn As ADVL_Utilities_Library_1.FileLocation 'The location used to store settings.
+    Public ProjectLocn As ADVL_Utilities_Library_1.FileLocation 'The project location - used to store form settings.
     Public ApplicationName As String 'The name of the application using the message form.
 
     'Public SettingsLocn As New Location 'This is a directory or archive where settings are stored. NOTE: USE ApplicationDir TYO STORE SETTINGS.
@@ -125,7 +126,8 @@
         'Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
         Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
         'Settings.Save(ApplicationDir & "\" & SettingsName)
-        SettingsLocn.SaveXmlData(SettingsFileName, Settings)
+        'SettingsLocn.SaveXmlData(SettingsFileName, Settings)
+        ProjectLocn.SaveXmlData(SettingsFileName, Settings)
 
     End Sub
 
@@ -139,7 +141,8 @@
         'If System.IO.File.Exists(ApplicationDir & "\" & SettingsName) Then
         Dim Settings As System.Xml.Linq.XDocument
         'Settings = XDocument.Load(ApplicationDir & "\" & SettingsName)
-        SettingsLocn.ReadXmlData(SettingsFileName, Settings)
+        'SettingsLocn.ReadXmlData(SettingsFileName, Settings)
+        ProjectLocn.ReadXmlData(SettingsFileName, Settings)
 
         If Settings Is Nothing Then
             Exit Sub
@@ -270,17 +273,33 @@
                 RaiseEvent CreateProjectError("The new project cannot be created. The specified new project directory already exists: " & NewProjectDirectoryPath)
                 Exit Sub
             Else
+                'Check if a file exists at that path:
+                If System.IO.File.Exists(NewProjectDirectoryPath) Then
+                    RaiseEvent CreateProjectError("The new project cannot be created. A file with the same name as the project directory already exists: " & NewProjectDirectoryPath)
+                    Exit Sub
+                End If
                 System.IO.Directory.CreateDirectory(NewProjectDirectoryPath) 'The new project directory has been created.
             End If
 
             NewProject.Type = Project.Types.Directory 'ProjectInfo.Types.Directory
+            NewProject.Path = NewProjectDirectoryPath '29Jul18
             NewProject.Name = txtProjectName.Text
             NewProject.Description = txtProjectDescription.Text
             NewProject.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")
+
+            'Added 24Aug18:
+            Dim IDString As String = NewProject.Name & " " & Format(NewProject.CreationDate, "d-MMM-yyyy H:mm:ss")
+            NewProject.ID = IDString.GetHashCode
+
             NewProject.SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
             NewProject.SettingsLocn.Path = NewProjectDirectoryPath
             NewProject.DataLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
             NewProject.DataLocn.Path = NewProjectDirectoryPath
+
+            'Add 3Nov18:
+            NewProject.SystemLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+            NewProject.SystemLocn.Path = NewProjectDirectoryPath
+
             NewProject.Author.Name = txtAuthorName.Text
             NewProject.Author.Description = txtAuthorDescription.Text
             NewProject.Author.Contact = txtAuthorContact.Text
@@ -291,7 +310,7 @@
             NewProject.Usage.LastUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
 
 
-        ElseIf TabControl1.SelectedTab Is TabPage2 Then 'A new Project File will be created. --------------------------------------------------------------
+        ElseIf TabControl1.SelectedTab Is TabPage2 Then 'A new Project Archive File will be created. --------------------------------------------------------------
             Dim DirectoryPath As String = txtPFDirectoryPath.Text 'The new project file will be created in this directory.
             'Check if the ProjectPath exists:
             If System.IO.Directory.Exists(DirectoryPath) Then
@@ -316,13 +335,24 @@
             End If
 
             NewProject.Type = Project.Types.Archive 'ProjectInfo.Types.Archive
+            NewProject.Path = NewProjectFilePath '29Jul18
             NewProject.Name = txtProjectName.Text
             NewProject.Description = txtProjectDescription.Text
             NewProject.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")
+
+            'Added 24Aug18:
+            Dim IDString As String = NewProject.Name & " " & Format(NewProject.CreationDate, "d-MMM-yyyy H:mm:ss")
+            NewProject.ID = IDString.GetHashCode
+
             NewProject.SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
             NewProject.SettingsLocn.Path = NewProjectFilePath
             NewProject.DataLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
             NewProject.DataLocn.Path = NewProjectFilePath
+
+            'Add 3Nov18:
+            NewProject.SystemLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
+            NewProject.SystemLocn.Path = NewProjectFilePath
+
             NewProject.Author.Name = txtAuthorName.Text
             NewProject.Author.Description = txtAuthorDescription.Text
             NewProject.Author.Contact = txtAuthorContact.Text
@@ -382,9 +412,15 @@
             End If
 
             NewProject.Type = Project.Types.Hybrid 'ProjectInfo.Types.Hybrid
+            NewProject.Path = NewProjectDirectoryPath '29Jul18
             NewProject.Name = txtProjectName.Text
             NewProject.Description = txtProjectDescription.Text
             NewProject.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")
+
+            'Added 24Aug18:
+            Dim IDString As String = NewProject.Name & " " & Format(NewProject.CreationDate, "d-MMM-yyyy H:mm:ss")
+            NewProject.ID = IDString.GetHashCode
+
             NewProject.SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
             NewProject.SettingsLocn.Path = NewProjectDirectoryPath
             NewProject.DataLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
@@ -403,78 +439,118 @@
         End If
 
         'Find the Application Info: ---------------------------------------------------------------------------------------------------------------------------------------------------------
-        'Check if the Application Info file exists:
-        If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml") Then
+        'SEE UPDATED CODE BELOW!!!
+        ''Check if the Application Info file exists:
+        ''If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml") Then
+        'If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info_ADVL_2.xml") Then
 
-        Else
-            RaiseEvent CreateProjectError("The Application Information file (Application_Info.xml) is missing from the Application Directory: " & ApplicationDir)
-            Exit Sub
-        End If
+        'Else
+        '    RaiseEvent CreateProjectError("The Application Information file (Application_Info.xml) is missing from the Application Directory: " & ApplicationDir)
+        '    Exit Sub
+        'End If
 
-        'Read the Application Information:
-        Dim ApplicationInfo As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\Application_Info.xml")
+        ''Read the Application Information:
+        ''Dim ApplicationInfo As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\Application_Info.xml")
+        'Dim ApplicationInfo As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\Application_Info_ADVL_2.xml")
 
-        If ApplicationInfo.<Application>.<Name>.Value = Nothing Then
-            NewProject.ApplicationSummary.Name = ""
-        Else
-            NewProject.ApplicationSummary.Name = ApplicationInfo.<Application>.<Name>.Value
-        End If
+        'If ApplicationInfo.<Application>.<Name>.Value = Nothing Then
+        '    'NewProject.ApplicationSummary.Name = ""
+        '    'NewProject.HostApplication.Name = ""
+        '    NewProject.Application.Name = ""
+        'Else
+        '    'NewProject.HostApplication.Name = ApplicationInfo.<Application>.<Name>.Value
+        '    NewProject.Application.Name = ApplicationInfo.<Application>.<Name>.Value
+        'End If
 
-        If ApplicationInfo.<Application>.<Description>.Value = Nothing Then
-            NewProject.ApplicationSummary.Description = ""
-        Else
-            NewProject.ApplicationSummary.Description = ApplicationInfo.<Application>.<Description>.Value
-        End If
+        'If ApplicationInfo.<Application>.<Description>.Value = Nothing Then
+        '    'NewProject.HostApplication.Description = ""
+        '    NewProject.Application.Description = ""
+        'Else
+        '    'NewProject.HostApplication.Description = ApplicationInfo.<Application>.<Description>.Value
+        '    NewProject.Application.Description = ApplicationInfo.<Application>.<Description>.Value
+        'End If
 
-        If ApplicationInfo.<Application>.<CreationDate>.Value = Nothing Then
-            NewProject.ApplicationSummary.CreationDate = "1-Jan-2000 12:00:00"
-        Else
-            'NewProject.ApplicationSummary.CreationDate = ApplicationInfo.<Application>.<CreationDate>.Value
-            'NewProject.ApplicationSummary.CreationDate = Format(ApplicationInfo.<Application>.<CreationDate>.Value, "d-MMM-yyyy H:mm:ss") 'ERROR
-            NewProject.ApplicationSummary.CreationDate = ApplicationInfo.<Application>.<CreationDate>.Value
-        End If
+        'If ApplicationInfo.<Application>.<CreationDate>.Value = Nothing Then
+        '    'NewProject.HostApplication.CreationDate = "1-Jan-2000 12:00:00"
+        '    NewProject.Application.CreationDate = "1-Jan-2000 12:00:00"
+        'Else
+        '    'NewProject.ApplicationSummary.CreationDate = ApplicationInfo.<Application>.<CreationDate>.Value
+        '    'NewProject.ApplicationSummary.CreationDate = Format(ApplicationInfo.<Application>.<CreationDate>.Value, "d-MMM-yyyy H:mm:ss") 'ERROR
+        '    'NewProject.HostApplication.CreationDate = ApplicationInfo.<Application>.<CreationDate>.Value
+        '    NewProject.Application.CreationDate = ApplicationInfo.<Application>.<CreationDate>.Value
+        'End If
 
-        If ApplicationInfo.<Application>.<Version>.<Major>.Value = Nothing Then
-            NewProject.ApplicationSummary.Version.Major = 1
-        Else
-            NewProject.ApplicationSummary.Version.Major = ApplicationInfo.<Application>.<Version>.<Major>.Value
-        End If
+        'If ApplicationInfo.<Application>.<Version>.<Major>.Value = Nothing Then
+        '    'NewProject.HostApplication.Version.Major = 1
+        '    NewProject.Application.Version.Major = 1
+        'Else
+        '    'NewProject.HostApplication.Version.Major = ApplicationInfo.<Application>.<Version>.<Major>.Value
+        '    NewProject.Application.Version.Major = ApplicationInfo.<Application>.<Version>.<Major>.Value
+        'End If
 
-        If ApplicationInfo.<Application>.<Version>.<Minor>.Value = Nothing Then
-            NewProject.ApplicationSummary.Version.Minor = 0
-        Else
-            NewProject.ApplicationSummary.Version.Minor = ApplicationInfo.<Application>.<Version>.<Minor>.Value
-        End If
+        'If ApplicationInfo.<Application>.<Version>.<Minor>.Value = Nothing Then
+        '    'NewProject.HostApplication.Version.Minor = 0
+        '    NewProject.Application.Version.Minor = 0
+        'Else
+        '    'NewProject.HostApplication.Version.Minor = ApplicationInfo.<Application>.<Version>.<Minor>.Value
+        '    NewProject.Application.Version.Minor = ApplicationInfo.<Application>.<Version>.<Minor>.Value
+        'End If
 
-        If ApplicationInfo.<Application>.<Version>.<Build>.Value = Nothing Then
-            NewProject.ApplicationSummary.Version.Build = 1
-        Else
-            NewProject.ApplicationSummary.Version.Build = ApplicationInfo.<Application>.<Version>.<Build>.Value
-        End If
+        'If ApplicationInfo.<Application>.<Version>.<Build>.Value = Nothing Then
+        '    'NewProject.HostApplication.Version.Build = 1
+        '    NewProject.Application.Version.Build = 1
+        'Else
+        '    'NewProject.HostApplication.Version.Build = ApplicationInfo.<Application>.<Version>.<Build>.Value
+        '    NewProject.Application.Version.Build = ApplicationInfo.<Application>.<Version>.<Build>.Value
+        'End If
 
-        If ApplicationInfo.<Application>.<Version>.<Revision>.Value = Nothing Then
-            NewProject.ApplicationSummary.Version.Revision = 0
-        Else
-            NewProject.ApplicationSummary.Version.Revision = ApplicationInfo.<Application>.<Version>.<Revision>.Value
-        End If
+        'If ApplicationInfo.<Application>.<Version>.<Revision>.Value = Nothing Then
+        '    'NewProject.HostApplication.Version.Revision = 0
+        '    NewProject.Application.Version.Revision = 0
+        'Else
+        '    'NewProject.HostApplication.Version.Revision = ApplicationInfo.<Application>.<Version>.<Revision>.Value
+        '    NewProject.Application.Version.Revision = ApplicationInfo.<Application>.<Version>.<Revision>.Value
+        'End If
 
-        If ApplicationInfo.<Application>.<Author>.<Name>.Value = Nothing Then
-            NewProject.ApplicationSummary.Author.Name = ""
-        Else
-            NewProject.ApplicationSummary.Author.Name = ApplicationInfo.<Application>.<Author>.<Name>.Value
-        End If
+        'If ApplicationInfo.<Application>.<Author>.<Name>.Value = Nothing Then
+        '    'NewProject.HostApplication.Author.Name = ""
+        '    NewProject.Application.Author.Name = ""
+        'Else
+        '    'NewProject.HostApplication.Author.Name = ApplicationInfo.<Application>.<Author>.<Name>.Value
+        '    NewProject.Application.Author.Name = ApplicationInfo.<Application>.<Author>.<Name>.Value
+        'End If
 
-        If ApplicationInfo.<Application>.<Author>.<Description>.Value = Nothing Then
-            NewProject.ApplicationSummary.Author.Description = ""
-        Else
-            NewProject.ApplicationSummary.Author.Description = ApplicationInfo.<Application>.<Author>.<Description>.Value
-        End If
+        'If ApplicationInfo.<Application>.<Author>.<Description>.Value = Nothing Then
+        '    'NewProject.HostApplication.Author.Description = ""
+        '    NewProject.Application.Author.Description = ""
+        'Else
+        '    'NewProject.HostApplication.Author.Description = ApplicationInfo.<Application>.<Author>.<Description>.Value
+        '    NewProject.Application.Author.Description = ApplicationInfo.<Application>.<Author>.<Description>.Value
+        'End If
 
-        If ApplicationInfo.<Application>.<Author>.<Contact>.Value = Nothing Then
-            NewProject.ApplicationSummary.Author.Contact = ""
-        Else
-            NewProject.ApplicationSummary.Author.Contact = ApplicationInfo.<Application>.<Author>.<Contact>.Value
-        End If
+        'If ApplicationInfo.<Application>.<Author>.<Contact>.Value = Nothing Then
+        '    'NewProject.HostApplication.Author.Contact = ""
+        '    NewProject.Application.Author.Contact = ""
+        'Else
+        '    'NewProject.HostApplication.Author.Contact = ApplicationInfo.<Application>.<Author>.<Contact>.Value
+        '    NewProject.Application.Author.Contact = ApplicationInfo.<Application>.<Author>.<Contact>.Value
+        'End If
+
+        'UPDATED CODE:
+        Dim NewProjectAppInfo As New ADVL_Utilities_Library_1.ApplicationInfo
+        NewProjectAppInfo.ApplicationDir = ApplicationDir
+        NewProjectAppInfo.ReadFile()
+        NewProject.ApplicationDir = ApplicationDir
+        NewProject.Application.Name = NewProjectAppInfo.Name
+        NewProject.Application.Description = NewProjectAppInfo.Description
+        NewProject.Application.CreationDate = NewProjectAppInfo.CreationDate
+        NewProject.Application.Version.Major = NewProjectAppInfo.Version.Major
+        NewProject.Application.Version.Minor = NewProjectAppInfo.Version.Minor
+        NewProject.Application.Version.Build = NewProjectAppInfo.Version.Build
+        NewProject.Application.Version.Revision = NewProjectAppInfo.Version.Revision
+        NewProject.Application.Author.Name = NewProjectAppInfo.Author.Name
+        NewProject.Application.Author.Description = NewProjectAppInfo.Author.Description
+        NewProject.Application.Author.Contact = NewProjectAppInfo.Author.Contact
 
         'Save the Project Information:
         NewProject.SaveProjectInfoFile()
@@ -498,12 +574,16 @@
         NewProjectSummary.Description = NewProject.Description
         NewProjectSummary.Type = NewProject.Type
         'NewProjectSummary.CreationDate = NewProject.CreationDate
-        NewProjectSummary.SettingsLocnType = NewProject.SettingsLocn.Type
-        NewProjectSummary.SettingsLocnPath = NewProject.SettingsLocn.Path
+
+        'NewProjectSummary.SettingsLocnType = NewProject.SettingsLocn.Type
+        'NewProjectSummary.SettingsLocnPath = NewProject.SettingsLocn.Path
+        NewProjectSummary.Type = NewProject.Type
+        NewProjectSummary.Path = NewProject.Path
+
         'NewProjectSummary.DataLocnType = NewProject.DataLocn.Type
         'NewProjectSummary.DataLocnPath = NewProject.DataLocn.Path
         NewProjectSummary.AuthorName = NewProject.Author.Name
-        NewProjectSummary.ApplicationName = NewProject.ApplicationSummary.Name
+        'NewProjectSummary.ApplicationName = NewProject.HostApplication.Name
         'NewProjectSummary.Extension = NewProject.ApplicationSummary.Extension
 
         NewProjectSummary.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")

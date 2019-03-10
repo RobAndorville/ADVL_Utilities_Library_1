@@ -11,7 +11,8 @@ Public Class frmAddProject
 
     Dim RootPath As String
 
-    Public SettingsLocn As ADVL_Utilities_Library_1.FileLocation 'The location used to store settings.
+    'Public SettingsLocn As ADVL_Utilities_Library_1.FileLocation 'The location used to store settings.
+    Public ProjectLocn As ADVL_Utilities_Library_1.FileLocation 'The Project location - used to store this form's settings.
     Public ApplicationName As String 'The name of the application using the message form.
 
 
@@ -65,7 +66,8 @@ Public Class frmAddProject
         'Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
         Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
         'Settings.Save(ApplicationDir & "\" & SettingsName)
-        SettingsLocn.SaveXmlData(SettingsFileName, Settings)
+        'SettingsLocn.SaveXmlData(SettingsFileName, Settings)
+        ProjectLocn.SaveXmlData(SettingsFileName, Settings)
 
     End Sub
 
@@ -79,7 +81,8 @@ Public Class frmAddProject
         'If System.IO.File.Exists(ApplicationDir & "\" & SettingsName) Then
         Dim Settings As System.Xml.Linq.XDocument
         'Settings = XDocument.Load(ApplicationDir & "\" & SettingsName)
-        SettingsLocn.ReadXmlData(SettingsFileName, Settings)
+        'SettingsLocn.ReadXmlData(SettingsFileName, Settings)
+        ProjectLocn.ReadXmlData(SettingsFileName, Settings)
 
         If Settings Is Nothing Then
             Exit Sub
@@ -131,6 +134,7 @@ Public Class frmAddProject
     Private Sub frmAddProject_Load(sender As Object, e As EventArgs) Handles Me.Load
 
         Label12.Visible = False 'Hide "Searching ..." label
+        chkSearchSubDirectories.Checked = True
 
         'For Each drv As System.IO.DriveInfo In My.Computer.FileSystem.Drives
         '    TreeView1.Nodes.Add(drv.Name)
@@ -202,11 +206,24 @@ Public Class frmAddProject
         'Timer1.Enabled = True
         'Timer1.Start()
 
-       
+
 
         With ProgressBar1
-            .Maximum = My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "ADVL_Project_Info.xml").Count
-            .Minimum = 0
+            'Try
+            If chkSearchSubDirectories.Checked = True Then
+                '.Maximum = My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "ADVL_Project_Info.xml").Count
+                .Maximum = My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "Project_Info_ADVL_2.xml").Count 'Search for the latest file version.
+                '.Maximum = My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "ADVL_Project_Info.xml").Where(Function(file) (file.Contai
+            Else
+                '.Maximum = My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchTopLevelOnly, "ADVL_Project_Info.xml").Count
+                .Maximum = My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchTopLevelOnly, "Project_Info_ADVL_2.xml").Count
+            End If
+
+                'Catch ex As Exception
+                '    RaiseEvent ErrorMessage(ex.Message)
+                'End Try
+
+                .Minimum = 0
             .Step = 1
             '.Value = 1
             If .Maximum = 0 Then
@@ -216,14 +233,41 @@ Public Class frmAddProject
             End If
         End With
 
-        For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "ADVL_Project_Info.xml")
-            ProgressBar1.PerformStep()
-            ListBox1.Items.Add(foundFile)
-        Next
+        If chkSearchSubDirectories.Checked = True Then
+            'For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "ADVL_Project_Info.xml")
+            For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "Project_Info_ADVL_2.xml")
+                Try
+                    ProgressBar1.PerformStep()
+                    ListBox1.Items.Add(foundFile)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage(ex.Message)
+                End Try
+            Next
+        Else
+            'For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchTopLevelOnly, "ADVL_Project_Info.xml")
+            For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchTopLevelOnly, "Project_Info_ADVL_2.xml")
+                Try
+                    ProgressBar1.PerformStep()
+                    ListBox1.Items.Add(foundFile)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage(ex.Message)
+                End Try
+            Next
+        End If
 
         With ProgressBar2
-            .Maximum = My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "*.AdvlProject").Count
-            .Minimum = 0
+            'Try
+            If chkSearchSubDirectories.Checked = True Then
+                    .Maximum = My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "*.AdvlProject").Count
+                Else
+                    .Maximum = My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchTopLevelOnly, "*.AdvlProject").Count
+                End If
+                'Catch ex As Exception
+                '    RaiseEvent ErrorMessage(ex.Message)
+                'End Try
+
+
+                .Minimum = 0
             .Step = 1
             If .Maximum = 0 Then
                 .Value = 0
@@ -232,12 +276,30 @@ Public Class frmAddProject
             End If
         End With
 
-        For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "*.AdvlProject")
-            ProgressBar2.PerformStep()
-            ListBox1.Items.Add(foundFile)
-        Next
-
-        Label12.Visible = False
+        'Try
+        If chkSearchSubDirectories.Checked = True Then
+            For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "*.AdvlProject")
+                Try
+                    ProgressBar2.PerformStep()
+                    ListBox1.Items.Add(foundFile)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage(ex.Message)
+                End Try
+            Next
+        Else
+            For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchTopLevelOnly, "*.AdvlProject")
+                Try
+                    ProgressBar2.PerformStep()
+                    ListBox1.Items.Add(foundFile)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage(ex.Message)
+                End Try
+            Next
+        End If
+            'Catch ex As Exception
+            '    RaiseEvent ErrorMessage(ex.Message)
+            'End Try
+            Label12.Visible = False
         'Timer1.Stop()
 
     End Sub
@@ -245,7 +307,8 @@ Public Class frmAddProject
     Private Sub ListBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged
         'Display the project properties in the ADVL_Project_Info.xml file:
 
-        If ListBox1.Text.EndsWith("ADVL_Project_Info.xml") Then
+        'If ListBox1.Text.EndsWith("ADVL_Project_Info.xml") Then
+        If ListBox1.Text.EndsWith("Project_Info_ADVL_2.xml") Then
             'Directory project.
             Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ListBox1.Text)
             txtProjectName.Text = ProjectInfoXDoc.<Project>.<Name>.Value
@@ -253,24 +316,24 @@ Public Class frmAddProject
             txtType.Text = ProjectInfoXDoc.<Project>.<Type>.Value
             txtCreationDate.Text = ProjectInfoXDoc.<Project>.<CreationDate>.Value
             txtAuthor.Text = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
-            txtSettingsLocnType.Text = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
-            txtSettingsLocnPath.Text = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-            txtDataLocnType.Text = ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value
-            txtDataLocnPath.Text = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
-            txtApplicationName.Text = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
+            txtSettingsRelLocnType.Text = ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Type>.Value
+            txtSettingsRelLocnPath.Text = ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value
+            txtDataRelLocnType.Text = ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Type>.Value
+            txtDataRelLocnPath.Text = ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Path>.Value
+            txtApplicationName.Text = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
             Dim Directory As String
             Directory = System.IO.Path.GetDirectoryName(ListBox1.Text)
-            If Trim(txtSettingsLocnPath.Text) = Trim(Directory) Then
-                'Project is in the same location as the saved Settings Path
-                txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, Drawing.FontStyle.Regular)
-                txtComments.ForeColor = Drawing.Color.Black
-                txtComments.Text = "Project location OK."
-            Else
-                'Project has been moved from the saved Settings Path
-                txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 10, Drawing.FontStyle.Bold)
-                txtComments.ForeColor = Drawing.Color.Red
-                txtComments.Text = "Project has moved from the saved location!"
-            End If
+            'If Trim(txtSettingsRelLocnPath.Text) = Trim(Directory) Then
+            '    'Project is in the same location as the saved Settings Path
+            '    txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, Drawing.FontStyle.Regular)
+            '    txtComments.ForeColor = Drawing.Color.Black
+            '    txtComments.Text = "Project location OK."
+            'Else
+            '    'Project has been moved from the saved Settings Path
+            '    txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 10, Drawing.FontStyle.Bold)
+            '    txtComments.ForeColor = Drawing.Color.Red
+            '    txtComments.Text = "Project has moved from the saved location!"
+            'End If
         ElseIf ListBox1.Text.EndsWith(".AdvlProject") Then
             'Archive project.
             'RaiseEvent Message(".AdvlProject type selected." & vbCrLf)
@@ -285,22 +348,22 @@ Public Class frmAddProject
                     txtType.Text = ProjectInfoXDoc.<Project>.<Type>.Value
                     txtCreationDate.Text = ProjectInfoXDoc.<Project>.<CreationDate>.Value
                     txtAuthor.Text = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
-                    txtSettingsLocnType.Text = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
-                    txtSettingsLocnPath.Text = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-                    txtDataLocnType.Text = ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value
-                    txtDataLocnPath.Text = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
-                    txtApplicationName.Text = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
-                    If Trim(txtSettingsLocnPath.Text) = Trim(ListBox1.Text) Then
-                        'Project is in the same location as the saved Settings Path
-                        txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, Drawing.FontStyle.Regular)
-                        txtComments.ForeColor = Drawing.Color.Black
-                        txtComments.Text = "Project location OK."
-                    Else
-                        'Project has been moved from the saved Settings Path
-                        txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 10, Drawing.FontStyle.Bold)
-                        txtComments.ForeColor = Drawing.Color.Red
-                        txtComments.Text = "Project has moved from the saved location!"
-                    End If
+                    txtSettingsRelLocnType.Text = ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Type>.Value
+                    txtSettingsRelLocnPath.Text = ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value
+                    txtDataRelLocnType.Text = ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Type>.Value
+                    txtDataRelLocnPath.Text = ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Path>.Value
+                    txtApplicationName.Text = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
+                    'If Trim(txtSettingsRelLocnPath.Text) = Trim(ListBox1.Text) Then
+                    '    'Project is in the same location as the saved Settings Path
+                    '    txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, Drawing.FontStyle.Regular)
+                    '    txtComments.ForeColor = Drawing.Color.Black
+                    '    txtComments.Text = "Project location OK."
+                    'Else
+                    '    'Project has been moved from the saved Settings Path
+                    '    txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 10, Drawing.FontStyle.Bold)
+                    '    txtComments.ForeColor = Drawing.Color.Red
+                    '    txtComments.Text = "Project has moved from the saved location!"
+                    'End If
                 Else
                     RaiseEvent ErrorMessage("Project information file not found in archive: " & ListBox1.Text & vbCrLf)
                 End If
@@ -319,44 +382,62 @@ Public Class frmAddProject
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
         'Add the selected project to the project list.
 
-        If ListBox1.Text.EndsWith("ADVL_Project_Info.xml") Then
+        'If ListBox1.Text.EndsWith("ADVL_Project_Info.xml") Then
+        If ListBox1.Text.EndsWith("Project_Info_ADVL_2.xml") Then
             'Directory project or Hybrid project.
             Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ListBox1.Text)
             Dim PathChanged As Boolean = False
             Dim ProjectSummary As New ADVL_Utilities_Library_1.ProjectSummary
+
+            If ProjectInfoXDoc Is Nothing Then
+                RaiseEvent ErrorMessage("No Project Information was found." & vbCrLf & vbCrLf)
+                Exit Sub
+            End If
+
+            If ProjectInfoXDoc.<Project>.<Application>.<Name>.Value <> ApplicationName Then
+                RaiseEvent ErrorMessage("The Project Application Name is: " & ProjectInfoXDoc.<Project>.<Application>.<Name>.Value & vbCrLf)
+                RaiseEvent ErrorMessage("This does not match the current Application Name: " & ApplicationName & vbCrLf & vbCrLf)
+                Exit Sub
+            End If
 
             Select Case ProjectInfoXDoc.<Project>.<Type>.Value
                 Case "Directory"
                     'Check if the SettingsPath is the same as the current Project Directory path:
                     Dim ProjectDirPath As String = System.IO.Path.GetDirectoryName(ListBox1.Text)
 
-                    If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value = ProjectDirPath Then
-                        'Saved Settings Path is correct.
-                    Else
-                        'Saved Settings Path must be updated:
-                        'ProjectInfoXDoc.<Project>.<SettingsLocation.<Path>.Value = ProjectDirPath
-                        ProjectInfoXDoc.Document.Element("Project/SettingsLocation").SetElementValue("Path", ProjectDirPath)
-                        PathChanged = True
-                    End If
-                    If ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value = ProjectDirPath Then
-                        'Saved Data Path is correct.
-                    Else
-                        'Saved Data Path must be updated:
-                        ProjectInfoXDoc.Document.Element("Project/DataLocation").SetElementValue("Path", ProjectDirPath)
-                        PathChanged = True
-                    End If
-                    If PathChanged = True Then
-                        ProjectInfoXDoc.Save(ProjectDirPath & "\" & "ADVL_Project_Info.xml")
-                    End If
+                    'NOTE: Only the relative location of the SettingsLocn and DataLocn are now stored! - No need for the following checks:
+                    'If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value = ProjectDirPath Then
+                    '    'Saved Settings Path is correct.
+                    'Else
+                    '    'Saved Settings Path must be updated:
+                    '    'ProjectInfoXDoc.<Project>.<SettingsLocation.<Path>.Value = ProjectDirPath
+                    '    'ProjectInfoXDoc.Document.Element("Project/SettingsLocation").SetElementValue("Path", ProjectDirPath)
+                    '    ProjectInfoXDoc.Element("Project").Element("SettingsLocation").SetElementValue("Path", ProjectDirPath)
+                    '    PathChanged = True
+                    'End If
+                    'If ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value = ProjectDirPath Then
+                    '    'Saved Data Path is correct.
+                    'Else
+                    '    'Saved Data Path must be updated:
+                    '    'ProjectInfoXDoc.Document.Element("Project/DataLocation").SetElementValue("Path", ProjectDirPath)
+                    '    ProjectInfoXDoc.Element("Project").Element("DataLocation").SetElementValue("Path", ProjectDirPath)
+                    '    PathChanged = True
+                    'End If
+                    'If PathChanged = True Then
+                    '    ProjectInfoXDoc.Save(ProjectDirPath & "\" & "ADVL_Project_Info.xml")
+                    'End If
 
-                    ProjectSummary.ApplicationName = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
+                    'ProjectSummary.ApplicationName = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
                     ProjectSummary.AuthorName = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
                     ProjectSummary.CreationDate = ProjectInfoXDoc.<Project>.<CreationDate>.Value
                     ProjectSummary.Description = ProjectInfoXDoc.<Project>.<Description>.Value
                     ProjectSummary.Name = ProjectInfoXDoc.<Project>.<Name>.Value
-                    ProjectSummary.SettingsLocnPath = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+                    'ProjectSummary.SettingsLocnPath = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+                    'ProjectSummary.Path = ProjectInfoXDoc.<Project>.<Path>.Value
+                    ProjectSummary.Path = ProjectDirPath
 
-                    ProjectSummary.SettingsLocnType = FileLocation.Types.Directory
+                    'ProjectSummary.SettingsLocnType = FileLocation.Types.Directory
+                    'ProjectSummary.Type = FileLocation.Types.Directory
 
                     ProjectSummary.Type = Project.Types.Directory
 
@@ -372,40 +453,45 @@ Public Class frmAddProject
             Dim Zip As New ZipComp
             Zip.ArchivePath = ListBox1.Text
             If Zip.ArchiveExists Then
-                If Zip.EntryExists("ADVL_Project_Info.xml") Then
-                    Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("ADVL_Project_Info.xml"))
+                'If Zip.EntryExists("ADVL_Project_Info.xml") Then
+                If Zip.EntryExists("Project_Info_ADVL_2.xml") Then
+                    'Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("ADVL_Project_Info.xml"))
+                    Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("Project_Info_ADVL_2.xml"))
                     Dim PathChanged As Boolean = False
                     Dim ProjectSummary As New ADVL_Utilities_Library_1.ProjectSummary
 
-                    'Check if the SettingsPath is the same as the current Project Directory path:
-                    If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value = ListBox1.Text Then
-                        'Saved Settings Path is correct.
-                    Else
-                        'Saved Settings Path must be updated:
-                        ProjectInfoXDoc.Element("Project").Element("SettingsLocation").SetElementValue("Path", ListBox1.Text)
-                        PathChanged = True
-                    End If
-                    'Check if the DataPath is the same as the current Project Directory path:
-                    If ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value = ListBox1.Text Then
-                        'Saved Data Path is correct.
-                    Else
-                        'Saved Data Path must be updated:
-                        ProjectInfoXDoc.Element("Project").Element("DataLocation").SetElementValue("Path", ListBox1.Text)
-                        PathChanged = True
-                    End If
+                    'NOTE: Only the relative location of the SettingsLocn and DataLocn are now stored! - No need for the following checks:
+                    ''Check if the SettingsPath is the same as the current Project Directory path:
+                    'If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value = ListBox1.Text Then
+                    '    'Saved Settings Path is correct.
+                    'Else
+                    '    'Saved Settings Path must be updated:
+                    '    ProjectInfoXDoc.Element("Project").Element("SettingsLocation").SetElementValue("Path", ListBox1.Text)
+                    '    PathChanged = True
+                    'End If
+                    ''Check if the DataPath is the same as the current Project Directory path:
+                    'If ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value = ListBox1.Text Then
+                    '    'Saved Data Path is correct.
+                    'Else
+                    '    'Saved Data Path must be updated:
+                    '    ProjectInfoXDoc.Element("Project").Element("DataLocation").SetElementValue("Path", ListBox1.Text)
+                    '    PathChanged = True
+                    'End If
 
-                    If PathChanged = True Then
-                        Zip.AddText("ADVL_Project_Info.xml", ProjectInfoXDoc.ToString)
-                    End If
+                    'If PathChanged = True Then
+                    '    Zip.AddText("ADVL_Project_Info.xml", ProjectInfoXDoc.ToString)
+                    'End If
 
-                    ProjectSummary.ApplicationName = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
+                    'ProjectSummary.ApplicationName = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
                     ProjectSummary.AuthorName = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
                     ProjectSummary.CreationDate = ProjectInfoXDoc.<Project>.<CreationDate>.Value
                     ProjectSummary.Description = ProjectInfoXDoc.<Project>.<Description>.Value
                     ProjectSummary.Name = ProjectInfoXDoc.<Project>.<Name>.Value
-                    ProjectSummary.SettingsLocnPath = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+                    'ProjectSummary.SettingsLocnPath = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+                    'ProjectSummary.Path = ProjectInfoXDoc.<Project>.<Path>.Value
+                    ProjectSummary.Path = Zip.ArchivePath
 
-                    ProjectSummary.SettingsLocnType = FileLocation.Types.Archive
+                    'ProjectSummary.SettingsLocnType = FileLocation.Types.Archive
 
                     ProjectSummary.Type = Project.Types.Archive
 

@@ -1,5 +1,6 @@
 ﻿Public Class frmProject
-    'The Project form is used to select a project for an Andorville Labs application or add or remove a project from the list of available projects.
+    'The Project form is used to select a project for an Andorville(TM) application or add or remove a project from the list of available projects.
+    'This form is opened from the Project class using the SelectProject() method.
 
 #Region " Variable Declarations - All the variables used in this form." '--------------------------------------------------------------------------------------------------------------------
 
@@ -10,8 +11,10 @@
 
     Public ApplicationSummary As New ApplicationSummary 'The Application Summary is updated by the Project class that calls the Project Form. This summary is needed when a new project is created.
 
-    Public SettingsLocn As ADVL_Utilities_Library_1.FileLocation 'The location used to store settings.
-    Public ApplicationName As String 'The name of the application using the message form.
+    'Public SettingsLocn As ADVL_Utilities_Library_1.FileLocation 'The location used to store settings. 'UPDATE 29Jul18 - Replaced by ProjectLocn
+    'Public ProjectLocn As ADVL_Utilities_Library_1.FileLocation 'The project location.
+    Public ProjectLocn As New ADVL_Utilities_Library_1.FileLocation 'The project location.
+    Public ApplicationName As String 'The name of the application associated with the projects.
 
     'Public SettingsLocn As New Location 'This is a directory or archive where settings are stored.
 
@@ -91,7 +94,8 @@
 
         'Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
         Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
-        SettingsLocn.SaveXmlData(SettingsFileName, Settings)
+        'SettingsLocn.SaveXmlData(SettingsFileName, Settings)
+        ProjectLocn.SaveXmlData(SettingsFileName, Settings)
 
     End Sub
 
@@ -103,7 +107,8 @@
 
         Dim Settings As System.Xml.Linq.XDocument
 
-        SettingsLocn.ReadXmlData(SettingsFileName, Settings)
+        'SettingsLocn.ReadXmlData(SettingsFileName, Settings)
+        ProjectLocn.ReadXmlData(SettingsFileName, Settings)
 
         If Settings Is Nothing Then
             Exit Sub
@@ -201,7 +206,8 @@
         If IsNothing(NewProjectForm) Then
             NewProjectForm = New frmNewProject
             NewProjectForm.ApplicationName = ApplicationName
-            NewProjectForm.SettingsLocn = SettingsLocn
+            'NewProjectForm.SettingsLocn = SettingsLocn
+            NewProjectForm.ProjectLocn = ProjectLocn
             NewProjectForm.Show()
             NewProjectForm.ApplicationDir = ApplicationDir     'Pass the name of the Application Directory.
             'NewProjectForm.ApplicationName = ApplicationName   'Pass the name of the Application Name.
@@ -224,7 +230,8 @@
         If IsNothing(AddProjectForm) Then
             AddProjectForm = New frmAddProject
             AddProjectForm.ApplicationName = ApplicationName
-            AddProjectForm.SettingsLocn = SettingsLocn
+            'AddProjectForm.SettingsLocn = SettingsLocn
+            AddProjectForm.ProjectLocn = ProjectLocn
             AddProjectForm.Show()
             AddProjectForm.ApplicationDir = ApplicationDir 'Pass the name of the Application Directory.
             AddProjectForm.RestoreFormSettings()
@@ -262,7 +269,8 @@
             Select Case ProjectList(RowNo).Type
                 Case Project.Types.Archive
                     txtType.Text = "Archive"
-                    If System.IO.File.Exists(ProjectList(RowNo).SettingsLocnPath) Then
+                    'If System.IO.File.Exists(ProjectList(RowNo).SettingsLocnPath) Then
+                    If System.IO.File.Exists(ProjectList(RowNo).Path) Then
                         'Archive found.
                     Else
                         RaiseEvent ErrorMessage("Project Archive not found!" & vbCrLf)
@@ -270,7 +278,8 @@
                     End If
                 Case Project.Types.Directory
                     txtType.Text = "Directory"
-                    If System.IO.Directory.Exists(ProjectList(RowNo).SettingsLocnPath) Then
+                    'If System.IO.Directory.Exists(ProjectList(RowNo).SettingsLocnPath) Then
+                    If System.IO.Directory.Exists(ProjectList(RowNo).Path) Then
                         'Directory found.
                     Else
                         RaiseEvent ErrorMessage("Project Directory not found!" & vbCrLf)
@@ -278,10 +287,11 @@
                     End If
                 Case Project.Types.Hybrid
                     txtType.Text = "Hybrid"
-                    If System.IO.Directory.Exists(ProjectList(RowNo).SettingsLocnPath) Then
+                    'If System.IO.Directory.Exists(ProjectList(RowNo).SettingsLocnPath) Then
+                    If System.IO.Directory.Exists(ProjectList(RowNo).Path) Then
                         'Directory found.
                     Else
-                         RaiseEvent ErrorMessage("Project Directory not found!" & vbCrLf)
+                        RaiseEvent ErrorMessage("Project Directory not found!" & vbCrLf)
                         Exit Sub
                     End If
                 Case Project.Types.None
@@ -289,12 +299,9 @@
             End Select
 
             RaiseEvent Message("Project number: " & RowNo & " selected." & vbCrLf)
-            'RaiseEvent Message("Project name: " & RowNo & ProjectList(RowNo).Name & vbCrLf)
             RaiseEvent Message("Project name: " & ProjectList(RowNo).Name & vbCrLf)
-            'RaiseEvent Message("Settings location type: " & RowNo & ProjectList(RowNo).SettingsLocnType & vbCrLf)
-            RaiseEvent Message("Settings location type: " & ProjectList(RowNo).SettingsLocnType.ToString & vbCrLf)
-            'RaiseEvent Message("Settings location path: " & RowNo & ProjectList(RowNo).SettingsLocnPath & vbCrLf & vbCrLf)
-            RaiseEvent Message("Settings location path: " & ProjectList(RowNo).SettingsLocnPath & vbCrLf & vbCrLf)
+            RaiseEvent Message("Project type: " & ProjectList(RowNo).Type.ToString & vbCrLf)
+            RaiseEvent Message("Project path: " & ProjectList(RowNo).Path & vbCrLf & vbCrLf)
             RaiseEvent ProjectSelected(ProjectList(RowNo))
         Else
             RaiseEvent ErrorMessage("No project selected." & vbCrLf)
@@ -323,26 +330,61 @@
                               <!---->
                               <!--Project List File-->
                               <ProjectList>
-                                  <%= From item In ProjectList _
-                                      Select _
+                                  <FormatCode>ADVL_2</FormatCode>
+                                  <ApplicationName><%= ApplicationName %></ApplicationName>
+                                  <%= From item In ProjectList
+                                      Select
                                       <Project>
                                           <Name><%= item.Name %></Name>
                                           <Description><%= item.Description %></Description>
                                           <Type><%= item.Type %></Type>
+                                          <Path><%= item.Path %></Path>
                                           <CreationDate><%= Format(item.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-                                          <SettingsLocationType><%= item.SettingsLocnType %></SettingsLocationType>
-                                          <SettingsLocationPath><%= item.SettingsLocnPath %></SettingsLocationPath>
                                           <AuthorName><%= item.AuthorName %></AuthorName>
-                                          <ApplicationName><%= item.ApplicationName %></ApplicationName>
                                       </Project>
                                   %>
                               </ProjectList>
 
-        ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
+        'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
+        'ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
+        'NOTE: Leave Project List file name as Project_List.xml. <FormatCode>ADVL_2</FormatCode> has been added but no need to change the file name.
+        'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
+        ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml") 'ÚPDATE THE FILE NAME!
 
     End Sub
 
     Private Sub ReadProjectList()
+        'Read the Project_List.xml file in the Application Directory.
+
+        'If System.IO.File.Exists(ApplicationDir & "\Project_List_ADVL_2.xml") Then 'The latest ADVL_2 format version of the Project List file exists.
+        'NOTE: Leave Project List file name as Project_List.xml. <FormatCode>ADVL_2</FormatCode> has been added but no need to change the file name.
+        'NOTE: IGNOTE THE COMMENT ABOVE: Project_List.xml files will be converted to Project_List_ADVL_2.xml files.
+        'If System.IO.File.Exists(ApplicationDir & "\Project_List.xml") Then 'The latest ADVL_2 format version of the Project List file exists.
+        If System.IO.File.Exists(ApplicationDir & "\Project_List_ADVL_2.xml") Then 'The latest ADVL_2 format version of the Project List file exists.
+            Dim ProjectListXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\Project_List_ADVL_2.xml")
+            ReadProjectListAdvl_2(ProjectListXDoc)
+        Else
+            If System.IO.File.Exists(ApplicationDir & "\Project_List.xml") Then 'The original ADVL_1 format version of the Project List file exists.
+                RaiseEvent Message("Converting Project_List.xml to Project_List_ADVL_2.xml." & vbCrLf)
+                'Convert the file to the latest ADVL_2 format:
+                Dim Conversion As New ADVL_Utilities_Library_1.FormatConvert.ProjectListFileConversion
+                Conversion.DirectoryPath = ApplicationDir
+                Conversion.InputFileName = "Project_List.xml"
+                Conversion.InputFormatCode = FormatConvert.ProjectListFileConversion.FormatCodes.ADVL_1
+                Conversion.OutputFormatCode = FormatConvert.ProjectListFileConversion.FormatCodes.ADVL_2
+                Conversion.Convert()
+                If System.IO.File.Exists(ApplicationDir & "\Project_List_ADVL_2.xml") Then
+                    ReadProjectList() 'Try ReadProjectList again. This time Project_List_ADVL_2.xml should be found
+                Else
+                    RaiseEvent ErrorMessage("Error converting Project_List.xml to Project_List_ADVL_2.xml." & vbCrLf)
+                End If
+            Else
+                RaiseEvent ErrorMessage("No versions of the Project List were found." & vbCrLf)
+            End If
+        End If
+    End Sub
+
+    Private Sub ReadProjectList_Old()
         'Read the Project_List.xml file in the Application Directory.
 
         If System.IO.File.Exists(ApplicationDir & "\Project_List.xml") Then 'Read the Project List.
@@ -366,14 +408,19 @@
                     Case "Hybrid"
                         NewProject.Type = Project.Types.Hybrid
                 End Select
+
+                NewProject.Path = item.<Path>.Value
+
                 NewProject.CreationDate = item.<CreationDate>.Value
-                Select Case item.<SettingsLocationType>.Value
-                    Case "Directory"
-                        NewProject.SettingsLocnType = ADVL_Utilities_Library_1.FileLocation.Types.Directory
-                    Case "Archive"
-                        NewProject.SettingsLocnType = ADVL_Utilities_Library_1.FileLocation.Types.Archive
-                End Select
-                NewProject.SettingsLocnPath = item.<SettingsLocationPath>.Value
+
+                'Select Case item.<SettingsLocationType>.Value
+                '    Case "Directory"
+                '        NewProject.SettingsLocnType = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                '    Case "Archive"
+                '        NewProject.SettingsLocnType = ADVL_Utilities_Library_1.FileLocation.Types.Archive
+                'End Select
+                'NewProject.SettingsLocnPath = item.<SettingsLocationPath>.Value
+
                 'Select Case item.<DataLocationType>.Value
                 '    Case "Directory"
                 '        NewProject.DataLocnPath = ADVL_Utilities.Location.Types.Directory
@@ -382,7 +429,7 @@
                 'End Select
                 'NewProject.DataLocnPath = item.<SettingsLocationPath>.Value
                 NewProject.AuthorName = item.<AuthorName>.Value
-                NewProject.ApplicationName = item.<ApplicationName>.Value
+                'NewProject.ApplicationName = item.<ApplicationName>.Value
 
                 ProjectList.Add(NewProject)
             Next
@@ -391,8 +438,41 @@
             UpdateProjectGrid()
         Else 'Create a Project List.
 
-
         End If
+    End Sub
+
+    Private Sub ReadProjectListAdvl_2(ByRef XDoc As System.Xml.Linq.XDocument)
+        'Readt the Project List XDocument (ADVL_2 format version).
+
+        Dim Projects = From item In XDoc.<ProjectList>.<Project>
+
+        ProjectList.Clear()
+        For Each item In Projects
+            Dim NewProject As New ProjectSummary
+            NewProject.Name = item.<Name>.Value
+            NewProject.Description = item.<Description>.Value
+            Select Case item.<Type>.Value
+                Case "None"
+                    NewProject.Type = Project.Types.None
+                Case "Directory"
+                    NewProject.Type = Project.Types.Directory
+                Case "Archive"
+                    NewProject.Type = Project.Types.Archive
+                Case "Hybrid"
+                    NewProject.Type = Project.Types.Hybrid
+            End Select
+
+            NewProject.Path = item.<Path>.Value
+
+            NewProject.CreationDate = item.<CreationDate>.Value
+
+            NewProject.AuthorName = item.<AuthorName>.Value
+
+            ProjectList.Add(NewProject)
+        Next
+
+        UpdateProjectGrid()
+
     End Sub
 
     Private Sub UpdateProjectGrid()
@@ -442,15 +522,17 @@
         txtAuthor.Text = ProjectList(RecordNo - 1).AuthorName
         txtType.Text = ProjectList(RecordNo - 1).Type
         txtCreationDate.Text = ProjectList(RecordNo - 1).CreationDate
-        txtSettingsLocnType.Text = ProjectList(RecordNo - 1).SettingsLocnType
-        txtSettingsLocnPath.Text = ProjectList(RecordNo - 1).SettingsLocnPath
+        'txtType.Text = ProjectList(RecordNo - 1).SettingsLocnType
+        txtType.Text = ProjectList(RecordNo - 1).Type
+        'txtPath.Text = ProjectList(RecordNo - 1).SettingsLocnPath
+        txtPath.Text = ProjectList(RecordNo - 1).Path
         'txtDataLocnType.Text = ProjectList(RecordNo - 1).DataLocnType
         'txtDataLocnPath.Text = ProjectList(RecordNo - 1).DataLocnPath
 
 
     End Sub
 
-  
+
 
     Private Sub AddProjectForm_ProjectToAdd(ProjectSummary As ProjectSummary) Handles AddProjectForm.ProjectToAdd
         ProjectList.Add(ProjectSummary) 'Add the project summary to the list.
@@ -486,7 +568,8 @@
         Select Case ProjectList(RecordNo).Type
             Case Project.Types.Archive
                 txtType.Text = "Archive"
-                If System.IO.File.Exists(ProjectList(RecordNo).SettingsLocnPath) Then
+                'If System.IO.File.Exists(ProjectList(RecordNo).SettingsLocnPath) Then
+                If System.IO.File.Exists(ProjectList(RecordNo).Path) Then
                     txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, Drawing.FontStyle.Regular)
                     txtComments.ForeColor = Drawing.Color.Black
                     txtComments.Text = "Archive found."
@@ -497,7 +580,8 @@
                 End If
             Case Project.Types.Directory
                 txtType.Text = "Directory"
-                If System.IO.Directory.Exists(ProjectList(RecordNo).SettingsLocnPath) Then
+                'If System.IO.Directory.Exists(ProjectList(RecordNo).SettingsLocnPath) Then
+                If System.IO.Directory.Exists(ProjectList(RecordNo).Path) Then
                     txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, Drawing.FontStyle.Regular)
                     txtComments.ForeColor = Drawing.Color.Black
                     txtComments.Text = "Directory found."
@@ -508,7 +592,8 @@
                 End If
             Case Project.Types.Hybrid
                 txtType.Text = "Hybrid"
-                If System.IO.Directory.Exists(ProjectList(RecordNo).SettingsLocnPath) Then
+                'If System.IO.Directory.Exists(ProjectList(RecordNo).SettingsLocnPath) Then
+                If System.IO.Directory.Exists(ProjectList(RecordNo).Path) Then
                     txtComments.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, Drawing.FontStyle.Regular)
                     txtComments.ForeColor = Drawing.Color.Black
                     txtComments.Text = "Directory found."
@@ -522,14 +607,16 @@
         End Select
         txtCreationDate.Text = ProjectList(RecordNo).CreationDate
         txtAuthor.Text = ProjectList(RecordNo).AuthorName
-        Select Case ProjectList(RecordNo).SettingsLocnType
-            Case FileLocation.Types.Archive
-                txtSettingsLocnType.Text = "Archive"
-            Case FileLocation.Types.Directory
-                txtSettingsLocnType.Text = "Directory"
-        End Select
-        txtSettingsLocnPath.Text = ProjectList(RecordNo).SettingsLocnPath
-        txtApplicationName.Text = ProjectList(RecordNo).ApplicationName
+        'Select Case ProjectList(RecordNo).SettingsLocnType
+        'Select Case ProjectList(RecordNo).Type
+        '    Case FileLocation.Types.Archive
+        '        txtType.Text = "Archive"
+        '    Case FileLocation.Types.Directory
+        '        txtType.Text = "Directory"
+        'End Select
+        'txtPath.Text = ProjectList(RecordNo).SettingsLocnPath
+        txtPath.Text = ProjectList(RecordNo).Path
+        'txtApplicationName.Text = ProjectList(RecordNo).ApplicationName
 
     End Sub
 
@@ -547,28 +634,81 @@
         End If
     End Sub
 
-    Private Sub btnSelectDefault_Click(sender As Object, e As EventArgs) Handles btnSelectDefault.Click
-        'Select the Default project.
+    'Private Sub btnSelectDefault_Click(sender As Object, e As EventArgs)
 
-        'The Default project is a directory project named 'Default_Project' in the Application Directory.
+    '    'Check if ProjectList contains a project named Default
+    '    Dim SelectedProject As ProjectSummary
+    '    SelectedProject = ProjectList.Find(Function(p) p.Name = "Default")
 
-        'Check if the Default_Project exists:
-        'CreateDefaultProject
+    '    If SelectedProject.Name = "Default" Then
+    '        'The Default project is already on the list.
+    '    Else
+    '        RaiseEvent CreateDefaultProject() 'Create the Default project. This also adds the project to the list.
+    '        ReadProjectList() 'Read the updated project list.
+    '        UpdateProjectGrid() 'Úpdate the project grid.
+    '    End If
 
-        'If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
-        '    'The Default_Project exists
-        '    'Check if it is on the list:
+    'End Sub
 
-        'Else
-        '    'Default_Project does not exist.
-        '    RaiseEvent CreateDefaultProject() 'Create the Default_Project.
-        '    ReadProjectList() 'Re-read the project list. The Default_Project should now be listed.
-        'End If
+    Private Sub btnSelDefault_Click(sender As Object, e As EventArgs) Handles btnSelDefault.Click
 
-        RaiseEvent OpenDefaultProject()
+        'Check if ProjectList contains a project named Default
+        Dim SelectedProject As ProjectSummary
+        SelectedProject = ProjectList.Find(Function(p) p.Name = "Default")
 
+        'If SelectedProject.Name = "Default" Then
+        If SelectedProject Is Nothing Then
+            'The Default project does not exist.
+            RaiseEvent CreateDefaultProject() 'Create the Default project. This also adds the project to the list.
+            ReadProjectList() 'Read the updated project list.
+            UpdateProjectGrid() 'Úpdate the project grid.
+        Else
+            'The Default project is already on the list.
 
+        End If
     End Sub
+
+    'Private Sub btnSelectDefault_Click(sender As Object, e As EventArgs) Handles btnSelectDefault.Click
+    '    'Select the Default project.
+
+    '    'The Default project is a directory project named 'Default_Project' in the Application Directory.
+
+    '    'Check if the Default_Project exists:
+    '    'CreateDefaultProject
+
+    '    'If System.IO.Directory.Exists(ApplicationDir & "\" & "Default_Project") Then
+    '    '    'The Default_Project exists
+    '    '    'Check if it is on the list:
+
+    '    'Else
+    '    '    'Default_Project does not exist.
+    '    '    RaiseEvent CreateDefaultProject() 'Create the Default_Project.
+    '    '    ReadProjectList() 'Re-read the project list. The Default_Project should now be listed.
+    '    'End If
+
+    '    'RaiseEvent OpenDefaultProject()
+
+    '    'Check if ProjectList contains a project named Default
+    '    Dim SelectedProject As ProjectSummary
+    '    SelectedProject = ProjectList.Find(Function(p) p.Name = "Default")
+
+    '    If SelectedProject.Name = "Default" Then
+    '        'The Default project is already on the list.
+    '    Else
+    '        RaiseEvent CreateDefaultProject() 'Create the Default project. This also adds the project to the list.
+    '        ReadProjectList() 'Read the updated project list.
+    '        UpdateProjectGrid() 'Úpdate the project grid.
+    '    End If
+
+
+    '    'RaiseEvent CreateDefaultProject()
+
+    '    'Search DataGridView1 for a project named Default
+    '    'Search ProjectList for a project named Default
+
+
+
+    'End Sub
 
 
 
@@ -581,7 +721,12 @@
     Public Event ErrorMessage(ByVal Message As String) 'Send an error message.
     Public Event Message(ByVal Message As String) 'Send a message.
     'Public Event CreateDefaultProject() '
-    Public Event OpenDefaultProject() 'Raise an event to open the Default_Project .
+    Public Event OpenDefaultProject() 'Raise an event to open the Default_Project.
+    Public Event CreateDefaultProject() 'Raise an event to create the Default_Project (if it does not already exist).
+
+
+
+
 
 
 #End Region 'Events -------------------------------------------------------------------------------------------------------------------------------------------------------------------------

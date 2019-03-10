@@ -1,5 +1,6 @@
-﻿Public Class frmZipSelectFile
-    'The ZipSelectFile form is used to select a file from the specified Zip archive.
+﻿Public Class frmZipSelectFileModal
+    'The ZipSelectFileModal form is used to select a file from the specified Zip archive.
+    'It can be displayed as a modal form.
 
 #Region " Variable Declarations - All the variables used in this form." '--------------------------------------------------------------------------------------------------------------------
 
@@ -30,18 +31,18 @@
         End Set
     End Property
 
-    Private _fileExtensions() As String = {} 'A list of file extensions used to get a file list.
-    Property FileExtensions As String()
+    Private _fileName As String 'The name of the selected file.
+    Property FileName As String
         Get
-            Return _fileExtensions
+            Return _fileName
         End Get
-        Set(value As String())
-            _fileExtensions = value
+        Set(value As String)
+            _fileName = value
         End Set
     End Property
 
-
 #End Region 'Properties ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 #Region " Process XML files - Read and write XML files." '-----------------------------------------------------------------------------------------------------------------------------------
 
@@ -110,15 +111,27 @@
 
 #Region " Form Display Methods - Code used to display this form." '--------------------------------------------------------------------------------------------------------------------------
 
-    Private Sub frmProject_Load(sender As Object, e As EventArgs) Handles Me.Load
+    'Private Sub frmProject_Load(sender As Object, e As EventArgs) Handles Me.Load
 
-        'The application that opens this form also initialises the form.
+    '    'The application that opens this form also initialises the form.
 
+    'End Sub
+
+    'Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles btnExit.Click
+    '    SaveFormSettings() 'Save the form settings.
+    '    Me.Close()
+    'End Sub
+
+    Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
+        'File selection has been cancelled
+        FileName = ""
+        Me.DialogResult = DialogResult.Cancel
     End Sub
 
-    Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles btnExit.Click
-        SaveFormSettings() 'Save the form settings.
-        Me.Close()
+    Private Sub btnOK_Click(sender As Object, e As EventArgs) Handles btnOK.Click
+        'A file has been selected.
+        FileName = ListBox1.Text
+        Me.DialogResult = DialogResult.OK
     End Sub
 
 #End Region 'Form Display Subroutines -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -130,84 +143,46 @@
 
         ListBox1.Items.Clear()
 
-        If ZipArchivePath = "" Then
-            RaiseEvent ErrorMessage("No zip archive selected." & vbCrLf)
-            Exit Sub
-        End If
+        'If ZipArchivePath = "" Then
+        '    RaiseEvent ErrorMessage("No zip archive selected." & vbCrLf)
+        '    Exit Sub
+        'End If
 
         Dim Zip As New ZipComp
         Zip.ArchivePath = ZipArchivePath
-
-        If FileExtension <> "" Then
-            'Originally, FileExtension was used to get a list of files of a single file type.
-            'FileExtensions can now be used to get a list of files of multiple file types.
-            'If FileExtension is not blank, it will be used to return a list of file of a single file type. 
-            '(This Is required for backwards compatibility.)
-
-            Dim ValidExtension As String = FileExtension
-            If ValidExtension.StartsWith(".") Then
-            Else
-                ValidExtension = "." & ValidExtension
-            End If
-            Dim Index As Integer
-            Dim EntryName As String
-            For Index = 1 To Zip.NEntries
-                'If FileExtension = "" Then
-                'ListBox1.Items.Add(Zip.GetEntryName(Index - 1))
-                'Else
-                EntryName = Zip.GetEntryName(Index - 1)
-                    If EntryName.EndsWith(ValidExtension) Then
-                        ListBox1.Items.Add(Zip.GetEntryName(Index - 1))
-                    End If
-                'End If
-            Next
-        ElseIf FileExtensions.Count > 0 Then 'Use the list of file extensions to select matching files.
-            'Dim Zip As New ZipComp
-            'Zip.ArchivePath = ZipArchivePath
-            Dim ValidExtension As String = FileExtension
-            Dim Index As Integer
-            Dim EntryName As String
-            Dim ExtNo As Integer
-            For ExtNo = 0 To FileExtensions.Count
-                ValidExtension = FileExtensions(ExtNo)
-                If ValidExtension.StartsWith(".") Then
-                Else
-                    ValidExtension = "." & ValidExtension
-                End If
-                For Index = 1 To Zip.NEntries
-                    'If FileExtension = "" Then
-                    'ListBox1.Items.Add(Zip.GetEntryName(Index - 1))
-                    'Else
-                    EntryName = Zip.GetEntryName(Index - 1)
-                        If EntryName.EndsWith(ValidExtension) Then
-                            ListBox1.Items.Add(Zip.GetEntryName(Index - 1))
-                        End If
-                    'End If
-                Next
-            Next
+        Dim ValidExtension As String = FileExtension
+        If ValidExtension.StartsWith(".") Then
         Else
-            'No file extensions have been specified.
-            'Add all files to the list.
-            Dim Index As Integer
-            For Index = 1 To Zip.NEntries
-                ListBox1.Items.Add(Zip.GetEntryName(Index - 1))
-            Next
+            ValidExtension = "." & ValidExtension
         End If
-
+        Dim Index As Integer
+        Dim EntryName As String
+        For Index = 1 To Zip.NEntries
+            If FileExtension = "" Then
+                ListBox1.Items.Add(Zip.GetEntryName(Index - 1))
+            Else
+                EntryName = Zip.GetEntryName(Index - 1)
+                If EntryName.EndsWith(ValidExtension) Then
+                    ListBox1.Items.Add(Zip.GetEntryName(Index - 1))
+                End If
+            End If
+        Next
     End Sub
 
-    Private Sub btnSelect_Click(sender As Object, e As EventArgs) Handles btnSelect.Click
-        RaiseEvent FileSelected(ListBox1.Text)
-    End Sub
+    'Private Sub btnSelect_Click(sender As Object, e As EventArgs) Handles btnSelect.Click
+    '    RaiseEvent FileSelected(ListBox1.Text)
+    'End Sub
 
 #End Region 'Form Methods -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #Region " Events" '--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    Public Event FileSelected(ByVal FileName As String) 'Raise an event passing the name of the selected file.
-    Public Event ErrorMessage(ByVal Message As String) 'Send an error message.
-    Public Event Message(ByVal Message As String) 'Send a message.
+    'Public Event FileSelected(ByVal FileName As String) 'Raise an event passing the name of the selected file.
+    'Public Event ErrorMessage(ByVal Message As String) 'Send an error message.
+    'Public Event Message(ByVal Message As String) 'Send a message.
 
 #End Region 'Events -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  
+
+
+
 End Class

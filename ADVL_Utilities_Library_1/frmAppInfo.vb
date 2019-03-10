@@ -224,14 +224,23 @@
         SelectedLibraryNo += 1
     End Sub
 
+    Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
+        'Update the Executable Path
+        RaiseEvent UpdateExePath()
+    End Sub
+
+    Private Sub btnRestoreDefaults_Click(sender As Object, e As EventArgs) Handles btnRestoreDefaults.Click
+        'Restore the defaults.
+        RaiseEvent RestoreDefaults()
+    End Sub
 
 
 #End Region 'Form Methods -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
-   
- 
+
+
     'Private Sub btnTest_Click(sender As Object, e As EventArgs) Handles btnTest.Click
     '    RaiseEvent RunTest()
     'End Sub
@@ -242,13 +251,24 @@
 
     Public Event DisplayAssociation(ByVal RecordNo As Integer) 'Display the File Association record.
     Public Event DisplayLibrary(ByVal RecordNo As Integer) 'Display the Library record.
+    Public Event UpdateExePath() 'Update the executable path.
+    Public Event RestoreDefaults() 'Restore the default values by calling the DefaultAppProperties() method in the Main form.
+
+    Public Event ConnectOnStartupChanged(ByVal Connect As Boolean) 'Update the ConnectOnStartup selection.
+
+
+    Private Sub chkConnect_LostFocus(sender As Object, e As EventArgs) Handles chkConnect.LostFocus
+        RaiseEvent ConnectOnStartupChanged(chkConnect.Checked)
+    End Sub
+
+
 
 #End Region
 
 
 
-  
-   
-  
-  
+
+
+
+
 End Class
