@@ -297,7 +297,6 @@ Public Class ZipComp '----------------------------------------------------------
         Catch ex As Exception
             RaiseEvent ErrorMessage("Error extracting file from archive: " & ex.Message)
         End Try
-
     End Sub
 
     Public Sub AddText(ByVal TextFileName As String, ByRef TextData As String)
@@ -498,6 +497,64 @@ Public Class ZipComp '----------------------------------------------------------
                 End Using
             Catch ex As Exception
                 RaiseEvent ErrorMessage("Error checking if entry exists: " & vbCrLf & ex.Message & vbCrLf)
+            End Try
+        End If
+    End Function
+
+    'NOTE: The Entry creation date is not stored in a zip file!
+    'Public Function EntryCreationDate(ByVal EntryName As String) As Date
+    '    'Returns the Creation Date of the entry if it exists.
+    '    If ArchivePath = "" Then
+    '        'Return False
+    '        Return DateValue("1900-01-01")
+    '    Else
+    '        Dim Result As Boolean = False
+    '        Try
+    '            Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Read)
+    '                Dim CreationDate As Date
+    '                For Each entry As ZipArchiveEntry In archive.Entries
+    '                    If entry.FullName = EntryName Then
+    '                        Result = True
+    '                        'CreationDate = entry.
+    '                        Exit For
+    '                    End If
+    '                Next
+    '                'Return Result
+    '            End Using
+    '        Catch ex As Exception
+    '            RaiseEvent ErrorMessage("Error checking if entry exists: " & vbCrLf & ex.Message & vbCrLf)
+    '        End Try
+    '    End If
+    'End Function
+
+    Public Function EntryLastEditDate(ByVal EntryName As String) As Date
+        'Returns the Creation Date of the entry if it exists.
+        If ArchivePath = "" Then
+            'Return False
+            Return DateValue("1900-01-01")
+        Else
+            Dim Result As Boolean = False
+            Try
+                Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Read)
+                    'Dim LastEditDate As Date
+                    Dim LastEditDateTimeOffset As DateTimeOffset
+                    For Each entry As ZipArchiveEntry In archive.Entries
+                        If entry.FullName = EntryName Then
+                            Result = True
+                            LastEditDateTimeOffset = entry.LastWriteTime
+                            Exit For
+                        End If
+                    Next
+                    'Return Result
+                    If Result = True Then 'Entry found
+                        Return LastEditDateTimeOffset.DateTime
+                    Else 'Entry not found
+                        Return DateValue("1900-01-01")
+                    End If
+                End Using
+            Catch ex As Exception
+                RaiseEvent ErrorMessage("Error checking if entry exists: " & vbCrLf & ex.Message & vbCrLf)
+                Return DateValue("1900-01-01")
             End Try
         End If
     End Function
@@ -1997,7 +2054,8 @@ Public Class XMessage '---------------------------------------------------------
         'Any other paths returns an "Unknown Instruction" warning.
 
         ' If path.StartsWith("ProcessingSequence:") Then
-        If path.StartsWith("XMsg:") Then
+        'If path.StartsWith("XMsg:") Then
+        If path.StartsWith("XMsg:") Or path.StartsWith("XSys:") Then
             'Path2 = path.Substring(19, path.Length - 19) 'Get path string with ProcessingSequence: removed from the start.
             Path2 = path.Substring(5, path.Length - 5) 'Get path string with ProcessingSequence: removed from the start.
             'Path2 = path.Substring(startIndex:=, length)
@@ -2179,27 +2237,37 @@ Public Class FileLocation '-----------------------------------------------------
     End Sub
 
 
-    Public Sub SaveXmlData(ByVal DataName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
+    Public Sub SaveXmlData(ByVal DataFileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
         'Save XML data in the Location with the name DataName. The data is read from XmlDoc.
 
-        Select Case Type
-            Case Types.Directory
-                If System.IO.Directory.Exists(Path) Then
-                    XmlDoc.Save(Path & "\" & DataName)
-                Else
+        If DataFileName = "" Then
+            RaiseEvent ErrorMessage("DataFileName is blank." & vbCrLf)
+            Exit Sub
+        End If
 
-                End If
+        If IsNothing(XmlDoc) Then
+            RaiseEvent ErrorMessage("Error saving XML Data to file: " & DataFileName & vbCrLf)
+            RaiseEvent ErrorMessage("  - No XML document to save." & DataFileName & vbCrLf)
+        Else
+            Select Case Type
+                Case Types.Directory
+                    If System.IO.Directory.Exists(Path) Then
+                        XmlDoc.Save(Path & "\" & DataFileName)
+                    Else
 
-            Case Types.Archive
-                If System.IO.File.Exists(Path) Then
-                    Dim Zip As New ZipComp
-                    Zip.ArchivePath = Path
-                    Zip.AddText(DataName, XmlDoc.ToString)
-                Else
-                    RaiseEvent ErrorMessage("Specified archive not found: " & Path & vbCrLf)
-                End If
+                    End If
 
-        End Select
+                Case Types.Archive
+                    If System.IO.File.Exists(Path) Then
+                        Dim Zip As New ZipComp
+                        Zip.ArchivePath = Path
+                        Zip.AddText(DataFileName, XmlDoc.ToString)
+                    Else
+                        RaiseEvent ErrorMessage("Specified archive not found: " & Path & vbCrLf)
+                    End If
+
+            End Select
+        End If
     End Sub
 
     Public Function FileExists(ByVal FileName As String) As Boolean
@@ -2214,6 +2282,35 @@ Public Class FileLocation '-----------------------------------------------------
                 Return Zip.EntryExists(FileName)
         End Select
     End Function
+
+    Public Sub ReadXmlDocData(ByVal DataFileName As String, ByRef XmlDoc As System.Xml.XmlDocument)
+        'Version of the ReadXmlData that outputs the data into an XmlDocument (instead of and XDocument).
+
+        Select Case Type
+            Case FileLocation.Types.Directory
+                'Read the Xml data document in the directory at DataLocn.Path
+                If System.IO.File.Exists(Path & "\" & DataFileName) Then
+                    'XmlDoc = XDocument.Load(DataLocn.Path & "\" & DataFileName)
+                    XmlDoc.Load(Path & "\" & DataFileName)
+                Else
+                    XmlDoc = Nothing
+                End If
+
+            Case FileLocation.Types.Archive
+                'Read the Xml Ddata document in the archive at DataLocn.Path
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = Path
+                If Zip.EntryExists(DataFileName) Then
+                    XmlDoc.LoadXml(Zip.GetText(DataFileName))
+                Else
+                    XmlDoc = Nothing
+                End If
+                Zip = Nothing
+        End Select
+
+    End Sub
+
+
 
 #End Region 'Location Methods ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2235,6 +2332,7 @@ Public Class Project '----------------------------------------------------------
     'The relative locations allow the SettingsLocn and DataLocn to be updated when the project file or archive is moved:
     Public SettingsRelLocn As New FileLocation 'This is the Settings location relative to the Project Location.
     Public DataRelLocn As New FileLocation 'This is the Data location relative to the Project Location.
+    Public DataDirRelLocn As New FileLocation 'This is the DataDir location realtive to the Project Location.
     Public SystemRelLocn As New FileLocation 'This is the System location relative to the Project Location.
     'For a Directory project type: SettingsRelLocn.Type = Directory, SettingsRelLocn.Path = ""
     '                              DataRelLocn.Type = Directory,     DataRelLocn.Path = ""
@@ -2250,6 +2348,7 @@ Public Class Project '----------------------------------------------------------
     'SettingsLocn.Type (Directory or Archive), SettingsLocn.Path
     Public DataLocn As New FileLocation 'This is a directory or archive where data is stored.
     'DataLocn.Type (Directory or Archive), DataLocn.Path
+    Public DataDirLocn As New FileLocation 'This is a directory created to store data that is not suitable for a Data archive. (eg. pdf and xlsx files that are already compressed.)
     Public SystemLocn As New FileLocation 'This is a directory or archive where system data is stored. (System data can be preserved when settings or other data is deleted.)
 
     Public WithEvents ProjectForm As frmProject 'Used to select a project.
@@ -2259,7 +2358,8 @@ Public Class Project '----------------------------------------------------------
     Public Parameter As New Dictionary(Of String, ParamInfo) 'Dictionary of Project Parameters.
     Public ParentParameter As New Dictionary(Of String, ParamInfo) 'Dictionary of Parent Project Parameters
 
-    Public ApplicationName As String 'The name of the application using the project.
+    'USE Application.Name
+    'Public ApplicationName As String 'The name of the application using the project.
 
     'Public ApplicationSummary As New ApplicationSummary 'This stores information about the application that created the project.
     'Public HostApplication As New ApplicationSummary 'This stores information about the application that created the project.
@@ -2420,6 +2520,16 @@ Public Class Project '----------------------------------------------------------
     '    End Set
     'End Property
 
+    Private _parentProjectType As Types = Types.None  'The type of parent project (None, Directory, Archive, Hybrid).
+    Property ParentProjectType As Types
+        Get
+            Return _parentProjectType
+        End Get
+        Set(value As Types)
+            _parentProjectType = value
+        End Set
+    End Property
+
     Private _parentProjectPath As String = "" 'The path of the Parent Project.
     Property ParentProjectPath As String
         Get
@@ -2534,34 +2644,6 @@ Public Class Project '----------------------------------------------------------
         End If
     End Function
 
-    'Public Sub SaveLastProjectInfo()
-    '    'Save information about the last project used.
-    '    'This is saved in the Application Directory.
-
-    '    Dim SettingsLocationType As String
-    '    Select Case SettingsLocn.Type
-    '        Case FileLocation.Types.Directory
-    '            SettingsLocationType = "Directory"
-    '        Case FileLocation.Types.Archive
-    '            SettingsLocationType = "Archive"
-    '    End Select
-
-    '    Dim ProjectInfoXDoc = <?xml version="1.0" encoding="utf-8"?>
-    '                          <!---->
-    '                          <!--Last Project Information for Application: ADVL_Zip-->
-    '                          <!---->
-    '                          <Project>
-    '                              <Name><%= Name %></Name>
-    '                              <Description><%= Description %></Description>
-    '                              <SettingsLocation>
-    '                                  <Type><%= SettingsLocationType %></Type>
-    '                                  <Path><%= SettingsLocn.Path %></Path>
-    '                              </SettingsLocation>
-    '                          </Project>
-
-    '    ProjectInfoXDoc.Save(ApplicationDir & "\" & "Last_Project_Info.xml")
-    'End Sub
-
     Public Sub SaveLastProjectInfo()
         'Save information about the last project used.
         'This is saved in the Application Directory.
@@ -2613,48 +2695,11 @@ Public Class Project '----------------------------------------------------------
         ProjectInfoXDoc.Save(ApplicationDir & "\" & "Last_Project_Info.xml")
     End Sub
 
-
-    'Public Sub ReadLastProjectInfo()
-    '    'Read the Last Project Information.
-
-    '    If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info.xml") Then 'Read Last Project information
-    '        Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Last_Project_Info.xml")
-    '        Dim SettingsLocnPath As String = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value 'Note: the settings location contains the data location.
-    '        Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
-    '            Case "Directory"
-    '                SettingsLocn.Type = FileLocation.Types.Directory
-    '                Usage.SaveLocn.Type = FileLocation.Types.Directory
-    '                If System.IO.Directory.Exists(SettingsLocnPath) Then
-    '                    SettingsLocn.Path = SettingsLocnPath
-    '                    Usage.SaveLocn.Path = SettingsLocnPath
-    '                    Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
-    '                    Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
-    '                Else
-    '                    UseDefaultProject()
-    '                End If
-    '            Case "Archive"
-    '                SettingsLocn.Type = FileLocation.Types.Archive
-    '                Usage.SaveLocn.Type = FileLocation.Types.Archive
-    '                If System.IO.File.Exists(SettingsLocnPath) Then
-    '                    SettingsLocn.Path = SettingsLocnPath
-    '                    Usage.SaveLocn.Path = SettingsLocnPath
-    '                    Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
-    '                    Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
-    '                Else
-    '                    UseDefaultProject()
-    '                End If
-    '        End Select
-    '    Else 'Open Default project
-    '        UseDefaultProject()
-    '    End If
-    'End Sub
-
     Public Sub ReadLastProjectInfo()
         'Read the Last Project Information.
         '  The Last Project Information file is in the Application Directory.
 
         If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info_ADVL_2.xml") Then 'The Last Project Info file exists.
-            'Dim ProjInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
             Dim ProjInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Last_Project_Info_ADVL_2.xml")
             ReadLastProjectInfoAdvl_2(ProjInfoXDoc)
         Else
@@ -2689,7 +2734,6 @@ Public Class Project '----------------------------------------------------------
         Else
             RaiseEvent ErrorMessage("The Project Name is not specified in the Last Project Information file." & vbCrLf)
             RaiseEvent ErrorMessage("The Default project will be opened." & vbCrLf)
-            'OpenDefaultProject()
             UseDefaultProject()
             Exit Sub
         End If
@@ -2729,177 +2773,6 @@ Public Class Project '----------------------------------------------------------
             RaiseEvent ErrorMessage("The Project Location Path is not specified in the Last Project Information file." & vbCrLf)
         End If
 
-    End Sub
-
-    Public Sub ReadLastProjectInfo_Old2()
-        'Read the Last Project Information.
-        If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info.xml") Then 'Read Last Project information
-            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Last_Project_Info.xml")
-
-            If ProjectInfoXDoc.<Project>.<FormatCode>.Value = Nothing Then
-                RaiseEvent ErrorMessage("The Last Project Information file has no format code." & vbCrLf)
-                RaiseEvent ErrorMessage("Use the Format Convert application to update the file." & vbCrLf)
-            ElseIf ProjectInfoXDoc.<Project>.<FormatCode>.Value = "ADVL_2" Then 'The file Format Code is the latest.
-                'Read the Project Name:
-                'If ProjectInfoXDoc.<Project>.<Location>.<Name>.Value <> Nothing Then
-                If ProjectInfoXDoc.<Project>.<Name>.Value <> Nothing Then
-                    'Name = ProjectInfoXDoc.<Project>.<Location>.<Name>.Value
-                    Name = ProjectInfoXDoc.<Project>.<Name>.Value
-                Else
-                    RaiseEvent ErrorMessage("The Project Name is not specified in the Last Project Information file." & vbCrLf)
-                End If
-
-                'Read the Project Description:
-                'If ProjectInfoXDoc.<Project>.<Location>.<Description>.Value <> Nothing Then
-                If ProjectInfoXDoc.<Project>.<Description>.Value <> Nothing Then
-                    'Description = ProjectInfoXDoc.<Project>.<Location>.<Description>.Value
-                    Description = ProjectInfoXDoc.<Project>.<Description>.Value
-                Else
-                    RaiseEvent ErrorMessage("The Project Description is not specified in the Last Project Information file." & vbCrLf)
-                End If
-
-                'Read the Project Location Type:
-                If ProjectInfoXDoc.<Project>.<Location>.<Type>.Value <> Nothing Then
-                    Select Case ProjectInfoXDoc.<Project>.<Location>.<Type>.Value '(None, Directory, Archive or Hybrid)
-                        Case "None"
-                            'ProjectLocn.Type = FileLocation.Types.Directory
-                            Type = Types.None
-                            Usage.SaveLocn.Type = FileLocation.Types.Directory
-                        Case "Directory"
-                            'ProjectLocn.Type = FileLocation.Types.Directory
-                            Type = Types.Directory
-                            Usage.SaveLocn.Type = FileLocation.Types.Directory
-                        Case "Archive"
-                            'ProjectLocn.Type = FileLocation.Types.Archive
-                            Type = Types.Archive
-                            Usage.SaveLocn.Type = FileLocation.Types.Archive
-                        Case "Hybrid"
-                            'ProjectLocn.Type = FileLocation.Types.Directory
-                            Type = Types.Hybrid
-                            Usage.SaveLocn.Type = FileLocation.Types.Directory
-                    End Select
-                Else
-                    RaiseEvent ErrorMessage("The Project Location Type is not specified in the Last Project Information file." & vbCrLf)
-                End If
-
-                'Read the Project Location Path:
-                If ProjectInfoXDoc.<Project>.<Location>.<Path>.Value <> Nothing Then
-                    'ProjectLocn.Path = ProjectInfoXDoc.<Project>.<Location>.<Path>.Value
-                    Path = ProjectInfoXDoc.<Project>.<Location>.<Path>.Value
-                    Usage.SaveLocn.Path = Path
-                Else
-                    RaiseEvent ErrorMessage("The Project Location Path is not specified in the Last Project Information file." & vbCrLf)
-                End If
-
-            Else 'The file Format Code is not the latest.
-                RaiseEvent ErrorMessage("The Last Project Information file has an old format code: " & ProjectInfoXDoc.<Project>.<FormatCode>.Value & vbCrLf)
-                RaiseEvent ErrorMessage("Use the Format Convert application to update the file." & vbCrLf)
-            End If
-
-        Else 'Open Default project
-            UseDefaultProject()
-        End If
-
-    End Sub
-
-    Public Sub ReadLastProjectInfo_Old()
-        'Read the Last Project Information.
-        'UPDATE: 17Jul18: The Project Information file: ADVL_Project_Info.xml is now stored in Project.Path (not the SettingsLocn).
-
-        If System.IO.File.Exists(ApplicationDir & "\" & "Last_Project_Info.xml") Then 'Read Last Project information
-            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Last_Project_Info.xml")
-            Dim SettingsLocnPath As String
-
-            If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value <> Nothing Then 'This is a pre-17Jul18 Last_Project_Info.xml file.
-                SettingsLocnPath = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value 'Note: the settings location contains the data location.
-                Path = "" 'A blank Project.Path indicates that the SettingsLocnPath is being used to locate the ADVL_Project_Info.xml file.
-            ElseIf ProjectInfoXDoc.<Project>.<Location>.<Path>.Value <> Nothing Then 'This is a post-17Jul18 Last_Project_Info.xml file.
-                Path = ProjectInfoXDoc.<Project>.<Location>.<Path>.Value
-            Else
-                RaiseEvent ErrorMessage("The Project Path or the Settings Location Path were not found in the Last_Project_Info.xml file!" & vbCrLf)
-                Exit Sub
-            End If
-
-
-            If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value <> Nothing Then 'This is a pre-17Jul18 Last_Project_Info.xml file. ADVL_Project_Info.xml is at SettingsLocn.
-                Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
-                    Case "Directory"
-                        SettingsLocn.Type = FileLocation.Types.Directory
-                        Usage.SaveLocn.Type = FileLocation.Types.Directory
-                        If System.IO.Directory.Exists(SettingsLocnPath) Then
-                            SettingsLocn.Path = SettingsLocnPath
-                            Usage.SaveLocn.Path = SettingsLocnPath
-                            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
-                            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
-                        Else
-                            UseDefaultProject()
-                        End If
-                    Case "Archive"
-                        SettingsLocn.Type = FileLocation.Types.Archive
-                        Usage.SaveLocn.Type = FileLocation.Types.Archive
-                        If System.IO.File.Exists(SettingsLocnPath) Then
-                            SettingsLocn.Path = SettingsLocnPath
-                            Usage.SaveLocn.Path = SettingsLocnPath
-                            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
-                            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
-                        Else
-                            UseDefaultProject()
-                        End If
-                End Select
-            ElseIf ProjectInfoXDoc.<Project>.<Location>.<Type>.Value <> Nothing Then 'This is a post-17Jul18 Last_Project_Info.xml file. ADVL_Project_Info.xml is at Project.Path (not SettingsLocn).
-                Select Case ProjectInfoXDoc.<Project>.<Location>.<Type>.Value '(None, Directory, Archive or Hybrid)
-                    Case "Directory"
-                        'SettingsLocn.Type = FileLocation.Types.Directory
-                        'Usage.SaveLocn.Type = FileLocation.Types.Directory
-                        'If System.IO.Directory.Exists(SettingsLocnPath) Then
-                        '    SettingsLocn.Path = SettingsLocnPath
-                        '    Usage.SaveLocn.Path = SettingsLocnPath
-                        '    Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
-                        '    Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
-                        'Else
-                        '    UseDefaultProject()
-                        'End If
-                        Type = Types.Directory
-                        Usage.SaveLocn.Type = FileLocation.Types.Directory
-                        If System.IO.Directory.Exists(Path) Then
-                            Usage.SaveLocn.Path = Path
-                            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
-                            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
-                        Else
-                            UseDefaultProject()
-                        End If
-                    Case "Archive"
-                        'SettingsLocn.Type = FileLocation.Types.Archive
-                        'Usage.SaveLocn.Type = FileLocation.Types.Archive
-                        'If System.IO.File.Exists(SettingsLocnPath) Then
-                        '    SettingsLocn.Path = SettingsLocnPath
-                        '    Usage.SaveLocn.Path = SettingsLocnPath
-                        '    Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
-                        '    Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
-                        'Else
-                        '    UseDefaultProject()
-                        'End If
-                        Type = Types.Archive
-                        Usage.SaveLocn.Type = FileLocation.Types.Archive
-                        If System.IO.File.Exists(Path) Then
-                            Usage.SaveLocn.Path = Path
-                            Name = ProjectInfoXDoc.<Project>.<Name>.Value 'Read the name of the last project used.
-                            Description = ProjectInfoXDoc.<Project>.<Description>.Value 'Read the descritpion of the last project used.
-                        Else
-                            UseDefaultProject()
-                        End If
-                    Case "Hybrid"
-                        'TO DO
-                    Case "None"
-                        'TO DO
-                End Select
-            Else
-
-            End If
-
-        Else 'Open Default project
-            UseDefaultProject()
-        End If
     End Sub
 
     Private Sub UseDefaultProject()
@@ -2966,7 +2839,6 @@ Public Class Project '----------------------------------------------------------
         End Select
 
         If ProjectFileExists("Project_Info_ADVL_2.xml") Then 'The Project Information file exists (ADVL_2 format version).
-            'Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
             Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
             ReadXmlProjectFile("Project_Info_ADVL_2.xml", ProjectInfoXDoc)
             ReadProjectInfoFileAdvl_2(ProjectInfoXDoc)
@@ -2974,7 +2846,6 @@ Public Class Project '----------------------------------------------------------
             If ProjectFileExists("ADVL_Project_Info.xml") Then 'The original ADVL_1 format version of the Project Information file exists.
                 RaiseEvent Message("Converting ADVL_Project_Info.xml to Project_Info_ADVL_2.xml." & vbCrLf)
                 'Convert the file to the latest ADVL_2 format:
-                'Dim ProjInfoConversion As New ADVL_Utilities_Library_1.FormatConvert.ProjectInfoFileConversion
                 ProjInfoConversion = New ADVL_Utilities_Library_1.FormatConvert.ProjectInfoFileConversion
                 'ProjInfoConversion.ProjectType = Type
                 'NOTE: PROJECTTYPE DOES NOT USE THE SAME ENUMS AS TYPE!!!
@@ -3005,7 +2876,6 @@ Public Class Project '----------------------------------------------------------
         End If
     End Sub
 
-    'Public Sub ReadProjectInfoFileAtPath()
     Public Function ReadProjectInfoFileAtPath() As Boolean
         'Read the Project Information file at the location in Path.
 
@@ -3098,6 +2968,8 @@ Public Class Project '----------------------------------------------------------
                     SettingsLocn.Path = Path
                     DataLocn.Type = FileLocation.Types.Directory
                     DataLocn.Path = Path
+                    DataDirLocn.Type = FileLocation.Types.Directory 'For the Default project, the DataDirLocn is the same as the DataLocn. (It provides an alternative uncompressed location to an archive Data location.)
+                    DataDirLocn.Path = Path
                     SystemLocn.Type = FileLocation.Types.Directory
                     SystemLocn.Path = Path
                     Usage.SaveLocn.Type = FileLocation.Types.Directory
@@ -3111,6 +2983,11 @@ Public Class Project '----------------------------------------------------------
                     SettingsLocn.Path = Path
                     DataLocn.Type = FileLocation.Types.Archive
                     DataLocn.Path = Path
+                    'Use the Archive location for the DataDirLocn - it is not possible to use a Directory in this case.
+                    'DataDirLocn.Type = FileLocation.Types.Directory
+                    DataDirLocn.Type = FileLocation.Types.Archive
+                    'DataDirLocn.Path = "" 'There is no DataDirLocn in an Archive project.
+                    DataDirLocn.Path = Path 'The only option is to use the Archive path!.
                     SystemLocn.Type = FileLocation.Types.Archive
                     SystemLocn.Path = Path
                     Usage.SaveLocn.Type = FileLocation.Types.Archive
@@ -3124,6 +3001,8 @@ Public Class Project '----------------------------------------------------------
                     SettingsLocn.Path = Path
                     DataLocn.Type = FileLocation.Types.Directory
                     DataLocn.Path = Path
+                    DataDirLocn.Type = FileLocation.Types.Directory 'For a Directory project, the DataDirLocn is the same as the DataLocn. (It provides an alternative uncompressed location to an archive Data location.)
+                    DataDirLocn.Path = Path
                     SystemLocn.Type = FileLocation.Types.Directory
                     SystemLocn.Path = Path
                     Usage.SaveLocn.Type = FileLocation.Types.Directory
@@ -3179,13 +3058,16 @@ Public Class Project '----------------------------------------------------------
                                     If XDoc.<Project>.<DataRelativeLocation>.<Path>.Value = "" Then
                                         DataLocn.Path = Path 'The Data Path is the same as the Project Directory
                                     Else
-                                        'DataLocn.Path = Path & "\" & XDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is a sub-directory of the Project Directory.
                                         DataLocn.Path = Path & XDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is a sub-directory of the Project Directory.
                                     End If
                                 End If
+                                'For a Hybrid project with a Directory Data Location, the DataDirLocn is the same as the DataLocn. (It provides an alternative uncompressed location to an archive Data location.)
+                                DataDirLocn.Type = FileLocation.Types.Directory
+                                DataDirLocn.Path = DataLocn.Path
 
                             Case "Archive"
                                 DataLocn.Type = FileLocation.Types.Archive
+                                DataDirLocn.Type = FileLocation.Types.Directory
                                 If XDoc.<Project>.<DataRelativeLocation>.<Path>.Value = Nothing Then
                                     RaiseEvent ErrorMessage("No Data relative location path is specified for the Hybrid project." & vbCrLf)
                                 Else
@@ -3194,8 +3076,9 @@ Public Class Project '----------------------------------------------------------
                                         RaiseEvent ErrorMessage("The Data relative location path is an Archive with a blank name specified." & vbCrLf)
                                         RaiseEvent ErrorMessage("The Project path will be used." & vbCrLf)
                                     Else
-                                        'DataLocn.Path = Path & "\" & XDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is an Archive in the Project Directory.
                                         DataLocn.Path = Path & XDoc.<Project>.<DataRelativeLocation>.<Path>.Value 'The Data Path is an Archive in the Project Directory.
+                                        Dim DataDirName As String = System.IO.Path.GetFileNameWithoutExtension(DataLocn.Path) 'The Data directory name is the same as the Archive file name with the file extension removed.
+                                        DataDirLocn.Path = Path & "\" & DataDirName
                                     End If
                                 End If
 
@@ -3215,7 +3098,6 @@ Public Class Project '----------------------------------------------------------
                                     If XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value = "" Then
                                         SystemLocn.Path = Path 'The Data Path is the same as the Project Directory
                                     Else
-                                        'SystemLocn.Path = Path & "\" & XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value 'The System Path is a sub-directory of the Project Directory.
                                         SystemLocn.Path = Path & XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value 'The System Path is a sub-directory of the Project Directory.
                                     End If
                                 End If
@@ -3230,7 +3112,6 @@ Public Class Project '----------------------------------------------------------
                                         RaiseEvent ErrorMessage("The System relative location path is an Archive with a blank name specified." & vbCrLf)
                                         RaiseEvent ErrorMessage("The Project path will be used." & vbCrLf)
                                     Else
-                                        'SystemLocn.Path = Path & "\" & XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value 'The Data Path is an Archive in the Project Directory.
                                         SystemLocn.Path = Path & XDoc.<Project>.<SystemRelativeLocation>.<Path>.Value 'The Data Path is an Archive in the Project Directory.
                                     End If
                                 End If
@@ -3609,494 +3490,395 @@ Public Class Project '----------------------------------------------------------
 
     End Sub
 
-    Public Sub ReadProjectInfoFile_Old()
-        'Read project settings in a project information file.
-        'This file is located in the project Settings Location.
-        'The project settings location is initially obtained from the current project file or from the project list.
+    'Public Sub ReadProjectInfoFile_Old()
+    '    'Read project settings in a project information file.
+    '    'This file is located in the project Settings Location.
+    '    'The project settings location is initially obtained from the current project file or from the project list.
 
-        'UPDATE 13AUG16
-        'SettingsLocn and DataLocn is the same as the Project Directory location or the Project Archive location.
-        'These are now left blank in the ADVL_Project_Info.xml file.
-        'DataLocn has a value only for Hybrid projects.
-        'Future project types may use these location settings or add new location settings.
+    '    'UPDATE 13AUG16
+    '    'SettingsLocn and DataLocn is the same as the Project Directory location or the Project Archive location.
+    '    'These are now left blank in the ADVL_Project_Info.xml file.
+    '    'DataLocn has a value only for Hybrid projects.
+    '    'Future project types may use these location settings or add new location settings.
 
-        'UPDATE 19JUL18
-        'The ADVL_Project_Info.xml file is now stored in the project directory or archive file specified by Project.Type and Project.Path.
+    '    'UPDATE 19JUL18
+    '    'The ADVL_Project_Info.xml file is now stored in the project directory or archive file specified by Project.Type and Project.Path.
 
-        'If Project.Path = "" Then the project is an old pre-19JUL18 version.
+    '    'If Project.Path = "" Then the project is an old pre-19JUL18 version.
 
-        If Path = "" Then 'Pre-19JUL18 Project version.
+    '    If Path = "" Then 'Pre-19JUL18 Project version.
 
-        Else 'Post-19JUL18 Project version.
-
-
-        End If
-
-        'If SettingsFileExists("ADVL_Project_Info.xml") Then
-        If ProjectFileExists("ADVL_Project_Info.xml") Then
-            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
-            'ReadXmlSettings("ADVL_Project_Info.xml", ProjectInfoXDoc)
-            ReadXmlProjectFile("ADVL_Project_Info.xml", ProjectInfoXDoc)
-
-            'NOTE: saved values (SavedSettingsLocn etc) stored the values recorded in the ADVL_Project_Info.xml file.
-            'These were used to handle the case where the project directory or archive has been moved and the saved values need to be updated.
-            'These values are no longer stored for Directory and Archive project types. (The values are the same as the location of the Directory or Archive file.)
-
-            'Read the project Name:
-            'Dim SavedName As String = ""
-            If ProjectInfoXDoc.<Project>.<Name>.Value = Nothing Then
-                Name = ""
-                'SavedName = ""
-            Else
-                Name = ProjectInfoXDoc.<Project>.<Name>.Value
-                'SavedName = ProjectInfoXDoc.<Project>.<Name>.Value
-            End If
-
-            'If SavedName <> Name Then
-            '    RaiseEvent ErrorMessage("The last used project name (" & Name & ") is different from the name in the Project Info file (" & SavedName & ")." & vbCrLf)
-            'End If
-
-            'Read the project Description
-            'Dim SavedDescription As String = ""
-            If ProjectInfoXDoc.<Project>.<Description>.Value = Nothing Then
-                Description = ""
-                'SavedDescription = ""
-            Else
-                Description = ProjectInfoXDoc.<Project>.<Description>.Value
-                'SavedDescription = ProjectInfoXDoc.<Project>.<Description>.Value
-            End If
-
-            'If SavedDescription <> Description Then
-            '    RaiseEvent ErrorMessage("The last used project description (" & Description & ") is different from the description in the Project Info file (" & SavedDescription & ")." & vbCrLf)
-            'End If
-
-            'Read the project Creation Date:
-            If ProjectInfoXDoc.<Project>.<CreationDate>.Value = Nothing Then
-                CreationDate = ""
-            Else
-                CreationDate = ProjectInfoXDoc.<Project>.<CreationDate>.Value
-            End If
-
-            'Read the project version:
-            If ProjectInfoXDoc.<Project>.<Version>.<Major>.Value = Nothing Then
-                Version.Major = 0
-            Else
-                Version.Major = ProjectInfoXDoc.<Project>.<Version>.<Major>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<Version>.<Minor>.Value = Nothing Then
-                Version.Minor = 0
-            Else
-                Version.Minor = ProjectInfoXDoc.<Project>.<Version>.<Minor>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<Version>.<Build>.Value = Nothing Then
-                Version.Build = 0
-            Else
-                Version.Build = ProjectInfoXDoc.<Project>.<Version>.<Build>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<Version>.<Revision>.Value = Nothing Then
-                Version.Revision = 0
-            Else
-                Version.Revision = ProjectInfoXDoc.<Project>.<Version>.<Revision>.Value
-            End If
-
-            'Read the Project Author information:
-            If ProjectInfoXDoc.<Project>.<Author>.<Name>.Value = Nothing Then
-                Author.Name = ""
-            Else
-                Author.Name = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<Author>.<Description>.Value = Nothing Then
-                Author.Description = ""
-            Else
-                Author.Description = ProjectInfoXDoc.<Project>.<Author>.<Description>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<Author>.<Contact>.Value = Nothing Then
-                Author.Contact = ""
-            Else
-                Author.Contact = ProjectInfoXDoc.<Project>.<Author>.<Contact>.Value
-            End If
-
-            'Read the project Type
-            If ProjectInfoXDoc.<Project>.<Type>.Value = Nothing Then
-                'Author = ""
-                Type = Types.None
-            Else
-                Select Case ProjectInfoXDoc.<Project>.<Type>.Value
-                    Case "None"
-                        Type = Types.None
-                        DataLocn.Type = SettingsLocn.Type
-                        DataLocn.Path = SettingsLocn.Path
-                    Case "Directory"
-                        Type = Types.Directory
-                        DataLocn.Type = SettingsLocn.Type
-                        DataLocn.Path = SettingsLocn.Path
-                    Case "Archive"
-                        Type = Types.Archive
-                        DataLocn.Type = SettingsLocn.Type
-                        DataLocn.Path = SettingsLocn.Path
-                    Case "Hybrid"
-                        Type = Types.Hybrid
-                        Select Case ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value
-                            Case "Directory"
-                                DataLocn.Type = FileLocation.Types.Directory
-                            Case "Archive"
-                                DataLocn.Type = FileLocation.Types.Archive
-                        End Select
-                        DataLocn.Path = DataLocn.Path = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
-                End Select
-
-            End If
-
-            ''If the Default project is selected, the Type should be "None". Change the Type to "None" if required:
-            'If Name = "Default" Then
-            '    If Type = Types.None Then
-            '        'Correct Type for the Default project.
-            '    Else
-            '        RaiseEvent ErrorMessage("The Default project is selected. The saved project type was: " & Type.ToString & " The project type has been changed to 'None'" & vbCrLf)
-            '        Type = Types.None
-            '    End If
-            'End If
-
-            ''Read the Saved SettingsLocn.Type but dont overwite the current value.
-            'Dim SavedSettingsLocn As New FileLocation
-
-            'If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value = Nothing Then
-            '    'SettingsLocn.Type = FileLocation.Types.Directory 
-            'Else
-            '    Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
-            '        Case "Directory"
-            '            'SettingsLocn.Type = FileLocation.Types.Directory
-            '            SavedSettingsLocn.Type = FileLocation.Types.Directory
-            '        Case "Archive"
-            '            'SettingsLocn.Type = FileLocation.Types.Archive
-            '            SavedSettingsLocn.Type = FileLocation.Types.Archive
-            '    End Select
-            'End If
-
-            'If SavedSettingsLocn.Type <> SettingsLocn.Type Then
-            '    RaiseEvent ErrorMessage("The last used project SettingsLocn.Type (" & SettingsLocn.Type.ToString & ") is different from the type in the Project Info file (" & SavedSettingsLocn.Type.ToString & ")." & vbCrLf)
-            'End If
-
-            ''Read the Saved SettingsLocn.Path but dont overwite the current value.
-            'If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value = Nothing Then
-            '    'SettingsLocn.Path = ApplicationDir
-            'Else
-            '    'SettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-            '    SavedSettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
-            'End If
+    '    Else 'Post-19JUL18 Project version.
 
 
-            'If SavedSettingsLocn.Path <> SettingsLocn.Path Then
-            '    RaiseEvent ErrorMessage("The last used project SettingsLocn.Path (" & SettingsLocn.Path & ") is different from the path in the Project Info file (" & SavedSettingsLocn.Path & ")." & vbCrLf)
-            'End If
+    '    End If
 
-            'If ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value = Nothing Then
-            '    DataLocn.Type = FileLocation.Types.Directory
-            'Else
-            '    Select Case ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value
-            '        Case "Directory"
-            '            DataLocn.Type = FileLocation.Types.Directory
-            '        Case "Archive"
-            '            DataLocn.Type = FileLocation.Types.Archive
-            '    End Select
-            'End If
-            'If ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value = Nothing Then
-            '    DataLocn.Path = ApplicationDir
-            'Else
-            '    DataLocn.Path = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
-            'End If
+    '    'If SettingsFileExists("ADVL_Project_Info.xml") Then
+    '    If ProjectFileExists("ADVL_Project_Info.xml") Then
+    '        Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
+    '        'ReadXmlSettings("ADVL_Project_Info.xml", ProjectInfoXDoc)
+    '        ReadXmlProjectFile("ADVL_Project_Info.xml", ProjectInfoXDoc)
 
-            ''If the Default project is being used, change the DataLocn.Type to Directory and DataLocn.Path to Application
-            'If Name = "Default" Then
-            '    If DataLocn.Type = FileLocation.Types.Directory Then
-            '        'Correct DataLocn.Type for the Default project read.
-            '    Else
-            '        RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Type was: " & DataLocn.Type.ToString & " The project DataLocn.Type has been changed to 'Directory'" & vbCrLf)
-            '        DataLocn.Type = FileLocation.Types.Directory
-            '    End If
-            '    If DataLocn.Path = ApplicationDir & "\" & "Default_Project" Then
-            '        'Correct DataLocn.Path for the Default project read.
-            '    Else
-            '        RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Path was: " & DataLocn.Path & " The project DataLocn.Type has been changed to " & ApplicationDir & "\" & "Default_Project" & vbCrLf)
-            '        DataLocn.Path = ApplicationDir & "\" & "Default_Project"
-            '    End If
-            'End If
+    '        'NOTE: saved values (SavedSettingsLocn etc) stored the values recorded in the ADVL_Project_Info.xml file.
+    '        'These were used to handle the case where the project directory or archive has been moved and the saved values need to be updated.
+    '        'These values are no longer stored for Directory and Archive project types. (The values are the same as the location of the Directory or Archive file.)
+
+    '        'Read the project Name:
+    '        'Dim SavedName As String = ""
+    '        If ProjectInfoXDoc.<Project>.<Name>.Value = Nothing Then
+    '            Name = ""
+    '            'SavedName = ""
+    '        Else
+    '            Name = ProjectInfoXDoc.<Project>.<Name>.Value
+    '            'SavedName = ProjectInfoXDoc.<Project>.<Name>.Value
+    '        End If
+
+    '        'If SavedName <> Name Then
+    '        '    RaiseEvent ErrorMessage("The last used project name (" & Name & ") is different from the name in the Project Info file (" & SavedName & ")." & vbCrLf)
+    '        'End If
+
+    '        'Read the project Description
+    '        'Dim SavedDescription As String = ""
+    '        If ProjectInfoXDoc.<Project>.<Description>.Value = Nothing Then
+    '            Description = ""
+    '            'SavedDescription = ""
+    '        Else
+    '            Description = ProjectInfoXDoc.<Project>.<Description>.Value
+    '            'SavedDescription = ProjectInfoXDoc.<Project>.<Description>.Value
+    '        End If
+
+    '        'If SavedDescription <> Description Then
+    '        '    RaiseEvent ErrorMessage("The last used project description (" & Description & ") is different from the description in the Project Info file (" & SavedDescription & ")." & vbCrLf)
+    '        'End If
+
+    '        'Read the project Creation Date:
+    '        If ProjectInfoXDoc.<Project>.<CreationDate>.Value = Nothing Then
+    '            CreationDate = ""
+    '        Else
+    '            CreationDate = ProjectInfoXDoc.<Project>.<CreationDate>.Value
+    '        End If
+
+    '        'Read the project version:
+    '        If ProjectInfoXDoc.<Project>.<Version>.<Major>.Value = Nothing Then
+    '            Version.Major = 0
+    '        Else
+    '            Version.Major = ProjectInfoXDoc.<Project>.<Version>.<Major>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<Version>.<Minor>.Value = Nothing Then
+    '            Version.Minor = 0
+    '        Else
+    '            Version.Minor = ProjectInfoXDoc.<Project>.<Version>.<Minor>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<Version>.<Build>.Value = Nothing Then
+    '            Version.Build = 0
+    '        Else
+    '            Version.Build = ProjectInfoXDoc.<Project>.<Version>.<Build>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<Version>.<Revision>.Value = Nothing Then
+    '            Version.Revision = 0
+    '        Else
+    '            Version.Revision = ProjectInfoXDoc.<Project>.<Version>.<Revision>.Value
+    '        End If
+
+    '        'Read the Project Author information:
+    '        If ProjectInfoXDoc.<Project>.<Author>.<Name>.Value = Nothing Then
+    '            Author.Name = ""
+    '        Else
+    '            Author.Name = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<Author>.<Description>.Value = Nothing Then
+    '            Author.Description = ""
+    '        Else
+    '            Author.Description = ProjectInfoXDoc.<Project>.<Author>.<Description>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<Author>.<Contact>.Value = Nothing Then
+    '            Author.Contact = ""
+    '        Else
+    '            Author.Contact = ProjectInfoXDoc.<Project>.<Author>.<Contact>.Value
+    '        End If
+
+    '        'Read the project Type
+    '        If ProjectInfoXDoc.<Project>.<Type>.Value = Nothing Then
+    '            'Author = ""
+    '            Type = Types.None
+    '        Else
+    '            Select Case ProjectInfoXDoc.<Project>.<Type>.Value
+    '                Case "None"
+    '                    Type = Types.None
+    '                    DataLocn.Type = SettingsLocn.Type
+    '                    DataLocn.Path = SettingsLocn.Path
+    '                Case "Directory"
+    '                    Type = Types.Directory
+    '                    DataLocn.Type = SettingsLocn.Type
+    '                    DataLocn.Path = SettingsLocn.Path
+    '                Case "Archive"
+    '                    Type = Types.Archive
+    '                    DataLocn.Type = SettingsLocn.Type
+    '                    DataLocn.Path = SettingsLocn.Path
+    '                Case "Hybrid"
+    '                    Type = Types.Hybrid
+    '                    Select Case ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value
+    '                        Case "Directory"
+    '                            DataLocn.Type = FileLocation.Types.Directory
+    '                        Case "Archive"
+    '                            DataLocn.Type = FileLocation.Types.Archive
+    '                    End Select
+    '                    DataLocn.Path = DataLocn.Path = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
+    '            End Select
+
+    '        End If
+
+    '        ''If the Default project is selected, the Type should be "None". Change the Type to "None" if required:
+    '        'If Name = "Default" Then
+    '        '    If Type = Types.None Then
+    '        '        'Correct Type for the Default project.
+    '        '    Else
+    '        '        RaiseEvent ErrorMessage("The Default project is selected. The saved project type was: " & Type.ToString & " The project type has been changed to 'None'" & vbCrLf)
+    '        '        Type = Types.None
+    '        '    End If
+    '        'End If
+
+    '        ''Read the Saved SettingsLocn.Type but dont overwite the current value.
+    '        'Dim SavedSettingsLocn As New FileLocation
+
+    '        'If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value = Nothing Then
+    '        '    'SettingsLocn.Type = FileLocation.Types.Directory 
+    '        'Else
+    '        '    Select Case ProjectInfoXDoc.<Project>.<SettingsLocation>.<Type>.Value
+    '        '        Case "Directory"
+    '        '            'SettingsLocn.Type = FileLocation.Types.Directory
+    '        '            SavedSettingsLocn.Type = FileLocation.Types.Directory
+    '        '        Case "Archive"
+    '        '            'SettingsLocn.Type = FileLocation.Types.Archive
+    '        '            SavedSettingsLocn.Type = FileLocation.Types.Archive
+    '        '    End Select
+    '        'End If
+
+    '        'If SavedSettingsLocn.Type <> SettingsLocn.Type Then
+    '        '    RaiseEvent ErrorMessage("The last used project SettingsLocn.Type (" & SettingsLocn.Type.ToString & ") is different from the type in the Project Info file (" & SavedSettingsLocn.Type.ToString & ")." & vbCrLf)
+    '        'End If
+
+    '        ''Read the Saved SettingsLocn.Path but dont overwite the current value.
+    '        'If ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value = Nothing Then
+    '        '    'SettingsLocn.Path = ApplicationDir
+    '        'Else
+    '        '    'SettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+    '        '    SavedSettingsLocn.Path = ProjectInfoXDoc.<Project>.<SettingsLocation>.<Path>.Value
+    '        'End If
 
 
+    '        'If SavedSettingsLocn.Path <> SettingsLocn.Path Then
+    '        '    RaiseEvent ErrorMessage("The last used project SettingsLocn.Path (" & SettingsLocn.Path & ") is different from the path in the Project Info file (" & SavedSettingsLocn.Path & ")." & vbCrLf)
+    '        'End If
+
+    '        'If ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value = Nothing Then
+    '        '    DataLocn.Type = FileLocation.Types.Directory
+    '        'Else
+    '        '    Select Case ProjectInfoXDoc.<Project>.<DataLocation>.<Type>.Value
+    '        '        Case "Directory"
+    '        '            DataLocn.Type = FileLocation.Types.Directory
+    '        '        Case "Archive"
+    '        '            DataLocn.Type = FileLocation.Types.Archive
+    '        '    End Select
+    '        'End If
+    '        'If ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value = Nothing Then
+    '        '    DataLocn.Path = ApplicationDir
+    '        'Else
+    '        '    DataLocn.Path = ProjectInfoXDoc.<Project>.<DataLocation>.<Path>.Value
+    '        'End If
+
+    '        ''If the Default project is being used, change the DataLocn.Type to Directory and DataLocn.Path to Application
+    '        'If Name = "Default" Then
+    '        '    If DataLocn.Type = FileLocation.Types.Directory Then
+    '        '        'Correct DataLocn.Type for the Default project read.
+    '        '    Else
+    '        '        RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Type was: " & DataLocn.Type.ToString & " The project DataLocn.Type has been changed to 'Directory'" & vbCrLf)
+    '        '        DataLocn.Type = FileLocation.Types.Directory
+    '        '    End If
+    '        '    If DataLocn.Path = ApplicationDir & "\" & "Default_Project" Then
+    '        '        'Correct DataLocn.Path for the Default project read.
+    '        '    Else
+    '        '        RaiseEvent ErrorMessage("The Default project is selected. The saved DataLocn.Path was: " & DataLocn.Path & " The project DataLocn.Type has been changed to " & ApplicationDir & "\" & "Default_Project" & vbCrLf)
+    '        '        DataLocn.Path = ApplicationDir & "\" & "Default_Project"
+    '        '    End If
+    '        'End If
 
 
 
-            'Read the Application Summary NOTE: THIS CODE REMAINS TO HANDLE OLD PROJECT VERSIONS. IN NEW VERSIONS, <ApplicationSummary> IS REPLACED BY <HostApplication>.
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value = Nothing Then
-                'ApplicationSummary.Name = ""
-                'HostApplication.Name = ""
-                Application.Name = ""
-            Else
-                'ApplicationSummary.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
-                'HostApplication.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
-                Application.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value = Nothing Then
-                'ApplicationSummary.Description = ""
-                'HostApplication.Description = ""
-                Application.Description = ""
-            Else
-                'ApplicationSummary.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
-                'HostApplication.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
-                Application.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value = Nothing Then
-                'ApplicationSummary.CreationDate = ""
-                'HostApplication.CreationDate = "1-Jan-2000 12:00:00"
-                Application.CreationDate = "1-Jan-2000 12:00:00"
 
-            Else
-                'ApplicationSummary.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
-                'HostApplication.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
-                Application.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value = Nothing Then
-                'ApplicationSummary.Version.Major = ""
-                'HostApplication.Version.Major = ""
-                'HostApplication.Version.Major = 0
-                Application.Version.Major = 0
-            Else
-                'ApplicationSummary.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
-                'HostApplication.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
-                Application.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value = Nothing Then
-                'ApplicationSummary.Version.Minor = ""
-                'HostApplication.Version.Minor = ""
-                'HostApplication.Version.Minor = 0
-                Application.Version.Minor = 0
-            Else
-                'ApplicationSummary.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
-                'HostApplication.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
-                Application.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value = Nothing Then
-                'ApplicationSummary.Version.Build = ""
-                'HostApplication.Version.Build = ""
-                'HostApplication.Version.Build = 0
-                Application.Version.Build = 0
-            Else
-                'ApplicationSummary.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
-                'HostApplication.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
-                Application.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value = Nothing Then
-                'ApplicationSummary.Version.Revision = ""
-                'HostApplication.Version.Revision = ""
-                'HostApplication.Version.Revision = 0
-                Application.Version.Revision = 0
-            Else
-                'ApplicationSummary.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
-                'HostApplication.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
-                Application.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value = Nothing Then
-                'ApplicationSummary.Author.Name = ""
-                'HostApplication.Author.Name = ""
-                Application.Author.Name = ""
-            Else
-                'ApplicationSummary.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
-                'HostApplication.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
-                Application.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value = Nothing Then
-                'ApplicationSummary.Author.Description = ""
-                'HostApplication.Author.Description = ""
-                Application.Author.Description = ""
-            Else
-                'ApplicationSummary.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
-                'HostApplication.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
-                Application.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value = Nothing Then
-                'ApplicationSummary.Author.Contact = ""
-                'HostApplication.Author.Contact = ""
-                Application.Author.Contact = ""
-            Else
-                'ApplicationSummary.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
-                'HostApplication.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
-                Application.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
-            End If
 
-            'Read the Host Application information: 
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<Name>.Value = Nothing Then
-                'HostApplication.Name = ""
-            Else
-                'HostApplication.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Name>.Value
-                Application.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Name>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<Description>.Value = Nothing Then
-                'HostApplication.Description = ""
-            Else
-                'HostApplication.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Description>.Value
-                Application.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Description>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value = Nothing Then
-                'HostApplication.CreationDate = ""
-            Else
-                'HostApplication.CreationDate = ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value
-                Application.CreationDate = ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value = Nothing Then
-                'HostApplication.Version.Major = ""
-            Else
-                'HostApplication.Version.Major = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value
-                Application.Version.Major = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value = Nothing Then
-                'HostApplication.Version.Minor = ""
-            Else
-                'HostApplication.Version.Minor = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value
-                Application.Version.Minor = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value = Nothing Then
-                'HostApplication.Version.Build = ""
-            Else
-                'HostApplication.Version.Build = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value
-                Application.Version.Build = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value = Nothing Then
-                'HostApplication.Version.Revision = ""
-            Else
-                'HostApplication.Version.Revision = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value
-                Application.Version.Revision = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value = Nothing Then
-                'HostApplication.Author.Name = ""
-            Else
-                'HostApplication.Author.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value
-                Application.Author.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value = Nothing Then
-                'HostApplication.Author.Description = ""
-            Else
-                'HostApplication.Author.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value
-                Application.Author.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value
-            End If
-            If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value = Nothing Then
-                'HostApplication.Author.Contact = ""
-            Else
-                'HostApplication.Author.Contact = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value
-                Application.Author.Contact = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value
-            End If
+    '        'Read the Application Summary NOTE: THIS CODE REMAINS TO HANDLE OLD PROJECT VERSIONS. IN NEW VERSIONS, <ApplicationSummary> IS REPLACED BY <HostApplication>.
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value = Nothing Then
+    '            'ApplicationSummary.Name = ""
+    '            'HostApplication.Name = ""
+    '            Application.Name = ""
+    '        Else
+    '            'ApplicationSummary.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
+    '            'HostApplication.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
+    '            Application.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Name>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value = Nothing Then
+    '            'ApplicationSummary.Description = ""
+    '            'HostApplication.Description = ""
+    '            Application.Description = ""
+    '        Else
+    '            'ApplicationSummary.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
+    '            'HostApplication.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
+    '            Application.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Description>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value = Nothing Then
+    '            'ApplicationSummary.CreationDate = ""
+    '            'HostApplication.CreationDate = "1-Jan-2000 12:00:00"
+    '            Application.CreationDate = "1-Jan-2000 12:00:00"
 
-            Usage.RestoreUsageInfo()
+    '        Else
+    '            'ApplicationSummary.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
+    '            'HostApplication.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
+    '            Application.CreationDate = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<CreationDate>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value = Nothing Then
+    '            'ApplicationSummary.Version.Major = ""
+    '            'HostApplication.Version.Major = ""
+    '            'HostApplication.Version.Major = 0
+    '            Application.Version.Major = 0
+    '        Else
+    '            'ApplicationSummary.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
+    '            'HostApplication.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
+    '            Application.Version.Major = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Major>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value = Nothing Then
+    '            'ApplicationSummary.Version.Minor = ""
+    '            'HostApplication.Version.Minor = ""
+    '            'HostApplication.Version.Minor = 0
+    '            Application.Version.Minor = 0
+    '        Else
+    '            'ApplicationSummary.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
+    '            'HostApplication.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
+    '            Application.Version.Minor = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Minor>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value = Nothing Then
+    '            'ApplicationSummary.Version.Build = ""
+    '            'HostApplication.Version.Build = ""
+    '            'HostApplication.Version.Build = 0
+    '            Application.Version.Build = 0
+    '        Else
+    '            'ApplicationSummary.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
+    '            'HostApplication.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
+    '            Application.Version.Build = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Build>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value = Nothing Then
+    '            'ApplicationSummary.Version.Revision = ""
+    '            'HostApplication.Version.Revision = ""
+    '            'HostApplication.Version.Revision = 0
+    '            Application.Version.Revision = 0
+    '        Else
+    '            'ApplicationSummary.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
+    '            'HostApplication.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
+    '            Application.Version.Revision = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Version>.<Revision>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value = Nothing Then
+    '            'ApplicationSummary.Author.Name = ""
+    '            'HostApplication.Author.Name = ""
+    '            Application.Author.Name = ""
+    '        Else
+    '            'ApplicationSummary.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
+    '            'HostApplication.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
+    '            Application.Author.Name = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Name>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value = Nothing Then
+    '            'ApplicationSummary.Author.Description = ""
+    '            'HostApplication.Author.Description = ""
+    '            Application.Author.Description = ""
+    '        Else
+    '            'ApplicationSummary.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
+    '            'HostApplication.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
+    '            Application.Author.Description = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Description>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value = Nothing Then
+    '            'ApplicationSummary.Author.Contact = ""
+    '            'HostApplication.Author.Contact = ""
+    '            Application.Author.Contact = ""
+    '        Else
+    '            'ApplicationSummary.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
+    '            'HostApplication.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
+    '            Application.Author.Contact = ProjectInfoXDoc.<Project>.<ApplicationSummary>.<Author>.<Contact>.Value
+    '        End If
 
-        Else
-            'No Project_Info.xml file found.
-            'OpenDefaultProject()
-            UseDefaultProject()
-            Usage.RestoreUsageInfo()
-        End If
-    End Sub
+    '        'Read the Host Application information: 
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<Name>.Value = Nothing Then
+    '            'HostApplication.Name = ""
+    '        Else
+    '            'HostApplication.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Name>.Value
+    '            Application.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Name>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<Description>.Value = Nothing Then
+    '            'HostApplication.Description = ""
+    '        Else
+    '            'HostApplication.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Description>.Value
+    '            Application.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Description>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value = Nothing Then
+    '            'HostApplication.CreationDate = ""
+    '        Else
+    '            'HostApplication.CreationDate = ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value
+    '            Application.CreationDate = ProjectInfoXDoc.<Project>.<HostApplication>.<CreationDate>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value = Nothing Then
+    '            'HostApplication.Version.Major = ""
+    '        Else
+    '            'HostApplication.Version.Major = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value
+    '            Application.Version.Major = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Major>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value = Nothing Then
+    '            'HostApplication.Version.Minor = ""
+    '        Else
+    '            'HostApplication.Version.Minor = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value
+    '            Application.Version.Minor = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Minor>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value = Nothing Then
+    '            'HostApplication.Version.Build = ""
+    '        Else
+    '            'HostApplication.Version.Build = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value
+    '            Application.Version.Build = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Build>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value = Nothing Then
+    '            'HostApplication.Version.Revision = ""
+    '        Else
+    '            'HostApplication.Version.Revision = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value
+    '            Application.Version.Revision = ProjectInfoXDoc.<Project>.<HostApplication>.<Version>.<Revision>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value = Nothing Then
+    '            'HostApplication.Author.Name = ""
+    '        Else
+    '            'HostApplication.Author.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value
+    '            Application.Author.Name = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Name>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value = Nothing Then
+    '            'HostApplication.Author.Description = ""
+    '        Else
+    '            'HostApplication.Author.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value
+    '            Application.Author.Description = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Description>.Value
+    '        End If
+    '        If ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value = Nothing Then
+    '            'HostApplication.Author.Contact = ""
+    '        Else
+    '            'HostApplication.Author.Contact = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value
+    '            Application.Author.Contact = ProjectInfoXDoc.<Project>.<HostApplication>.<Author>.<Contact>.Value
+    '        End If
+
+    '        Usage.RestoreUsageInfo()
+
+    '    Else
+    '        'No Project_Info.xml file found.
+    '        'OpenDefaultProject()
+    '        UseDefaultProject()
+    '        Usage.RestoreUsageInfo()
+    '    End If
+    'End Sub
 
     Public Sub SaveProjectInfoFile()
         'Write the project settings to the project information file.
         'This file is written to the Settings Location.
-
-        'UPDATE 13AUG16
-        'SettingsLocn and DataLocn is the same as the Project Directory location or the Project Archive location.
-        'These are now left blank in the ADVL_Project_Info.xml file.
-        'DataLocn has a value only for Hybrid projects.
-        'Future project types may use these location settings or add new location settings.
-
-        'Dim SettingsLocationType As String
-        'Dim SettingsLocationPath As String
-        'Dim DataLocationType As String
-        'Dim DataLocationPath As String
-
-        'Dim SettingsRelLocnType As String
-        'Dim SettingsRelLocnPath As String
-        'Dim DataRelLocnType As String
-        'Dim DataRelLocnPath As String
-
-        'Dim ProjectType As String
-
-        'NOTE: SettingsRelLocn and DataRelLocn are now global variables in the Project class.
-        'Select Case Type
-        '    Case Types.None
-        '        ProjectType = "None"
-        '        'SettingsLocationType = ""
-        '        'SettingsLocationPath = ""
-        '        'DataLocationType = ""
-        '        'DataLocationPath = ""
-        '        SettingsRelLocnType = ""
-        '        SettingsRelLocnPath = ""
-        '        DataRelLocnType = ""
-        '        DataRelLocnPath = ""
-
-        '    Case Types.Directory
-        '        ProjectType = "Directory"
-        '        'SettingsLocationType = ""
-        '        'SettingsLocationPath = ""
-        '        'DataLocationType = ""
-        '        'DataLocationPath = ""
-        '        SettingsRelLocnType = ""
-        '        SettingsRelLocnPath = ""
-        '        DataRelLocnType = ""
-        '        DataRelLocnPath = ""
-
-        '    Case Types.Archive
-        '        ProjectType = "Archive"
-        '        'SettingsLocationType = ""
-        '        'SettingsLocationPath = ""
-        '        'DataLocationType = ""
-        '        'DataLocationPath = ""
-        '        SettingsRelLocnType = ""
-        '        SettingsRelLocnPath = ""
-        '        DataRelLocnType = ""
-        '        DataRelLocnPath = ""
-
-        '        'Relative locations are used for Hybrid Projects.
-        '        'The Settings and Data locations are specified relative to the Project Location.
-        '        'If the Project location is moved, the Settings and Data locations can be determined from the realtive locations.
-        '        'UPDATE 29Jul18 - THESE RELATIVE LOCATIONS ARE NOW PROJECT CLASS PROPERTIES.
-        '    Case Types.Hybrid
-        '        ProjectType = "Hybrid"
-        '        'SettingsLocationType = ""
-        '        'SettingsLocationPath = ""
-        '        'DataLocationType = "Archive"
-        '        'DataLocationPath = DataLocn.Path
-        '        SettingsRelLocnType = ""
-        '        SettingsRelLocnPath = ""
-        '        DataRelLocnType = "Archive"
-        '        DataRelLocnPath = DataLocn.Path
-
-        'End Select
-
-        'Dim SettingsLocationType As String
-        'Select Case SettingsLocn.Type
-        '    Case FileLocation.Types.Directory
-        '        SettingsLocationType = "Directory"
-        '    Case FileLocation.Types.Archive
-        '        SettingsLocationType = "Archive"
-        'End Select
-
-        'Dim DataLocationType As String
-        'Select Case DataLocn.Type
-        '    Case FileLocation.Types.Directory
-        '        DataLocationType = "Directory"
-        '    Case FileLocation.Types.Archive
-        '        DataLocationType = "Archive"
-        'End Select
-
-        'This line was changed in the next section:
-        '<CreationDate><%= Format(Usage.FirstUsed, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-
-        'These lines were changed in the next section:
-        '<SettingsLocation>
-        '    <Type><%= SettingsLocationType %></Type>
-        '    <Path><%= SettingsLocn.Path %></Path>
-        '</SettingsLocation>
-        '<DataLocation>
-        '    <Type><%= DataLocationType %></Type>
-        '    <Path><%= DataLocn.Path %></Path>
-        '</DataLocation>
 
         Dim ProjectInfoXDoc = <?xml version="1.0" encoding="utf-8"?>
                               <!---->
@@ -4153,56 +3935,6 @@ Public Class Project '----------------------------------------------------------
                                   <ConnectOnOpen><%= ConnectOnOpen %></ConnectOnOpen>
                               </Project>
 
-        '<ConnectOnOpen><%= ConnectOnOpen %></ConnectOnOpen> ADDED 20Feb19
-
-        '<HostProject>
-        '    <Name><%= HostProjectName %></Name>
-        '    <DirectoryName><%= HostProjectDirectoryName %></DirectoryName>
-        '    <CreationDate><%= Format(HostProjectCreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-        '    <ID><%= HostProjectID %></ID>
-        '</HostProject>
-
-        '   <Type><%= ProjectType %></Type>
-
-        '<!--Project Information for Application: ADVL_Zip-->
-
-        '<Version>
-        '    <Major><%= Version.Major %></Major>
-        '    <Minor><%= Version.Minor %></Minor>
-        '    <Build><%= Version.Build %></Build>
-        '    <Revision><%= Version.Revision %></Revision>
-        '</Version>
-
-        '<SettingsLocation>
-        '    <Type><%= SettingsLocationType %></Type>
-        '    <Path><%= SettingsLocationPath %></Path>
-        '</SettingsLocation>
-        '<DataLocation>
-        '    <Type><%= DataLocationType %></Type>
-        '    <Path><%= DataLocationPath %></Path>
-        '</DataLocation>
-
-        '<HostApplication>
-        '    <Name><%= HostApplication.Name %></Name>
-        '    <Description><%= HostApplication.Description %></Description>
-        '    <CreationDate><%= Format(HostApplication.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
-        '    <Version>
-        '        <Major><%= HostApplication.Version.Major %></Major>
-        '        <Minor><%= HostApplication.Version.Minor %></Minor>
-        '        <Build><%= HostApplication.Version.Build %></Build>
-        '        <Revision><%= HostApplication.Version.Revision %></Revision>
-        '    </Version>
-        '    <Author>
-        '        <Name><%= HostApplication.Author.Name %></Name>
-        '        <Description><%= HostApplication.Author.Description %></Description>
-        '        <Contact><%= HostApplication.Author.Contact %></Contact>
-        '    </Author>
-        '</HostApplication>
-
-        'UPDATE: 16Jul18: <ApplicationSummary> changed to <HostApplication>
-        'SaveXmlSettings("ADVL_Project_Info.xml", ProjectInfoXDoc)
-
-        'SaveXmlSettings("Project_Info_ADVL_2.xml", ProjectInfoXDoc)
         SaveXmlProjectFile("Project_Info_ADVL_2.xml", ProjectInfoXDoc)
 
     End Sub
@@ -4273,6 +4005,84 @@ Public Class Project '----------------------------------------------------------
                     Return Zip.EntryExists(DataName)
                 Else
                     Return False
+                End If
+        End Select
+    End Function
+
+    Public Function DataDirFileExists(ByVal DataName As String) As Boolean
+        'Returns True if the data file exists.
+        Select Case DataDirLocn.Type
+            Case FileLocation.Types.Directory
+                'Check if the DataName exists in the project directory:
+                Return System.IO.File.Exists(DataDirLocn.Path & "\" & DataName)
+            Case FileLocation.Types.Archive
+                'Check if the DataName exists in the project archive:
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataDirLocn.Path
+                If Zip.ArchiveExists Then
+                    Return Zip.EntryExists(DataName)
+                Else
+                    Return False
+                End If
+        End Select
+    End Function
+
+    Public Function DataFileCreationDate(ByVal DataName As String) As Date
+        'Returns the Creation Date of the file if it exists.
+        Select Case DataLocn.Type
+            Case FileLocation.Types.Directory
+                'Check if the DataName exists in the project directory:
+                If System.IO.File.Exists(DataLocn.Path & "\" & DataName) Then
+                    Dim myFileInfo As New System.IO.FileInfo(DataLocn.Path & "\" & DataName)
+                    Return myFileInfo.CreationTime
+                Else
+                    Return DateValue("1900-01-01")
+                End If
+            Case FileLocation.Types.Archive
+                'Check if the DataName exists in the project archive:
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+                If Zip.ArchiveExists Then
+                    'Return Zip.EntryExists(DataName)
+                    If Zip.EntryExists(DataName) Then
+                        'Zip files do not the entry creation date!
+                        Return DateValue("1900-01-01")
+                    Else
+                        Return DateValue("1900-01-01")
+                    End If
+                Else
+                    'Return False
+                    Return DateValue("1900-01-01")
+                End If
+        End Select
+    End Function
+
+    Public Function DataFileLastEditDate(ByVal DataName) As Date
+        'Returns the Last Edit Date of the file if it exists.
+        Select Case DataLocn.Type
+            Case FileLocation.Types.Directory
+                'Check if the DataName exists in the project directory:
+                'Return System.IO.File.Exists(DataLocn.Path & "\" & DataName)
+                If System.IO.File.Exists(DataLocn.Path & "\" & DataName) Then
+                    Dim myFileInfo As New System.IO.FileInfo(DataLocn.Path & "\" & DataName)
+                    Return myFileInfo.LastWriteTime
+                Else
+                    Return DateValue("1900-01-01")
+                End If
+            Case FileLocation.Types.Archive
+                'Check if the DataName exists in the project archive:
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+                If Zip.ArchiveExists Then
+                    'Return Zip.EntryExists(DataName)
+                    If Zip.EntryExists(DataName) Then
+                        Return Zip.EntryLastEditDate(DataName)
+                    Else
+                        Return DateValue("1900-01-01")
+                    End If
+                Else
+                    'Return False
+                    Return DateValue("1900-01-01")
                 End If
         End Select
     End Function
@@ -4392,24 +4202,6 @@ Public Class Project '----------------------------------------------------------
         End Select
 
     End Function
-
-    'Public Function ProjectFileExists_Old(ByVal Name As String) As Boolean
-    '    'Returns True if the Project file exists.
-    '    Select Case ProjectLocn.Type
-    '        Case FileLocation.Types.Directory
-    '            'Check if the Name exists in the project directory:
-    '            Return System.IO.File.Exists(ProjectLocn.Path & "\" & Name)
-    '        Case FileLocation.Types.Archive
-    '            'Check if the Name exists in the project archive:
-    '            Dim Zip As New ZipComp
-    '            Zip.ArchivePath = ProjectLocn.Path
-    '            If Zip.ArchiveExists Then
-    '                Return Zip.EntryExists(Name)
-    '            Else
-    '                Return False
-    '            End If
-    '    End Select
-    'End Function
 
     Public Sub LockProject()
         'Add a Project lock file to the settings location to indicate that the project is in use.
@@ -4594,35 +4386,6 @@ Public Class Project '----------------------------------------------------------
 
     End Sub
 
-    'Public Sub ReadXmlProjectFile_Old(ByVal FileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
-    '    'Read the XML File from the Project location.
-
-    '    Select Case ProjectLocn.Type
-    '        Case FileLocation.Types.Directory
-    '            'Read the Project document in the directory at ProjectLocn.Path
-    '            If System.IO.File.Exists(ProjectLocn.Path & "\" & FileName) Then
-    '                XmlDoc = XDocument.Load(ProjectLocn.Path & "\" & FileName)
-    '            Else
-    '                XmlDoc = Nothing
-    '            End If
-
-    '        Case FileLocation.Types.Archive
-    '            'Read the Project document in the archive at ProjectLocn.Path
-    '            Dim Zip As New ZipComp
-    '            Zip.ArchivePath = ProjectLocn.Path
-    '            If Zip.EntryExists(FileName) Then
-    '                'Debugging:
-    '                'Debug.Print(Zip.GetText(SettingsName))
-    '                Dim Temp As String = Zip.GetText(FileName)
-
-    '                XmlDoc = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText(FileName))
-
-    '            Else
-    '                XmlDoc = Nothing
-    '            End If
-    '            Zip = Nothing
-    '    End Select
-
     'End Sub
 
     'Read and write Data files: -------------------------------------------------------------------------------------
@@ -4634,7 +4397,9 @@ Public Class Project '----------------------------------------------------------
     'DeleteData      - Delete a data file
     'SelectDataFile  - Display a list of data files for selection
     'GetDataFileList - Returns a list of data files
-    'ReadData        - Read the data in a fil einto a Stream
+    'ReadData        - Read the data in a file into a Stream
+    'CopyArchiveDataToProject - Extract a data file from the Data Archive to the Project directory.
+
 
     Public Sub ReadXmlData(ByVal DataFileName As String, ByRef XmlDoc As System.Xml.Linq.XDocument)
         'Read the XML data from the data location.
@@ -4731,21 +4496,26 @@ Public Class Project '----------------------------------------------------------
             Exit Sub
         End If
 
-        Select Case DataLocn.Type
-            Case FileLocation.Types.Directory
-                Try
-                    'Save the data XML document in the directory at DataLocn.Path
-                    XmlDoc.Save(DataLocn.Path & "\" & DataFileName)
-                Catch ex As Exception
-                    RaiseEvent ErrorMessage("Error saving XML file. " & ex.Message & vbCrLf)
-                End Try
+        If IsNothing(XmlDoc) Then
+            RaiseEvent ErrorMessage("Error saving XML Data to file: " & DataFileName & vbCrLf)
+            RaiseEvent ErrorMessage("  - No XML document to save." & DataFileName & vbCrLf)
+        Else
+            Select Case DataLocn.Type
+                Case FileLocation.Types.Directory
+                    Try
+                        'Save the data XML document in the directory at DataLocn.Path
+                        XmlDoc.Save(DataLocn.Path & "\" & DataFileName)
+                    Catch ex As Exception
+                        RaiseEvent ErrorMessage("Error saving XML file. " & ex.Message & vbCrLf)
+                    End Try
 
-            Case FileLocation.Types.Archive
-                'Save the data XML document in the archive at DataLocn.Path
-                Dim Zip As New ZipComp
-                Zip.ArchivePath = DataLocn.Path
-                Zip.AddText(DataFileName, XmlDoc.ToString)
-        End Select
+                Case FileLocation.Types.Archive
+                    'Save the data XML document in the archive at DataLocn.Path
+                    Dim Zip As New ZipComp
+                    Zip.ArchivePath = DataLocn.Path
+                    Zip.AddText(DataFileName, XmlDoc.ToString)
+            End Select
+        End If
     End Sub
 
     Public Sub RenameDataFile(ByVal OldFilename, ByVal NewFilename)
@@ -4778,6 +4548,57 @@ Public Class Project '----------------------------------------------------------
                 Dim Zip As New ZipComp
                 Zip.ArchivePath = DataLocn.Path
                 Zip.RemoveEntry(DataName)
+        End Select
+    End Sub
+
+    Public Sub DeleteDataDirFile(ByVal DataName As String)
+        'Delete the specified file from the DataDirLocn
+        If DataDirLocn.Path = "" Then
+            'The path does not exist - nothing to delete.
+        ElseIf System.IO.Directory.Exists(DataDirLocn.Path) Then
+            'Check if the file exists:
+            If System.IO.File.Exists(DataDirLocn.Path & "\" & DataName) Then
+                'File found. Delete it:
+                Try
+                    System.IO.File.Delete(DataDirLocn.Path & "\" & DataName)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage("Error deleting data file: " & DataName & "  Error message: " & ex.Message & vbCrLf)
+                End Try
+            Else
+                'The specified file does not exist.
+            End If
+        Else
+            'The path does not exist - nothing to delete.
+        End If
+    End Sub
+
+    Public Sub CreateDataDir()
+        'Create the Data Directory if it doesnt already exist.
+        'The DataDirLocn is a directory location that is used to store data that is not suitable for storing the an archive DataLocn.
+        'It is only created when it is needed. Most applications do not need this directory. The Document library needs it to make storage of .xlsx and .pdf files easier. These files are already compressed.
+        If DataDirLocn.Path = "" Then
+            'This project can not contain a separate Data Directory. (It is probably an archive project.)
+        Else
+            If System.IO.Directory.Exists(DataDirLocn.Path) Then
+                'The Data Directory already exists.
+            Else
+                System.IO.Directory.CreateDirectory(DataDirLocn.Path)
+            End If
+        End If
+    End Sub
+
+    Public Sub DeleteProjectFile(ByVal FileName As String)
+        Select Case LocnType
+            Case FileLocation.Types.Directory
+                Try
+                    System.IO.File.Delete(Path & "\" & FileName)
+                Catch ex As Exception
+                    RaiseEvent ErrorMessage("Error deleting project file: " & FileName & "  Error message: " & ex.Message & vbCrLf)
+                End Try
+            Case FileLocation.Types.Archive
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = Path
+                Zip.RemoveEntry(FileName)
         End Select
     End Sub
 
@@ -4825,6 +4646,35 @@ Public Class Project '----------------------------------------------------------
 
         End Select
 
+    End Function
+
+    Public Function SelectDataDirFile(ByVal DataFileType As String, ByVal DataFileExtension As String) As String
+        'Displays a list of data files in DataDirLocn with the specified extension for selection.
+
+        'NOTE: The DataDirLocn directory created to store data that is not suitable for a Data archive. (eg. pdf and xlsx files that are already compressed.)
+        '      Check that you should be using SelectDataFile instead!
+
+        'The DataFileType string is used to display a description of the type of data file.
+        'Eg: SelectDataFile("Text files", "txt")
+
+        Select Case DataDirLocn.Type
+            Case FileLocation.Types.Archive
+                'The data files are stored in an archive file.
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path
+                Return Zip.SelectFileModal(DataFileExtension)
+
+            Case FileLocation.Types.Directory
+                'The data files are stored in a directory.
+                Dim OpenFileDialog As New System.Windows.Forms.OpenFileDialog
+                OpenFileDialog.InitialDirectory = DataLocn.Path
+                OpenFileDialog.Filter = DataFileType & " | *." & DataFileExtension
+                If OpenFileDialog.ShowDialog = Windows.Forms.DialogResult.OK Then
+                    Return System.IO.Path.GetFileName(OpenFileDialog.FileName)
+                Else
+                    Return ""
+                End If
+        End Select
     End Function
 
     Public Function GetDataFileList(ByVal DataFileExtension As String, ByRef FilenameList As ArrayList)
@@ -4899,6 +4749,72 @@ Public Class Project '----------------------------------------------------------
 
         End Select
 
+    End Sub
+
+    Public Sub CopyArchiveDataToProject(ByVal FileName As String)
+        'Extract a data file from the Data Archive to the Project directory.
+        If DataLocn.Type = FileLocation.Types.Archive Then 'The Data Location is an archive.
+            If LocnType = FileLocation.Types.Directory Then 'The Project Location is a directory.
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path 'The path of the Data Archive file.
+                Zip.ExtractFileName = FileName 'The name of the data file to be extracted.
+                Zip.ExtractFileDirectory = Path 'The data file will be extracted to this directory path.
+                Zip.ExtractFile() '
+            Else
+                RaiseEvent ErrorMessage("The Project Location is not a directory." & vbCrLf)
+            End If
+        Else
+            RaiseEvent ErrorMessage("The Data Location is not an archive." & vbCrLf)
+        End If
+    End Sub
+
+    Public Sub CopyArchiveDataToProjectDir(ByVal FileName As String, ByVal DirName As String)
+        'Extract a data file from the Data Archive to a Project sub-directory.
+        'If the DirName sub-directory does not exist, then it is created.
+        If DataLocn.Type = FileLocation.Types.Archive Then 'The Data Location is an archive.
+            If LocnType = FileLocation.Types.Directory Then 'The Project Location is a directory.
+                Dim DestDirPath As String = Path & "\" & DirName
+                If System.IO.Directory.Exists(DestDirPath) Then 'The directory exists
+                Else 'Create the directory
+                    My.Computer.FileSystem.CreateDirectory(DestDirPath)
+                End If
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path 'The path of the Data Archive file.
+                Zip.ExtractFileName = FileName 'The name of the data file to be extracted.
+                Zip.ExtractFileDirectory = DestDirPath 'The data file will be extracted to this directory path.
+                Zip.ExtractFile()
+            Else
+                RaiseEvent ErrorMessage("The Project Location is not a directory." & vbCrLf)
+            End If
+        Else
+            RaiseEvent ErrorMessage("The Data Location is not an archive." & vbCrLf)
+        End If
+    End Sub
+
+    Public Sub CopyCheckArchiveDataToProjectDir(ByVal FileName As String, ByVal DirName As String)
+        'Extract a data file from the Data Archive to a Project sub-directory.
+        'Check if the extracted file already exists.
+        'If the DirName sub-directory does not exist, then it is created.
+        If DataLocn.Type = FileLocation.Types.Archive Then 'The Data Location is an archive.
+            If LocnType = FileLocation.Types.Directory Then 'The Project Location is a directory.
+                Dim DestDirPath As String = Path & "\" & DirName
+                If System.IO.Directory.Exists(DestDirPath) Then 'The directory exists
+                    'Check if the file has already been extracted:
+                    If System.IO.File.Exists(DestDirPath & "\" & FileName) Then Exit Sub 'Exit if the file has already been extracted.
+                Else 'Create the directory
+                    My.Computer.FileSystem.CreateDirectory(DestDirPath)
+                End If
+                Dim Zip As New ZipComp
+                Zip.ArchivePath = DataLocn.Path 'The path of the Data Archive file.
+                Zip.ExtractFileName = FileName 'The name of the data file to be extracted.
+                Zip.ExtractFileDirectory = DestDirPath 'The data file will be extracted to this directory path.
+                Zip.ExtractFile()
+            Else
+                RaiseEvent ErrorMessage("The Project Location is not a directory." & vbCrLf)
+            End If
+        Else
+            RaiseEvent ErrorMessage("The Data Location is not an archive." & vbCrLf)
+        End If
     End Sub
 
     'Read and write System files: -------------------------------------------------------------------------------------
@@ -5470,7 +5386,9 @@ Public Class Project '----------------------------------------------------------
         'Show the Project form:
         If IsNothing(ProjectForm) Then
             ProjectForm = New frmProject
-            ProjectForm.ApplicationName = ApplicationName
+            'ProjectForm.ApplicationName = ApplicationName
+            'ProjectForm.ApplicationName = Application.Name
+            ProjectForm.ApplicationSummary = Application
             'ProjectForm.SettingsLocn = SettingsLocn
             'ProjectForm.ProjectLocn = ProjectLocn
             'ProjectForm.ProjectLocn.Type = Type
@@ -5489,7 +5407,8 @@ Public Class Project '----------------------------------------------------------
         'Show the Project Params form:
         If IsNothing(ProjectParamsForm) Then
             ProjectParamsForm = New frmProjectParams
-            ProjectParamsForm.ApplicationName = ApplicationName
+            'ProjectParamsForm.ApplicationName = ApplicationName
+            ProjectParamsForm.ApplicationName = Application.Name
             ProjectParamsForm.ProjectLocn.Type = LocnType
             ProjectParamsForm.ProjectLocn.Path = Path
             'ProjectParamsForm.ApplicationDir = ApplicationDir
@@ -5636,7 +5555,7 @@ Public Class Project '----------------------------------------------------------
 
     Public Function GetParameter(ByVal Name As String) As String
         'Return the parameter value with the specified name.
-        'If there is not parameter with that name, return ""
+        'If there is no parameter with that name, return ""
         If ParameterExists(Name) Then
             Return Parameter(Name).Value
         Else
@@ -5647,6 +5566,16 @@ Public Class Project '----------------------------------------------------------
     Public Function ParentParameterExists(ByVal Name As String) As Boolean
         'True if a Parent Parameter with the specified Name exists.
         Return ParentParameter.ContainsKey(Name)
+    End Function
+
+    Public Function GetParentParameter(ByVal Name As String) As String
+        'Return the parent parameter value with the specified name.
+        'If there is no parameter with that name, return ""
+        If ParentParameterExists(Name) Then
+            Return ParentParameter(Name).Value
+        Else
+            Return ""
+        End If
     End Function
 
     'Private Sub ProjectForm_ErrorMessage(Message As String) Handles ProjectForm.ErrorMessage
@@ -5669,18 +5598,11 @@ Public Class Project '----------------------------------------------------------
 
     Private Sub ProjectForm_ProjectSelected(ByRef ProjectSummary As ProjectSummary) Handles ProjectForm.ProjectSelected
         'A project has been selected.
-        'RaiseEvent ProjectChanging()
         RaiseEvent Closing() 'This event indicates that the current project is closing.
-        'SettingsLocn.Path = ProjectSummary.SettingsLocnPath 'NOT USED = REPLACED BY PROJECTLOCATION.PATH
-        'SettingsLocn.Type = ProjectSummary.SettingsLocnType 'NOT USED = REPLACED BY PROJECTLOCATION.TYPE
-        'ProjectLocn.Type = ProjectSummary.Type
         Type = ProjectSummary.Type
-        'ProjectLocn.Path = ProjectSummary.Path
         Path = ProjectSummary.Path
         ReadProjectInfoFile()
-        'RaiseEvent ProjectSelected()
         RaiseEvent Selected()
-
     End Sub
 
     Public Sub CreateDefaultProject()
@@ -5911,7 +5833,7 @@ Public Class Project '----------------------------------------------------------
                                   <!--Project List File-->
                                   <ProjectList>
                                       <FormatCode>ADVL_2</FormatCode>
-                                      <ApplicationName><%= ApplicationName %></ApplicationName>
+                                      <ApplicationName><%= Application.Name %></ApplicationName>
                                       <%= From item In ProjectList
                                           Select
                                       <Project>
@@ -5925,6 +5847,7 @@ Public Class Project '----------------------------------------------------------
                                       %>
                                   </ProjectList>
 
+                '<ApplicationName><%= ApplicationName %></ApplicationName>
 
                 'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
                 ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
@@ -5936,7 +5859,7 @@ Public Class Project '----------------------------------------------------------
                                       <!--Project List File-->
                                       <ProjectList>
                                           <FormatCode>ADVL_2</FormatCode>
-                                          <ApplicationName><%= ApplicationName %></ApplicationName>
+                                          <ApplicationName><%= Application.Name %></ApplicationName>
                                           <Project>
                                               <Name><%= ProjectSummary.Name %></Name>
                                               <Description><%= ProjectSummary.Description %></Description>
@@ -5946,6 +5869,8 @@ Public Class Project '----------------------------------------------------------
                                               <AuthorName><%= ProjectSummary.AuthorName %></AuthorName>
                                           </Project>
                                       </ProjectList>
+
+                ' <ApplicationName><%= ApplicationName %></ApplicationName>
 
                 'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
                 ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
@@ -6031,7 +5956,7 @@ Public Class Project '----------------------------------------------------------
                                       <!--Project List File-->
                                       <ProjectList>
                                           <FormatCode>ADVL_2</FormatCode>
-                                          <ApplicationName><%= ApplicationName %></ApplicationName>
+                                          <ApplicationName><%= Application.Name %></ApplicationName>
                                           <%= From item In ProjectList
                                               Select
                                       <Project>
@@ -6044,6 +5969,7 @@ Public Class Project '----------------------------------------------------------
                                       </Project>
                                           %>
                                       </ProjectList>
+                    '<ApplicationName><%= ApplicationName %></ApplicationName>
 
                     'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
                     ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
@@ -6054,7 +5980,7 @@ Public Class Project '----------------------------------------------------------
                                           <!--Project List File-->
                                           <ProjectList>
                                               <FormatCode>ADVL_2</FormatCode>
-                                              <ApplicationName><%= ApplicationName %></ApplicationName>
+                                              <ApplicationName><%= Application.Name %></ApplicationName>
                                               <Project>
                                                   <Name><%= ProjectSummary.Name %></Name>
                                                   <Description><%= ProjectSummary.Description %></Description>
@@ -6064,6 +5990,8 @@ Public Class Project '----------------------------------------------------------
                                                   <AuthorName><%= ProjectSummary.AuthorName %></AuthorName>
                                               </Project>
                                           </ProjectList>
+
+                    '<ApplicationName><%= ApplicationName %></ApplicationName>
 
                     'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
                     ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
@@ -6132,8 +6060,9 @@ Public Class Project '----------------------------------------------------------
 
     End Sub
 
-
-
+    Private Sub ProjectForm_NewProjectCreated(ProjectPath As String) Handles ProjectForm.NewProjectCreated
+        RaiseEvent NewProjectCreated(ProjectPath) 'Raise an event to indicate that a new project has been created at the specified path.
+    End Sub
 
 
 #End Region 'Project Methods -----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -6149,6 +6078,10 @@ Public Class Project '----------------------------------------------------------
     Event Closing() 'This event indicates that the current project is closing. The parameters of the current project should be saved.
     'Event ProjectSelected() 'A project has been selected
     Event Selected() 'This event indicates that a new project has been selected. 
+
+    'Public Event NewProjectCreated(ByVal ProjectPath As String) 'Raise an event to indicate that a new project has been created at the specified path.
+    Event NewProjectCreated(ByVal ProjectPath As String) 'Raise an event to indicate that a new project has been created at the specified path.
+
 
 #End Region 'Project Events ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -6287,6 +6220,16 @@ Public Class ProjectSummary
     '    End Set
     'End Property
 
+    Private _status As String = "OK" 'The status of the project: OK if it is on the Project List, Recycled if it is on the Recycled list.
+    Property Status As String
+        Get
+            Return _status
+        End Get
+        Set(value As String)
+            _status = value
+        End Set
+    End Property
+
 End Class 'ProjectSummary -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 'DataFileInfo stores information about an Andorville (TM) Data File. ------------------------------------------------------------------------------------------------------------------------
@@ -6354,9 +6297,6 @@ Public Class Message '----------------------------------------------------------
 
 #End Region
 
-
-
-
 #Region " Message Properties - Properties used to display application messages." '------------------------------------------------------------------------------------------------------------
 
     Private _fontName As String = "Arial" 'The name of the font used to display the message.
@@ -6400,6 +6340,28 @@ Public Class Message '----------------------------------------------------------
         End Get
         Set(value As System.Drawing.Color)
             _color = value
+        End Set
+    End Property
+
+    Private _showXMessages As Boolean 'If True, XMessages will be displayed on the Messages form.
+    Property ShowXMessages As Boolean
+        Get
+            Return _showXMessages
+        End Get
+        Set(value As Boolean)
+            _showXMessages = value
+            MessageForm.chkShowXMessages.Checked = value
+        End Set
+    End Property
+
+    Private _showSysMessages As Boolean 'If True, System XMessages will be displayed on the Messages form.
+    Property ShowSysMessages As Boolean
+        Get
+            Return _showSysMessages
+        End Get
+        Set(value As Boolean)
+            _showSysMessages = value
+            MessageForm.chkShowSysMessages.Checked = value
         End Set
     End Property
 
@@ -6478,10 +6440,14 @@ Public Class Message '----------------------------------------------------------
             MessageForm = New frmMessages
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
+            'MessageForm.ProjectLocn = ProjectLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.RestoreFormSettings()
             MessageForm.BringToFront()
         Else
             MessageForm.Show()
+            MessageForm.SettingsLocn = SettingsLocn 'Added 18May19
+            MessageForm.RestoreFormSettings() 'Added 18May19
             MessageForm.BringToFront()
         End If
     End Sub
@@ -6493,7 +6459,9 @@ Public Class Message '----------------------------------------------------------
             MessageForm = New frmMessages
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
+            'MessageForm.ProjectLocn = ProjectLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.chkShowXMessages.Checked = ShowXMessages
             MessageForm.BringToFront()
         Else
             MessageForm.Show()
@@ -6566,6 +6534,7 @@ Public Class Message '----------------------------------------------------------
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.chkShowXMessages.Checked = ShowXMessages
             MessageForm.BringToFront()
         Else
             MessageForm.Show()
@@ -6592,12 +6561,6 @@ Public Class Message '----------------------------------------------------------
         'MessageForm.rtbMessages.ScrollToCaret()
 
 
-
-
-
-
-
-
         ''Restore the original settings:
         'FontName = OrigFontName
         'Color = OrigColor
@@ -6620,6 +6583,7 @@ Public Class Message '----------------------------------------------------------
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.chkShowXMessages.Checked = ShowXMessages
             MessageForm.BringToFront()
         Else
             MessageForm.Show()
@@ -6650,6 +6614,7 @@ Public Class Message '----------------------------------------------------------
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.chkShowXMessages.Checked = ShowXMessages
             'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
         Else
             MessageForm.Show()
@@ -6726,6 +6691,7 @@ Public Class Message '----------------------------------------------------------
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.chkShowXMessages.Checked = ShowXMessages
             'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
         Else
             MessageForm.Show()
@@ -6771,6 +6737,7 @@ Public Class Message '----------------------------------------------------------
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.chkShowXMessages.Checked = ShowXMessages
             'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
         Else
             MessageForm.Show()
@@ -6816,6 +6783,7 @@ Public Class Message '----------------------------------------------------------
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.chkShowXMessages.Checked = ShowXMessages
             'MessageForm.BringToFront() 'To keep the focus on the app form, dont bring the message form to the front!
         Else
             MessageForm.Show()
@@ -6856,6 +6824,7 @@ Public Class Message '----------------------------------------------------------
             MessageForm.ApplicationName = ApplicationName 'Pass the Application Name to the Message Form.
             MessageForm.SettingsLocn = SettingsLocn       'Pass the Settings Location to the Message Form.
             MessageForm.Show()
+            MessageForm.chkShowXMessages.Checked = ShowXMessages
             MessageForm.BringToFront()
         Else
             MessageForm.Show()
@@ -6975,6 +6944,18 @@ Public Class Message '----------------------------------------------------------
         XShowTextTypes()
     End Sub
 
+    Private Sub MessageForm_ShowXMessages(Show As Boolean) Handles MessageForm.ShowXMessages
+        'The ShowXMessages settings has been changed.
+        _showXMessages = Show 'Update the property.
+        RaiseEvent ShowXMessagesChanged(Show) 'Notify the host application of the change.
+    End Sub
+
+    Private Sub MessageForm_ShowSysMessages(Show As Boolean) Handles MessageForm.ShowSysMessages
+        'The ShowSysMessages settings has been changed.
+        _showSysMessages = Show 'Update the property.
+        RaiseEvent ShowSysMessagesChanged(Show) 'Notify the host application of the change.
+    End Sub
+
     'Private Sub MessageForm_SaveFormSettings(FormName As String, ByRef Settings As XDocument) Handles MessageForm.SaveFormSettings
     '    RaiseEvent SaveFormSettings(FormName, Settings)
     'End Sub
@@ -6986,6 +6967,8 @@ Public Class Message '----------------------------------------------------------
     'Public Event SaveFormSettings(ByVal FormName As String, ByRef Settings As System.Xml.Linq.XDocument) 'Raise an event to save the form settings. The settings are contained in the Settings XML document.
     Event ErrorMessage(ByVal Message As String)
     Event Message(ByVal Message As String)
+    Event ShowXMessagesChanged(ByVal Show As Boolean) 'This event is triggered when the ShowXMessages property has changed.
+    Event ShowSysMessagesChanged(ByVal Show As Boolean) 'This event is triggered when the ShowSysMessages property has changed.
 
 #End Region 'Events -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -7566,12 +7549,6 @@ Public Class ApplicationInfo '--------------------------------------------------
                                           </FileAssociation>
                                             %>
                                         </FileAssociationList>
-                                        <Version>
-                                            <Major><%= Version.Major %></Major>
-                                            <Minor><%= Version.Minor %></Minor>
-                                            <Build><%= Version.Build %></Build>
-                                            <Revision><%= Version.Revision %></Revision>
-                                        </Version>
                                         <Author>
                                             <Name><%= Author.Name %></Name>
                                             <Description><%= Author.Description %></Description>
@@ -7652,6 +7629,14 @@ Public Class ApplicationInfo '--------------------------------------------------
                                         </LibraryList>
                                     </Application>
 
+        '</FileAssociationList>
+        '<Version>
+        '    <Major><%= Version.Major %></Major>
+        '    <Minor><%= Version.Minor %></Minor>
+        '    <Build><%= Version.Build %></Build>
+        '    <Revision><%= Version.Revision %></Revision>
+        '</Version>
+
     End Function
 
     Public Function ApplicationInfoAdvl_2XDoc() As System.Xml.Linq.XDocument
@@ -7676,12 +7661,6 @@ Public Class ApplicationInfo '--------------------------------------------------
                                           </FileAssociation>
                                             %>
                                         </FileAssociationList>
-                                        <Version>
-                                            <Major><%= Version.Major %></Major>
-                                            <Minor><%= Version.Minor %></Minor>
-                                            <Build><%= Version.Build %></Build>
-                                            <Revision><%= Version.Revision %></Revision>
-                                        </Version>
                                         <Author>
                                             <Name><%= Author.Name %></Name>
                                             <Description><%= Author.Description %></Description>
@@ -7762,6 +7741,15 @@ Public Class ApplicationInfo '--------------------------------------------------
                                         </LibraryList>
                                         <ConnectOnStartup><%= ConnectOnStartup %></ConnectOnStartup>
                                     </Application>
+
+        'Version information is now obtained directory from My.Application.Info.Version.
+        '</FileAssociationList>
+        '<Version>
+        '    <Major><%= Version.Major %></Major>
+        '    <Minor><%= Version.Minor %></Minor>
+        '    <Build><%= Version.Build %></Build>
+        '    <Revision><%= Version.Revision %></Revision>
+        '</Version>
 
         '<ConnectOnStartup><%= ConnectOnStartup %></ConnectOnStartup> ADDED 20Feb19
 
@@ -7885,32 +7873,40 @@ Public Class ApplicationInfo '--------------------------------------------------
 
         'Read Version Information ---------------------------------------------------------------------------
         'Read Application Version - Major
-        If AppInfoXDoc.<Application>.<Version>.<Major>.Value = Nothing Then
-            Version.Major = 1
-        Else
-            Version.Major = AppInfoXDoc.<Application>.<Version>.<Major>.Value
-        End If
+        'If AppInfoXDoc.<Application>.<Version>.<Major>.Value = Nothing Then
+        '    Version.Major = 1
+        'Else
+        '    Version.Major = AppInfoXDoc.<Application>.<Version>.<Major>.Value
+        'End If
 
-        'Read Application Version - Minor
-        If AppInfoXDoc.<Application>.<Version>.<Minor>.Value = Nothing Then
-            Version.Minor = 0
-        Else
-            Version.Minor = AppInfoXDoc.<Application>.<Version>.<Minor>.Value
-        End If
+        ''Read Application Version - Minor
+        'If AppInfoXDoc.<Application>.<Version>.<Minor>.Value = Nothing Then
+        '    Version.Minor = 0
+        'Else
+        '    Version.Minor = AppInfoXDoc.<Application>.<Version>.<Minor>.Value
+        'End If
 
-        'Read Application Version - Build
-        If AppInfoXDoc.<Application>.<Version>.<Build>.Value = Nothing Then
-            Version.Build = 1
-        Else
-            Version.Build = AppInfoXDoc.<Application>.<Version>.<Build>.Value
-        End If
+        ''Read Application Version - Build
+        'If AppInfoXDoc.<Application>.<Version>.<Build>.Value = Nothing Then
+        '    Version.Build = 1
+        'Else
+        '    Version.Build = AppInfoXDoc.<Application>.<Version>.<Build>.Value
+        'End If
 
-        'Read Application Version - Revision
-        If AppInfoXDoc.<Application>.<Version>.<Revision>.Value = Nothing Then
-            Version.Revision = 0
-        Else
-            Version.Revision = AppInfoXDoc.<Application>.<Version>.<Revision>.Value
-        End If
+        ''Read Application Version - Revision
+        'If AppInfoXDoc.<Application>.<Version>.<Revision>.Value = Nothing Then
+        '    Version.Revision = 0
+        'Else
+        '    Version.Revision = AppInfoXDoc.<Application>.<Version>.<Revision>.Value
+        'End If
+
+        'NOTE: THIS APPEARS TO GET THE SystemUtilties version info:
+        'Version.Major = My.Application.Info.Version.Major.ToString
+        'Version.Minor = My.Application.Info.Version.Minor.ToString
+        'Version.Build = My.Application.Info.Version.Build.ToString
+        'Version.Revision = My.Application.Info.Version.Revision.ToString
+
+        'THIS IS NOW UPDATED DIRECTLY IN THE APPLICATION USING My.Application.Info.Version.
 
         'Read Copyright Information ------------------------------------------------------------------------
         'Read Copyright Owner Name
@@ -8180,34 +8176,35 @@ Public Class ApplicationInfo '--------------------------------------------------
             Author.Contact = AppInfoXDoc.<Application>.<Author>.<Contact>.Value
         End If
 
-        'Read Version Information ---------------------------------------------------------------------------
-        'Read Application Version - Major
-        If AppInfoXDoc.<Application>.<Version>.<Major>.Value = Nothing Then
-            Version.Major = 1
-        Else
-            Version.Major = AppInfoXDoc.<Application>.<Version>.<Major>.Value
-        End If
+        'THIS IS NOW UPDATED DIRECTLY IN THE APPLICATION USING My.Application.Info.Version.
+        ''Read Version Information ---------------------------------------------------------------------------
+        ''Read Application Version - Major
+        'If AppInfoXDoc.<Application>.<Version>.<Major>.Value = Nothing Then
+        '    Version.Major = 1
+        'Else
+        '    Version.Major = AppInfoXDoc.<Application>.<Version>.<Major>.Value
+        'End If
 
-        'Read Application Version - Minor
-        If AppInfoXDoc.<Application>.<Version>.<Minor>.Value = Nothing Then
-            Version.Minor = 0
-        Else
-            Version.Minor = AppInfoXDoc.<Application>.<Version>.<Minor>.Value
-        End If
+        ''Read Application Version - Minor
+        'If AppInfoXDoc.<Application>.<Version>.<Minor>.Value = Nothing Then
+        '    Version.Minor = 0
+        'Else
+        '    Version.Minor = AppInfoXDoc.<Application>.<Version>.<Minor>.Value
+        'End If
 
-        'Read Application Version - Build
-        If AppInfoXDoc.<Application>.<Version>.<Build>.Value = Nothing Then
-            Version.Build = 1
-        Else
-            Version.Build = AppInfoXDoc.<Application>.<Version>.<Build>.Value
-        End If
+        ''Read Application Version - Build
+        'If AppInfoXDoc.<Application>.<Version>.<Build>.Value = Nothing Then
+        '    Version.Build = 1
+        'Else
+        '    Version.Build = AppInfoXDoc.<Application>.<Version>.<Build>.Value
+        'End If
 
-        'Read Application Version - Revision
-        If AppInfoXDoc.<Application>.<Version>.<Revision>.Value = Nothing Then
-            Version.Revision = 0
-        Else
-            Version.Revision = AppInfoXDoc.<Application>.<Version>.<Revision>.Value
-        End If
+        ''Read Application Version - Revision
+        'If AppInfoXDoc.<Application>.<Version>.<Revision>.Value = Nothing Then
+        '    Version.Revision = 0
+        'Else
+        '    Version.Revision = AppInfoXDoc.<Application>.<Version>.<Revision>.Value
+        'End If
 
         'Read Copyright Information ------------------------------------------------------------------------
         'Read Copyright Owner Name
@@ -9829,9 +9826,13 @@ Public Class Usage '------------------------------------------------------------
                            <Usage>
                                <FirstUsed><%= Format(FirstUsed, "d-MMM-yyyy H:mm:ss") %></FirstUsed>
                                <LastUsed><%= Format(Now, "d-MMM-yyyy H:mm:ss") %></LastUsed>
-                               <LastDuration><%= CurrentDuration.ToString %></LastDuration>
-                               <TotalDuration><%= TotalDuration.ToString %></TotalDuration>
+                               <LastDuration><%= CurrentDuration.ToString("c") %></LastDuration>
+                               <TotalDuration><%= TotalDuration.ToString("c") %></TotalDuration>
                            </Usage>
+
+            '<LastDuration><%= CurrentDuration.ToString %></LastDuration>
+            '<TotalDuration><%= TotalDuration.ToString %></TotalDuration>
+
             'The "c" format specifies a constant (invariant) format for the TimeSpan string.
             'The "G" format spacified a General Long Format: [-]d’:’hh’:’mm’:’ss.fffffff
             'The "[-]{ d | [d.]hh:mm[:ss[.ff]] }" format is not valid
@@ -9852,11 +9853,14 @@ Public Class Usage '------------------------------------------------------------
                            <Usage>
                                <FirstUsed><%= Format(FirstUsed, "d-MMM-yyyy H:mm:ss") %></FirstUsed>
                                <LastUsed><%= Format(Now, "d-MMM-yyyy H:mm:ss") %></LastUsed>
-                               <LastDuration><%= CurrentDuration.ToString %></LastDuration>
-                               <TotalDuration><%= NewTotalDuration.ToString %></TotalDuration>
+                               <LastDuration><%= CurrentDuration.ToString("c") %></LastDuration>
+                               <TotalDuration><%= NewTotalDuration.ToString("c") %></TotalDuration>
                            </Usage>
             SaveLocn.SaveXmlData("Usage_Info.xml", UsageXml)
         End If
+
+        '<LastDuration><%= CurrentDuration.ToString %></LastDuration>
+        '<TotalDuration><%= NewTotalDuration.ToString %></TotalDuration>
 
     End Sub
 
@@ -9875,7 +9879,7 @@ Public Class Usage '------------------------------------------------------------
             LastDuration = System.TimeSpan.Zero
             TotalDuration = System.TimeSpan.Zero
         Else
-            'Get usage inforamtion from the Xml file:
+            'Get usage information from the Xml file:
             Dim culture As System.Globalization.CultureInfo = System.Globalization.CultureInfo.CurrentCulture
             If UsageXml.<Usage>.<FirstUsed>.Value = Nothing Then
                 FirstUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
@@ -9890,7 +9894,10 @@ Public Class Usage '------------------------------------------------------------
             If UsageXml.<Usage>.<LastDuration>.Value = Nothing Then
                 LastDuration = System.TimeSpan.Zero
             Else
-                LastDuration = System.TimeSpan.Parse(UsageXml.<Usage>.<LastDuration>.Value)
+                'LastDuration = System.TimeSpan.Parse(UsageXml.<Usage>.<LastDuration>.Value)
+                LastDuration = System.TimeSpan.ParseExact(UsageXml.<Usage>.<LastDuration>.Value, "c", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+
+
                 '[ws][-]{ d | [d.]hh:mm[:ss[.ff]] }[ws] TimeSpan format required.
                 'LastDuration = System.TimeSpan.ParseExact(UsageXml.<Usage>.<LastDuration>.Value, "c", culture)
                 'LastDuration = System.TimeSpan.TryParse(UsageXml.<Usage>.<LastDuration>.Value, )
@@ -9903,7 +9910,9 @@ Public Class Usage '------------------------------------------------------------
             If UsageXml.<Usage>.<TotalDuration>.Value = Nothing Then
                 TotalDuration = System.TimeSpan.Zero
             Else
-                TotalDuration = System.TimeSpan.Parse(UsageXml.<Usage>.<TotalDuration>.Value)
+                'TotalDuration = System.TimeSpan.Parse(UsageXml.<Usage>.<TotalDuration>.Value)
+                TotalDuration = System.TimeSpan.ParseExact(UsageXml.<Usage>.<TotalDuration>.Value, "c", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+
                 'TotalDuration = System.TimeSpan.ParseExact(UsageXml.<Usage>.<TotalDuration>.Value, "c", culture)
                 'If System.TimeSpan.TryParse(UsageXml.<Usage>.<TotalDuration>.Value, TotalDuration) Then
                 '    Debug.Print("Parsed " & UsageXml.<Usage>.<TotalDuration>.Value & " OK" & vbCrLf)

@@ -13,7 +13,9 @@ Public Class frmAddProject
 
     'Public SettingsLocn As ADVL_Utilities_Library_1.FileLocation 'The location used to store settings.
     Public ProjectLocn As ADVL_Utilities_Library_1.FileLocation 'The Project location - used to store this form's settings.
-    Public ApplicationName As String 'The name of the application using the message form.
+
+    'NOTE: ApplicationName is now a property.
+    'Public ApplicationName As String 'The name of the application using the message form. This value is set in the method that calls the AddProject form.
 
 
 #End Region 'Variable Declarations -----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -31,6 +33,18 @@ Public Class frmAddProject
             ApplicationSummary.ReadFile(_applicationDir) 'Update the Application Summary by reading the Application_Info.xml in the Application Directory.
         End Set
     End Property
+
+    Private _applicationName As String 'The name of the application using the message form. This value is set in the method that calls the AddProject form.
+    Public Property ApplicationName As String
+        Get
+            Return _applicationName
+        End Get
+        Set(value As String)
+            _applicationName = value
+            txtThisAppName.Text = _applicationName
+        End Set
+    End Property
+
 
     Private _searchDirectory As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments   'The directory used to search for project files.
     Property SearchDirectory As String
@@ -119,11 +133,44 @@ Public Class frmAddProject
         Else
             SearchDirectory = Settings.<FormSettings>.<SearchDirectory>.Value
         End If
-
+        CheckFormPos()
         'Else
         ''Settings file not found.
         'End If
 
+    End Sub
+
+    Private Sub CheckFormPos()
+        'Check that the form can be seen on a screen.
+
+        Dim MinWidthVisible As Integer = 192 'Minimum number of X pixels visible. The form will be moved if this many form pixels are not visible.
+        Dim MinHeightVisible As Integer = 64 'Minimum number of Y pixels visible. The form will be moved if this many form pixels are not visible.
+
+        Dim FormRect As New System.Drawing.Rectangle(Me.Left, Me.Top, Me.Width, Me.Height)
+        Dim WARect As System.Drawing.Rectangle = System.Windows.Forms.Screen.GetWorkingArea(FormRect) 'The Working Area rectangle - the usable area of the screen containing the form.
+
+        ''Check if the top of the form is less than zero:
+        'If Me.Top < 0 Then Me.Top = 0
+
+        'Check if the top of the form is above the top of the Working Area:
+        If Me.Top < WARect.Top Then
+            Me.Top = WARect.Top
+        End If
+
+        'Check if the top of the form is too close to the bottom of the Working Area:
+        If (Me.Top + MinHeightVisible) > (WARect.Top + WARect.Height) Then
+            Me.Top = WARect.Top + WARect.Height - MinHeightVisible
+        End If
+
+        'Check if the left edge of the form is too close to the right edge of the Working Area:
+        If (Me.Left + MinWidthVisible) > (WARect.Left + WARect.Width) Then
+            Me.Left = WARect.Left + WARect.Width - MinWidthVisible
+        End If
+
+        'Check if the right edge of the form is too close to the left edge of the Working Area:
+        If (Me.Left + Me.Width - MinWidthVisible) < WARect.Left Then
+            Me.Left = WARect.Left - Me.Width + MinWidthVisible
+        End If
     End Sub
 
 #End Region 'Process XML Files ---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -135,6 +182,11 @@ Public Class frmAddProject
 
         Label12.Visible = False 'Hide "Searching ..." label
         chkSearchSubDirectories.Checked = True
+        chkShowThisAppProjects.Checked = True
+
+        If SearchDirectory <> "" Then
+            txtSearchDirectory.Text = SearchDirectory
+        End If
 
         'For Each drv As System.IO.DriveInfo In My.Computer.FileSystem.Drives
         '    TreeView1.Nodes.Add(drv.Name)
@@ -233,12 +285,25 @@ Public Class frmAddProject
             End If
         End With
 
+        Dim ProjectInfoXDoc As System.Xml.Linq.XDocument
+        Dim ProjectAppName As String
+
+        Dim Zip As New ZipComp
+
         If chkSearchSubDirectories.Checked = True Then
             'For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "ADVL_Project_Info.xml")
             For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "Project_Info_ADVL_2.xml")
                 Try
                     ProgressBar1.PerformStep()
-                    ListBox1.Items.Add(foundFile)
+                    If chkShowThisAppProjects.Checked Then
+                        'Only show projects belonging the this application.
+                        ProjectInfoXDoc = XDocument.Load(foundFile)
+                        ProjectAppName = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
+                        'If ProjectAppName = ApplicationSummary.Name Then ListBox1.Items.Add(foundFile)
+                        If ProjectAppName = ApplicationName Then ListBox1.Items.Add(foundFile)
+                    Else
+                        ListBox1.Items.Add(foundFile)
+                    End If
                 Catch ex As Exception
                     RaiseEvent ErrorMessage(ex.Message)
                 End Try
@@ -248,7 +313,15 @@ Public Class frmAddProject
             For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchTopLevelOnly, "Project_Info_ADVL_2.xml")
                 Try
                     ProgressBar1.PerformStep()
-                    ListBox1.Items.Add(foundFile)
+                    If chkShowThisAppProjects.Checked Then
+                        'Only show projects belonging the this application.
+                        ProjectInfoXDoc = XDocument.Load(foundFile)
+                        ProjectAppName = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
+                        'If ProjectAppName = ApplicationSummary.Name Then ListBox1.Items.Add(foundFile)
+                        If ProjectAppName = ApplicationName Then ListBox1.Items.Add(foundFile)
+                    Else
+                        ListBox1.Items.Add(foundFile)
+                    End If
                 Catch ex As Exception
                     RaiseEvent ErrorMessage(ex.Message)
                 End Try
@@ -281,7 +354,31 @@ Public Class frmAddProject
             For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchAllSubDirectories, "*.AdvlProject")
                 Try
                     ProgressBar2.PerformStep()
-                    ListBox1.Items.Add(foundFile)
+                    If chkShowThisAppProjects.Checked Then
+                        'Only show projects belonging the this application.
+                        Zip.ArchivePath = foundFile
+                        If Zip.ArchiveExists Then
+                            If Zip.EntryExists("ADVL_Project_Info.xml") Then
+                                ProjectInfoXDoc = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("ADVL_Project_Info.xml"))
+                                ProjectAppName = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
+                                'If ProjectAppName = ApplicationSummary.Name Then ListBox1.Items.Add(foundFile)
+                                If ProjectAppName = ApplicationName Then ListBox1.Items.Add(foundFile)
+
+                            ElseIf Zip.EntryExists("Project_Info_ADVL_2.xml") Then
+                                ProjectInfoXDoc = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("Project_Info_ADVL_2.xml"))
+                                ProjectAppName = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
+                                'If ProjectAppName = ApplicationSummary.Name Then ListBox1.Items.Add(foundFile)
+                                If ProjectAppName = ApplicationName Then ListBox1.Items.Add(foundFile)
+
+                            Else
+                                RaiseEvent ErrorMessage("Project information file not found in archive: " & ListBox1.Text & vbCrLf)
+                            End If
+                        Else
+                            RaiseEvent ErrorMessage("Archive file does not exist: " & foundFile & vbCrLf)
+                        End If
+                    Else
+                        ListBox1.Items.Add(foundFile)
+                    End If
                 Catch ex As Exception
                     RaiseEvent ErrorMessage(ex.Message)
                 End Try
@@ -290,7 +387,31 @@ Public Class frmAddProject
             For Each foundFile As String In My.Computer.FileSystem.GetFiles(SearchDirectory, FileIO.SearchOption.SearchTopLevelOnly, "*.AdvlProject")
                 Try
                     ProgressBar2.PerformStep()
-                    ListBox1.Items.Add(foundFile)
+                    If chkShowThisAppProjects.Checked Then
+                        'Only show projects belonging the this application.
+                        Zip.ArchivePath = foundFile
+                        If Zip.ArchiveExists Then
+                            If Zip.EntryExists("ADVL_Project_Info.xml") Then
+                                ProjectInfoXDoc = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("ADVL_Project_Info.xml"))
+                                ProjectAppName = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
+                                'If ProjectAppName = ApplicationSummary.Name Then ListBox1.Items.Add(foundFile)
+                                If ProjectAppName = ApplicationName Then ListBox1.Items.Add(foundFile)
+
+                            ElseIf Zip.EntryExists("Project_Info_ADVL_2.xml") Then
+                                ProjectInfoXDoc = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("Project_Info_ADVL_2.xml"))
+                                ProjectAppName = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
+                                'If ProjectAppName = ApplicationSummary.Name Then ListBox1.Items.Add(foundFile)
+                                If ProjectAppName = ApplicationName Then ListBox1.Items.Add(foundFile)
+
+                            Else
+                                RaiseEvent ErrorMessage("Project information file not found in archive: " & ListBox1.Text & vbCrLf)
+                            End If
+                        Else
+                            RaiseEvent ErrorMessage("Archive file does not exist: " & foundFile & vbCrLf)
+                        End If
+                    Else
+                        ListBox1.Items.Add(foundFile)
+                    End If
                 Catch ex As Exception
                     RaiseEvent ErrorMessage(ex.Message)
                 End Try
@@ -340,9 +461,9 @@ Public Class frmAddProject
             Dim Zip As New ZipComp
             Zip.ArchivePath = ListBox1.Text
             If Zip.ArchiveExists Then
-                If Zip.EntryExists("ADVL_Project_Info.xml") Then
+                If Zip.EntryExists("Project_Info_ADVL_2.xml") Then
                     'Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(Zip.GetText("ADVL_Project_Info.xml"))
-                    Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("ADVL_Project_Info.xml"))
+                    Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("Project_Info_ADVL_2.xml"))
                     txtProjectName.Text = ProjectInfoXDoc.<Project>.<Name>.Value
                     txtDescription.Text = ProjectInfoXDoc.<Project>.<Description>.Value
                     txtType.Text = ProjectInfoXDoc.<Project>.<Type>.Value
@@ -364,6 +485,18 @@ Public Class frmAddProject
                     '    txtComments.ForeColor = Drawing.Color.Red
                     '    txtComments.Text = "Project has moved from the saved location!"
                     'End If
+                ElseIf Zip.EntryExists("ADVL_Project_Info.xml") Then
+                    Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("ADVL_Project_Info.xml"))
+                    txtProjectName.Text = ProjectInfoXDoc.<Project>.<Name>.Value
+                    txtDescription.Text = ProjectInfoXDoc.<Project>.<Description>.Value
+                    txtType.Text = ProjectInfoXDoc.<Project>.<Type>.Value
+                    txtCreationDate.Text = ProjectInfoXDoc.<Project>.<CreationDate>.Value
+                    txtAuthor.Text = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
+                    txtSettingsRelLocnType.Text = ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Type>.Value
+                    txtSettingsRelLocnPath.Text = ProjectInfoXDoc.<Project>.<SettingsRelativeLocation>.<Path>.Value
+                    txtDataRelLocnType.Text = ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Type>.Value
+                    txtDataRelLocnPath.Text = ProjectInfoXDoc.<Project>.<DataRelativeLocation>.<Path>.Value
+                    txtApplicationName.Text = ProjectInfoXDoc.<Project>.<Application>.<Name>.Value
                 Else
                     RaiseEvent ErrorMessage("Project information file not found in archive: " & ListBox1.Text & vbCrLf)
                 End If
@@ -375,8 +508,6 @@ Public Class frmAddProject
             RaiseEvent ErrorMessage("Unknown project type. Project selected: " & ListBox1.Text & vbCrLf)
         End If
 
-
-
     End Sub
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
@@ -386,7 +517,7 @@ Public Class frmAddProject
         If ListBox1.Text.EndsWith("Project_Info_ADVL_2.xml") Then
             'Directory project or Hybrid project.
             Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ListBox1.Text)
-            Dim PathChanged As Boolean = False
+            'Dim PathChanged As Boolean = False
             Dim ProjectSummary As New ADVL_Utilities_Library_1.ProjectSummary
 
             If ProjectInfoXDoc Is Nothing Then
@@ -444,6 +575,25 @@ Public Class frmAddProject
                     RaiseEvent ProjectToAdd(ProjectSummary)
                 Case "Hybrid"
 
+                    ''FOR TESTING:
+                    'RaiseEvent Message("Hybrid Project:" & vbCrLf)
+                    'Dim ProjectDirPath As String = System.IO.Path.GetDirectoryName(ListBox1.Text)
+                    'RaiseEvent Message("Project directory path: " & ProjectDirPath & vbCrLf)
+                    'RaiseEvent Message("ProjectSummary.AuthorName: " & ProjectInfoXDoc.<Project>.<Author>.<Name>.Value & vbCrLf)
+                    'RaiseEvent Message("ProjectSummary.CreationDate: " & ProjectInfoXDoc.<Project>.<CreationDate>.Value & vbCrLf)
+                    'RaiseEvent Message("ProjectSummary.Description: " & ProjectInfoXDoc.<Project>.<Description>.Value & vbCrLf)
+                    'RaiseEvent Message("ProjectSummary.Name: " & ProjectInfoXDoc.<Project>.<Name>.Value & vbCrLf)
+                    'RaiseEvent Message("ProjectSummary.Path: " & ProjectDirPath & vbCrLf)
+                    'RaiseEvent Message("ProjectSummary.Type: " & "Hybrid" & vbCrLf)
+
+                    Dim ProjectDirPath As String = System.IO.Path.GetDirectoryName(ListBox1.Text)
+                    ProjectSummary.AuthorName = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
+                    ProjectSummary.CreationDate = ProjectInfoXDoc.<Project>.<CreationDate>.Value
+                    ProjectSummary.Description = ProjectInfoXDoc.<Project>.<Description>.Value
+                    ProjectSummary.Name = ProjectInfoXDoc.<Project>.<Name>.Value
+                    ProjectSummary.Path = ProjectDirPath
+                    ProjectSummary.Type = Project.Types.Hybrid
+                    RaiseEvent ProjectToAdd(ProjectSummary)
                 Case Else
 
             End Select
@@ -457,7 +607,7 @@ Public Class frmAddProject
                 If Zip.EntryExists("Project_Info_ADVL_2.xml") Then
                     'Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("ADVL_Project_Info.xml"))
                     Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Parse("<?xml version=""1.0"" encoding=""utf-8""?>" & Zip.GetText("Project_Info_ADVL_2.xml"))
-                    Dim PathChanged As Boolean = False
+                    'Dim PathChanged As Boolean = False
                     Dim ProjectSummary As New ADVL_Utilities_Library_1.ProjectSummary
 
                     'NOTE: Only the relative location of the SettingsLocn and DataLocn are now stored! - No need for the following checks:

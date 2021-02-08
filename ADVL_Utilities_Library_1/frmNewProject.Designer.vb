@@ -47,19 +47,24 @@ Partial Class frmNewProject
         Me.btnFindHybridProjDir = New System.Windows.Forms.Button()
         Me.Label10 = New System.Windows.Forms.Label()
         Me.txtHPDirectoryPath = New System.Windows.Forms.TextBox()
-        Me.TabPage5 = New System.Windows.Forms.TabPage()
-        Me.chkProjectDir = New System.Windows.Forms.CheckBox()
-        Me.Label18 = New System.Windows.Forms.Label()
-        Me.txtDataFileName = New System.Windows.Forms.TextBox()
-        Me.Label13 = New System.Windows.Forms.Label()
-        Me.btnFindDataFileDir = New System.Windows.Forms.Button()
-        Me.Label14 = New System.Windows.Forms.Label()
-        Me.txtDataFileDirectory = New System.Windows.Forms.TextBox()
-        Me.txtDataDescription = New System.Windows.Forms.TextBox()
-        Me.txtDataName = New System.Windows.Forms.TextBox()
-        Me.Label15 = New System.Windows.Forms.Label()
-        Me.Label16 = New System.Windows.Forms.Label()
         Me.TabPage6 = New System.Windows.Forms.TabPage()
+        Me.cmbHPSettingsType = New System.Windows.Forms.ComboBox()
+        Me.Label70 = New System.Windows.Forms.Label()
+        Me.Label74 = New System.Windows.Forms.Label()
+        Me.Label69 = New System.Windows.Forms.Label()
+        Me.txtHPSettingsName = New System.Windows.Forms.TextBox()
+        Me.TabPage5 = New System.Windows.Forms.TabPage()
+        Me.Label57 = New System.Windows.Forms.Label()
+        Me.cmbHPDataType = New System.Windows.Forms.ComboBox()
+        Me.Label73 = New System.Windows.Forms.Label()
+        Me.txtHPDataName = New System.Windows.Forms.TextBox()
+        Me.Label16 = New System.Windows.Forms.Label()
+        Me.TabPage7 = New System.Windows.Forms.TabPage()
+        Me.Label71 = New System.Windows.Forms.Label()
+        Me.cmbHPSystemType = New System.Windows.Forms.ComboBox()
+        Me.Label75 = New System.Windows.Forms.Label()
+        Me.Label72 = New System.Windows.Forms.Label()
+        Me.txtHPSystemName = New System.Windows.Forms.TextBox()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
         Me.Label12 = New System.Windows.Forms.Label()
@@ -84,7 +89,9 @@ Partial Class frmNewProject
         Me.TabPage3.SuspendLayout()
         Me.TabControl2.SuspendLayout()
         Me.TabPage4.SuspendLayout()
+        Me.TabPage6.SuspendLayout()
         Me.TabPage5.SuspendLayout()
+        Me.TabPage7.SuspendLayout()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
         Me.SuspendLayout()
@@ -119,7 +126,7 @@ Partial Class frmNewProject
         Me.TabControl1.Location = New System.Drawing.Point(12, 307)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(624, 246)
+        Me.TabControl1.Size = New System.Drawing.Size(624, 309)
         Me.TabControl1.TabIndex = 21
         '
         'TabPage1
@@ -132,7 +139,7 @@ Partial Class frmNewProject
         Me.TabPage1.Location = New System.Drawing.Point(4, 22)
         Me.TabPage1.Name = "TabPage1"
         Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage1.Size = New System.Drawing.Size(616, 220)
+        Me.TabPage1.Size = New System.Drawing.Size(616, 283)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Project Directory"
         Me.TabPage1.UseVisualStyleBackColor = True
@@ -194,7 +201,7 @@ Partial Class frmNewProject
         Me.TabPage2.Location = New System.Drawing.Point(4, 22)
         Me.TabPage2.Name = "TabPage2"
         Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage2.Size = New System.Drawing.Size(616, 220)
+        Me.TabPage2.Size = New System.Drawing.Size(616, 283)
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "Project Archive"
         Me.TabPage2.UseVisualStyleBackColor = True
@@ -259,7 +266,7 @@ Partial Class frmNewProject
         Me.TabPage3.Controls.Add(Me.TabControl2)
         Me.TabPage3.Location = New System.Drawing.Point(4, 22)
         Me.TabPage3.Name = "TabPage3"
-        Me.TabPage3.Size = New System.Drawing.Size(616, 220)
+        Me.TabPage3.Size = New System.Drawing.Size(616, 283)
         Me.TabPage3.TabIndex = 2
         Me.TabPage3.Text = "Hybrid Project"
         Me.TabPage3.UseVisualStyleBackColor = True
@@ -270,12 +277,13 @@ Partial Class frmNewProject
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.TabControl2.Controls.Add(Me.TabPage4)
-        Me.TabControl2.Controls.Add(Me.TabPage5)
         Me.TabControl2.Controls.Add(Me.TabPage6)
+        Me.TabControl2.Controls.Add(Me.TabPage5)
+        Me.TabControl2.Controls.Add(Me.TabPage7)
         Me.TabControl2.Location = New System.Drawing.Point(3, 3)
         Me.TabControl2.Name = "TabControl2"
         Me.TabControl2.SelectedIndex = 0
-        Me.TabControl2.Size = New System.Drawing.Size(610, 214)
+        Me.TabControl2.Size = New System.Drawing.Size(610, 277)
         Me.TabControl2.TabIndex = 0
         '
         'TabPage4
@@ -288,7 +296,7 @@ Partial Class frmNewProject
         Me.TabPage4.Location = New System.Drawing.Point(4, 22)
         Me.TabPage4.Name = "TabPage4"
         Me.TabPage4.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage4.Size = New System.Drawing.Size(602, 188)
+        Me.TabPage4.Size = New System.Drawing.Size(602, 251)
         Me.TabPage4.TabIndex = 0
         Me.TabPage4.Text = "Project Directory"
         Me.TabPage4.UseVisualStyleBackColor = True
@@ -339,137 +347,183 @@ Partial Class frmNewProject
         Me.txtHPDirectoryPath.Size = New System.Drawing.Size(510, 48)
         Me.txtHPDirectoryPath.TabIndex = 35
         '
+        'TabPage6
+        '
+        Me.TabPage6.Controls.Add(Me.cmbHPSettingsType)
+        Me.TabPage6.Controls.Add(Me.Label70)
+        Me.TabPage6.Controls.Add(Me.Label74)
+        Me.TabPage6.Controls.Add(Me.Label69)
+        Me.TabPage6.Controls.Add(Me.txtHPSettingsName)
+        Me.TabPage6.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage6.Name = "TabPage6"
+        Me.TabPage6.Size = New System.Drawing.Size(602, 251)
+        Me.TabPage6.TabIndex = 2
+        Me.TabPage6.Text = "Settings"
+        Me.TabPage6.UseVisualStyleBackColor = True
+        '
+        'cmbHPSettingsType
+        '
+        Me.cmbHPSettingsType.FormattingEnabled = True
+        Me.cmbHPSettingsType.Location = New System.Drawing.Point(126, 32)
+        Me.cmbHPSettingsType.Name = "cmbHPSettingsType"
+        Me.cmbHPSettingsType.Size = New System.Drawing.Size(135, 21)
+        Me.cmbHPSettingsType.TabIndex = 293
+        '
+        'Label70
+        '
+        Me.Label70.AutoSize = True
+        Me.Label70.Location = New System.Drawing.Point(3, 35)
+        Me.Label70.Name = "Label70"
+        Me.Label70.Size = New System.Drawing.Size(111, 13)
+        Me.Label70.TabIndex = 292
+        Me.Label70.Text = "Settings location type:"
+        '
+        'Label74
+        '
+        Me.Label74.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Label74.AutoSize = True
+        Me.Label74.Location = New System.Drawing.Point(576, 9)
+        Me.Label74.Name = "Label74"
+        Me.Label74.Size = New System.Drawing.Size(23, 13)
+        Me.Label74.TabIndex = 291
+        Me.Label74.Text = ".zip"
+        '
+        'Label69
+        '
+        Me.Label69.AutoSize = True
+        Me.Label69.Location = New System.Drawing.Point(3, 9)
+        Me.Label69.Name = "Label69"
+        Me.Label69.Size = New System.Drawing.Size(117, 13)
+        Me.Label69.TabIndex = 46
+        Me.Label69.Text = "Settings location name:"
+        '
+        'txtHPSettingsName
+        '
+        Me.txtHPSettingsName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtHPSettingsName.Location = New System.Drawing.Point(126, 6)
+        Me.txtHPSettingsName.Name = "txtHPSettingsName"
+        Me.txtHPSettingsName.Size = New System.Drawing.Size(444, 20)
+        Me.txtHPSettingsName.TabIndex = 45
+        '
         'TabPage5
         '
-        Me.TabPage5.Controls.Add(Me.chkProjectDir)
-        Me.TabPage5.Controls.Add(Me.Label18)
-        Me.TabPage5.Controls.Add(Me.txtDataFileName)
-        Me.TabPage5.Controls.Add(Me.Label13)
-        Me.TabPage5.Controls.Add(Me.btnFindDataFileDir)
-        Me.TabPage5.Controls.Add(Me.Label14)
-        Me.TabPage5.Controls.Add(Me.txtDataFileDirectory)
-        Me.TabPage5.Controls.Add(Me.txtDataDescription)
-        Me.TabPage5.Controls.Add(Me.txtDataName)
-        Me.TabPage5.Controls.Add(Me.Label15)
+        Me.TabPage5.Controls.Add(Me.Label57)
+        Me.TabPage5.Controls.Add(Me.cmbHPDataType)
+        Me.TabPage5.Controls.Add(Me.Label73)
+        Me.TabPage5.Controls.Add(Me.txtHPDataName)
         Me.TabPage5.Controls.Add(Me.Label16)
         Me.TabPage5.Location = New System.Drawing.Point(4, 22)
         Me.TabPage5.Name = "TabPage5"
         Me.TabPage5.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage5.Size = New System.Drawing.Size(602, 188)
+        Me.TabPage5.Size = New System.Drawing.Size(602, 251)
         Me.TabPage5.TabIndex = 1
         Me.TabPage5.Text = "Data"
         Me.TabPage5.UseVisualStyleBackColor = True
         '
-        'chkProjectDir
+        'Label57
         '
-        Me.chkProjectDir.AutoSize = True
-        Me.chkProjectDir.Location = New System.Drawing.Point(6, 136)
-        Me.chkProjectDir.Name = "chkProjectDir"
-        Me.chkProjectDir.Size = New System.Drawing.Size(75, 17)
-        Me.chkProjectDir.TabIndex = 23
-        Me.chkProjectDir.Text = "Project Dir"
-        Me.chkProjectDir.UseVisualStyleBackColor = True
+        Me.Label57.AutoSize = True
+        Me.Label57.Location = New System.Drawing.Point(6, 35)
+        Me.Label57.Name = "Label57"
+        Me.Label57.Size = New System.Drawing.Size(96, 13)
+        Me.Label57.TabIndex = 291
+        Me.Label57.Text = "Data location type:"
         '
-        'Label18
+        'cmbHPDataType
         '
-        Me.Label18.AutoSize = True
-        Me.Label18.Location = New System.Drawing.Point(6, 169)
-        Me.Label18.Name = "Label18"
-        Me.Label18.Size = New System.Drawing.Size(60, 13)
-        Me.Label18.TabIndex = 23
-        Me.Label18.Text = "(.AdvlData)"
+        Me.cmbHPDataType.FormattingEnabled = True
+        Me.cmbHPDataType.Location = New System.Drawing.Point(114, 32)
+        Me.cmbHPDataType.Name = "cmbHPDataType"
+        Me.cmbHPDataType.Size = New System.Drawing.Size(135, 21)
+        Me.cmbHPDataType.TabIndex = 290
         '
-        'txtDataFileName
+        'Label73
         '
-        Me.txtDataFileName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.Label73.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Label73.AutoSize = True
+        Me.Label73.Location = New System.Drawing.Point(573, 9)
+        Me.Label73.Name = "Label73"
+        Me.Label73.Size = New System.Drawing.Size(23, 13)
+        Me.Label73.TabIndex = 289
+        Me.Label73.Text = ".zip"
+        '
+        'txtHPDataName
+        '
+        Me.txtHPDataName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtDataFileName.Location = New System.Drawing.Point(90, 159)
-        Me.txtDataFileName.Name = "txtDataFileName"
-        Me.txtDataFileName.Size = New System.Drawing.Size(506, 20)
-        Me.txtDataFileName.TabIndex = 48
-        '
-        'Label13
-        '
-        Me.Label13.AutoSize = True
-        Me.Label13.Location = New System.Drawing.Point(6, 156)
-        Me.Label13.Name = "Label13"
-        Me.Label13.Size = New System.Drawing.Size(78, 13)
-        Me.Label13.TabIndex = 47
-        Me.Label13.Text = "Data file name:"
-        '
-        'btnFindDataFileDir
-        '
-        Me.btnFindDataFileDir.Location = New System.Drawing.Point(42, 113)
-        Me.btnFindDataFileDir.Name = "btnFindDataFileDir"
-        Me.btnFindDataFileDir.Size = New System.Drawing.Size(42, 22)
-        Me.btnFindDataFileDir.TabIndex = 46
-        Me.btnFindDataFileDir.Text = "Find"
-        Me.btnFindDataFileDir.UseVisualStyleBackColor = True
-        '
-        'Label14
-        '
-        Me.Label14.AutoSize = True
-        Me.Label14.Location = New System.Drawing.Point(6, 116)
-        Me.Label14.Name = "Label14"
-        Me.Label14.Size = New System.Drawing.Size(32, 13)
-        Me.Label14.TabIndex = 45
-        Me.Label14.Text = "Path:"
-        '
-        'txtDataFileDirectory
-        '
-        Me.txtDataFileDirectory.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtDataFileDirectory.Location = New System.Drawing.Point(90, 113)
-        Me.txtDataFileDirectory.Multiline = True
-        Me.txtDataFileDirectory.Name = "txtDataFileDirectory"
-        Me.txtDataFileDirectory.Size = New System.Drawing.Size(506, 40)
-        Me.txtDataFileDirectory.TabIndex = 44
-        '
-        'txtDataDescription
-        '
-        Me.txtDataDescription.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtDataDescription.Location = New System.Drawing.Point(90, 32)
-        Me.txtDataDescription.Multiline = True
-        Me.txtDataDescription.Name = "txtDataDescription"
-        Me.txtDataDescription.Size = New System.Drawing.Size(506, 75)
-        Me.txtDataDescription.TabIndex = 43
-        '
-        'txtDataName
-        '
-        Me.txtDataName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtDataName.Location = New System.Drawing.Point(90, 6)
-        Me.txtDataName.Name = "txtDataName"
-        Me.txtDataName.Size = New System.Drawing.Size(506, 20)
-        Me.txtDataName.TabIndex = 42
-        '
-        'Label15
-        '
-        Me.Label15.AutoSize = True
-        Me.Label15.Location = New System.Drawing.Point(6, 35)
-        Me.Label15.Name = "Label15"
-        Me.Label15.Size = New System.Drawing.Size(63, 13)
-        Me.Label15.TabIndex = 41
-        Me.Label15.Text = "Description:"
+        Me.txtHPDataName.Location = New System.Drawing.Point(114, 6)
+        Me.txtHPDataName.Name = "txtHPDataName"
+        Me.txtHPDataName.Size = New System.Drawing.Size(453, 20)
+        Me.txtHPDataName.TabIndex = 42
         '
         'Label16
         '
         Me.Label16.AutoSize = True
         Me.Label16.Location = New System.Drawing.Point(6, 9)
         Me.Label16.Name = "Label16"
-        Me.Label16.Size = New System.Drawing.Size(64, 13)
+        Me.Label16.Size = New System.Drawing.Size(102, 13)
         Me.Label16.TabIndex = 40
-        Me.Label16.Text = "Data Name:"
+        Me.Label16.Text = "Data location name:"
         '
-        'TabPage6
+        'TabPage7
         '
-        Me.TabPage6.Location = New System.Drawing.Point(4, 22)
-        Me.TabPage6.Name = "TabPage6"
-        Me.TabPage6.Size = New System.Drawing.Size(602, 188)
-        Me.TabPage6.TabIndex = 2
-        Me.TabPage6.Text = "Settings"
-        Me.TabPage6.UseVisualStyleBackColor = True
+        Me.TabPage7.Controls.Add(Me.Label71)
+        Me.TabPage7.Controls.Add(Me.cmbHPSystemType)
+        Me.TabPage7.Controls.Add(Me.Label75)
+        Me.TabPage7.Controls.Add(Me.Label72)
+        Me.TabPage7.Controls.Add(Me.txtHPSystemName)
+        Me.TabPage7.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage7.Name = "TabPage7"
+        Me.TabPage7.Size = New System.Drawing.Size(602, 251)
+        Me.TabPage7.TabIndex = 3
+        Me.TabPage7.Text = "System"
+        Me.TabPage7.UseVisualStyleBackColor = True
+        '
+        'Label71
+        '
+        Me.Label71.AutoSize = True
+        Me.Label71.Location = New System.Drawing.Point(3, 35)
+        Me.Label71.Name = "Label71"
+        Me.Label71.Size = New System.Drawing.Size(107, 13)
+        Me.Label71.TabIndex = 297
+        Me.Label71.Text = "System location type:"
+        '
+        'cmbHPSystemType
+        '
+        Me.cmbHPSystemType.FormattingEnabled = True
+        Me.cmbHPSystemType.Location = New System.Drawing.Point(122, 32)
+        Me.cmbHPSystemType.Name = "cmbHPSystemType"
+        Me.cmbHPSystemType.Size = New System.Drawing.Size(135, 21)
+        Me.cmbHPSystemType.TabIndex = 296
+        '
+        'Label75
+        '
+        Me.Label75.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Label75.AutoSize = True
+        Me.Label75.Location = New System.Drawing.Point(576, 9)
+        Me.Label75.Name = "Label75"
+        Me.Label75.Size = New System.Drawing.Size(23, 13)
+        Me.Label75.TabIndex = 295
+        Me.Label75.Text = ".zip"
+        '
+        'Label72
+        '
+        Me.Label72.AutoSize = True
+        Me.Label72.Location = New System.Drawing.Point(3, 9)
+        Me.Label72.Name = "Label72"
+        Me.Label72.Size = New System.Drawing.Size(113, 13)
+        Me.Label72.TabIndex = 293
+        Me.Label72.Text = "System location name:"
+        '
+        'txtHPSystemName
+        '
+        Me.txtHPSystemName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtHPSystemName.Location = New System.Drawing.Point(122, 6)
+        Me.txtHPSystemName.Name = "txtHPSystemName"
+        Me.txtHPSystemName.Size = New System.Drawing.Size(448, 20)
+        Me.txtHPSystemName.TabIndex = 292
         '
         'GroupBox1
         '
@@ -649,7 +703,7 @@ Partial Class frmNewProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(648, 565)
+        Me.ClientSize = New System.Drawing.Size(648, 628)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.TabControl1)
         Me.Controls.Add(Me.btnCreate)
@@ -665,8 +719,12 @@ Partial Class frmNewProject
         Me.TabControl2.ResumeLayout(False)
         Me.TabPage4.ResumeLayout(False)
         Me.TabPage4.PerformLayout()
+        Me.TabPage6.ResumeLayout(False)
+        Me.TabPage6.PerformLayout()
         Me.TabPage5.ResumeLayout(False)
         Me.TabPage5.PerformLayout()
+        Me.TabPage7.ResumeLayout(False)
+        Me.TabPage7.PerformLayout()
         Me.GroupBox1.ResumeLayout(False)
         Me.GroupBox1.PerformLayout()
         Me.GroupBox2.ResumeLayout(False)
@@ -698,14 +756,7 @@ Partial Class frmNewProject
     Friend WithEvents Label10 As System.Windows.Forms.Label
     Friend WithEvents txtHPDirectoryPath As System.Windows.Forms.TextBox
     Friend WithEvents TabPage5 As System.Windows.Forms.TabPage
-    Friend WithEvents txtDataFileName As System.Windows.Forms.TextBox
-    Friend WithEvents Label13 As System.Windows.Forms.Label
-    Friend WithEvents btnFindDataFileDir As System.Windows.Forms.Button
-    Friend WithEvents Label14 As System.Windows.Forms.Label
-    Friend WithEvents txtDataFileDirectory As System.Windows.Forms.TextBox
-    Friend WithEvents txtDataDescription As System.Windows.Forms.TextBox
-    Friend WithEvents txtDataName As System.Windows.Forms.TextBox
-    Friend WithEvents Label15 As System.Windows.Forms.Label
+    Friend WithEvents txtHPDataName As System.Windows.Forms.TextBox
     Friend WithEvents Label16 As System.Windows.Forms.Label
     Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox
     Friend WithEvents txtAuthorName As System.Windows.Forms.TextBox
@@ -726,7 +777,19 @@ Partial Class frmNewProject
     Friend WithEvents txtAuthorDescription As System.Windows.Forms.TextBox
     Friend WithEvents FolderBrowserDialog1 As System.Windows.Forms.FolderBrowserDialog
     Friend WithEvents Label17 As System.Windows.Forms.Label
-    Friend WithEvents Label18 As System.Windows.Forms.Label
-    Friend WithEvents chkProjectDir As System.Windows.Forms.CheckBox
     Friend WithEvents TabPage6 As Windows.Forms.TabPage
+    Friend WithEvents cmbHPSettingsType As Windows.Forms.ComboBox
+    Friend WithEvents Label70 As Windows.Forms.Label
+    Friend WithEvents Label74 As Windows.Forms.Label
+    Friend WithEvents Label69 As Windows.Forms.Label
+    Friend WithEvents txtHPSettingsName As Windows.Forms.TextBox
+    Friend WithEvents Label57 As Windows.Forms.Label
+    Friend WithEvents cmbHPDataType As Windows.Forms.ComboBox
+    Friend WithEvents Label73 As Windows.Forms.Label
+    Friend WithEvents TabPage7 As Windows.Forms.TabPage
+    Friend WithEvents Label71 As Windows.Forms.Label
+    Friend WithEvents cmbHPSystemType As Windows.Forms.ComboBox
+    Friend WithEvents Label75 As Windows.Forms.Label
+    Friend WithEvents Label72 As Windows.Forms.Label
+    Friend WithEvents txtHPSystemName As Windows.Forms.TextBox
 End Class

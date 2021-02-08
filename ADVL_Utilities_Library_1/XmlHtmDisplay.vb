@@ -579,7 +579,8 @@ Public Class XmlHtmDisplay
             End If '-------------------------------------------------------------------------------------------------------------
             ' Construct the Rtf of the attributes.
             If myNode.Attributes.Count > 0 Then
-                For Each attribute As XAttribute In myNode.Attributes
+                'For Each attribute As XAttribute In myNode.Attributes
+                For Each attribute As Xml.XmlAttribute In myNode.Attributes
                     Dim attributeRtfContent As String =
                         String.Format(" {0} {3}{1} =\cf0 ""{2} {4}\cf0 """,
                                       Settings.RtfTextSettings(Settings.XAttributeKey),

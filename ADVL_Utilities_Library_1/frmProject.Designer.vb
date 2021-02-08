@@ -27,7 +27,7 @@ Partial Class frmProject
         Me.btnSelect = New System.Windows.Forms.Button()
         Me.btnNew = New System.Windows.Forms.Button()
         Me.btnAdd = New System.Windows.Forms.Button()
-        Me.btnRemove = New System.Windows.Forms.Button()
+        Me.btnDelete = New System.Windows.Forms.Button()
         Me.btnSaveAs = New System.Windows.Forms.Button()
         Me.DataGridView1 = New System.Windows.Forms.DataGridView()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
@@ -46,17 +46,27 @@ Partial Class frmProject
         Me.Label2 = New System.Windows.Forms.Label()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.btnRestore = New System.Windows.Forms.Button()
         Me.btnSelDefault = New System.Windows.Forms.Button()
+        Me.TabControl1 = New System.Windows.Forms.TabControl()
+        Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.DataGridView2 = New System.Windows.Forms.DataGridView()
+        Me.chkDeleteData = New System.Windows.Forms.CheckBox()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.GroupBox1.SuspendLayout()
+        Me.TabControl1.SuspendLayout()
+        Me.TabPage1.SuspendLayout()
+        Me.TabPage2.SuspendLayout()
+        CType(Me.DataGridView2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'btnExit
         '
         Me.btnExit.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnExit.Location = New System.Drawing.Point(716, 12)
+        Me.btnExit.Location = New System.Drawing.Point(740, 12)
         Me.btnExit.Name = "btnExit"
-        Me.btnExit.Size = New System.Drawing.Size(64, 22)
+        Me.btnExit.Size = New System.Drawing.Size(40, 22)
         Me.btnExit.TabIndex = 17
         Me.btnExit.Text = "Exit"
         Me.btnExit.UseVisualStyleBackColor = True
@@ -65,7 +75,7 @@ Partial Class frmProject
         '
         Me.btnSelect.Location = New System.Drawing.Point(12, 12)
         Me.btnSelect.Name = "btnSelect"
-        Me.btnSelect.Size = New System.Drawing.Size(64, 22)
+        Me.btnSelect.Size = New System.Drawing.Size(46, 22)
         Me.btnSelect.TabIndex = 18
         Me.btnSelect.Text = "Select"
         Me.ToolTip1.SetToolTip(Me.btnSelect, "Select the project highlighed below")
@@ -73,9 +83,9 @@ Partial Class frmProject
         '
         'btnNew
         '
-        Me.btnNew.Location = New System.Drawing.Point(82, 12)
+        Me.btnNew.Location = New System.Drawing.Point(64, 12)
         Me.btnNew.Name = "btnNew"
-        Me.btnNew.Size = New System.Drawing.Size(64, 22)
+        Me.btnNew.Size = New System.Drawing.Size(40, 22)
         Me.btnNew.TabIndex = 19
         Me.btnNew.Text = "New"
         Me.ToolTip1.SetToolTip(Me.btnNew, "Create a new project")
@@ -83,27 +93,27 @@ Partial Class frmProject
         '
         'btnAdd
         '
-        Me.btnAdd.Location = New System.Drawing.Point(152, 12)
+        Me.btnAdd.Location = New System.Drawing.Point(110, 12)
         Me.btnAdd.Name = "btnAdd"
-        Me.btnAdd.Size = New System.Drawing.Size(62, 22)
+        Me.btnAdd.Size = New System.Drawing.Size(40, 22)
         Me.btnAdd.TabIndex = 20
         Me.btnAdd.Text = "Add"
         Me.ToolTip1.SetToolTip(Me.btnAdd, "Add an existing project to the list")
         Me.btnAdd.UseVisualStyleBackColor = True
         '
-        'btnRemove
+        'btnDelete
         '
-        Me.btnRemove.Location = New System.Drawing.Point(220, 12)
-        Me.btnRemove.Name = "btnRemove"
-        Me.btnRemove.Size = New System.Drawing.Size(66, 22)
-        Me.btnRemove.TabIndex = 21
-        Me.btnRemove.Text = "Remove"
-        Me.ToolTip1.SetToolTip(Me.btnRemove, "Remove the highlighted project from the list")
-        Me.btnRemove.UseVisualStyleBackColor = True
+        Me.btnDelete.Location = New System.Drawing.Point(318, 12)
+        Me.btnDelete.Name = "btnDelete"
+        Me.btnDelete.Size = New System.Drawing.Size(54, 22)
+        Me.btnDelete.TabIndex = 21
+        Me.btnDelete.Text = "Delete"
+        Me.ToolTip1.SetToolTip(Me.btnDelete, "Remove the highlighted project from the list")
+        Me.btnDelete.UseVisualStyleBackColor = True
         '
         'btnSaveAs
         '
-        Me.btnSaveAs.Location = New System.Drawing.Point(292, 12)
+        Me.btnSaveAs.Location = New System.Drawing.Point(156, 12)
         Me.btnSaveAs.Name = "btnSaveAs"
         Me.btnSaveAs.Size = New System.Drawing.Size(66, 22)
         Me.btnSaveAs.TabIndex = 22
@@ -116,10 +126,10 @@ Partial Class frmProject
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridView1.Location = New System.Drawing.Point(12, 257)
+        Me.DataGridView1.Location = New System.Drawing.Point(6, 6)
         Me.DataGridView1.Name = "DataGridView1"
         Me.DataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
-        Me.DataGridView1.Size = New System.Drawing.Size(768, 243)
+        Me.DataGridView1.Size = New System.Drawing.Size(748, 309)
         Me.DataGridView1.TabIndex = 23
         '
         'GroupBox1
@@ -271,26 +281,94 @@ Partial Class frmProject
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "Name:"
         '
+        'btnRestore
+        '
+        Me.btnRestore.Location = New System.Drawing.Point(500, 12)
+        Me.btnRestore.Name = "btnRestore"
+        Me.btnRestore.Size = New System.Drawing.Size(52, 22)
+        Me.btnRestore.TabIndex = 28
+        Me.btnRestore.Text = "Restore"
+        Me.ToolTip1.SetToolTip(Me.btnRestore, "Remove the highlighted project from the list")
+        Me.btnRestore.UseVisualStyleBackColor = True
+        '
         'btnSelDefault
         '
-        Me.btnSelDefault.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnSelDefault.Location = New System.Drawing.Point(364, 12)
+        Me.btnSelDefault.Location = New System.Drawing.Point(228, 12)
         Me.btnSelDefault.Name = "btnSelDefault"
-        Me.btnSelDefault.Size = New System.Drawing.Size(105, 22)
+        Me.btnSelDefault.Size = New System.Drawing.Size(84, 22)
         Me.btnSelDefault.TabIndex = 26
         Me.btnSelDefault.Text = "Select Default"
         Me.btnSelDefault.UseVisualStyleBackColor = True
+        '
+        'TabControl1
+        '
+        Me.TabControl1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.TabControl1.Controls.Add(Me.TabPage1)
+        Me.TabControl1.Controls.Add(Me.TabPage2)
+        Me.TabControl1.Location = New System.Drawing.Point(12, 257)
+        Me.TabControl1.Name = "TabControl1"
+        Me.TabControl1.SelectedIndex = 0
+        Me.TabControl1.Size = New System.Drawing.Size(768, 347)
+        Me.TabControl1.TabIndex = 27
+        '
+        'TabPage1
+        '
+        Me.TabPage1.Controls.Add(Me.DataGridView1)
+        Me.TabPage1.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage1.Name = "TabPage1"
+        Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPage1.Size = New System.Drawing.Size(760, 321)
+        Me.TabPage1.TabIndex = 0
+        Me.TabPage1.Text = "Project List"
+        Me.TabPage1.UseVisualStyleBackColor = True
+        '
+        'TabPage2
+        '
+        Me.TabPage2.Controls.Add(Me.DataGridView2)
+        Me.TabPage2.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage2.Name = "TabPage2"
+        Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPage2.Size = New System.Drawing.Size(760, 321)
+        Me.TabPage2.TabIndex = 1
+        Me.TabPage2.Text = "Recycled"
+        Me.TabPage2.UseVisualStyleBackColor = True
+        '
+        'DataGridView2
+        '
+        Me.DataGridView2.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.DataGridView2.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.DataGridView2.Location = New System.Drawing.Point(6, 6)
+        Me.DataGridView2.Name = "DataGridView2"
+        Me.DataGridView2.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
+        Me.DataGridView2.Size = New System.Drawing.Size(748, 309)
+        Me.DataGridView2.TabIndex = 0
+        '
+        'chkDeleteData
+        '
+        Me.chkDeleteData.AutoSize = True
+        Me.chkDeleteData.Location = New System.Drawing.Point(378, 16)
+        Me.chkDeleteData.Name = "chkDeleteData"
+        Me.chkDeleteData.Size = New System.Drawing.Size(116, 17)
+        Me.chkDeleteData.TabIndex = 29
+        Me.chkDeleteData.Text = "Delete project data"
+        Me.chkDeleteData.UseVisualStyleBackColor = True
         '
         'frmProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(792, 512)
+        Me.ClientSize = New System.Drawing.Size(792, 616)
+        Me.Controls.Add(Me.chkDeleteData)
+        Me.Controls.Add(Me.btnRestore)
+        Me.Controls.Add(Me.TabControl1)
         Me.Controls.Add(Me.btnSelDefault)
         Me.Controls.Add(Me.GroupBox1)
-        Me.Controls.Add(Me.DataGridView1)
         Me.Controls.Add(Me.btnSaveAs)
-        Me.Controls.Add(Me.btnRemove)
+        Me.Controls.Add(Me.btnDelete)
         Me.Controls.Add(Me.btnAdd)
         Me.Controls.Add(Me.btnNew)
         Me.Controls.Add(Me.btnSelect)
@@ -300,14 +378,19 @@ Partial Class frmProject
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.GroupBox1.ResumeLayout(False)
         Me.GroupBox1.PerformLayout()
+        Me.TabControl1.ResumeLayout(False)
+        Me.TabPage1.ResumeLayout(False)
+        Me.TabPage2.ResumeLayout(False)
+        CType(Me.DataGridView2, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
+        Me.PerformLayout()
 
     End Sub
     Friend WithEvents btnExit As System.Windows.Forms.Button
     Friend WithEvents btnSelect As System.Windows.Forms.Button
     Friend WithEvents btnNew As System.Windows.Forms.Button
     Friend WithEvents btnAdd As System.Windows.Forms.Button
-    Friend WithEvents btnRemove As System.Windows.Forms.Button
+    Friend WithEvents btnDelete As System.Windows.Forms.Button
     Friend WithEvents btnSaveAs As System.Windows.Forms.Button
     Friend WithEvents DataGridView1 As System.Windows.Forms.DataGridView
     Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox
@@ -327,4 +410,10 @@ Partial Class frmProject
     Friend WithEvents Label6 As System.Windows.Forms.Label
     Friend WithEvents ToolTip1 As Windows.Forms.ToolTip
     Friend WithEvents btnSelDefault As Windows.Forms.Button
+    Friend WithEvents TabControl1 As Windows.Forms.TabControl
+    Friend WithEvents TabPage1 As Windows.Forms.TabPage
+    Friend WithEvents TabPage2 As Windows.Forms.TabPage
+    Friend WithEvents btnRestore As Windows.Forms.Button
+    Friend WithEvents chkDeleteData As Windows.Forms.CheckBox
+    Friend WithEvents DataGridView2 As Windows.Forms.DataGridView
 End Class

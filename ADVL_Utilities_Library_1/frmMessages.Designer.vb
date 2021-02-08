@@ -52,12 +52,15 @@ Partial Class frmMessages
         Me.btnClearInstructions = New System.Windows.Forms.Button()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
-        Me.XmlHtmDisplay1 = New ADVL_Utilities_Library_1.XmlHtmDisplay(Me.components)
         Me.TabPage3 = New System.Windows.Forms.TabPage()
-        Me.XmlDisplay = New ADVL_Utilities_Library_1.XmlDisplay(Me.components)
         Me.TabPage2 = New System.Windows.Forms.TabPage()
         Me.btnShowXMsgTextTypes = New System.Windows.Forms.Button()
         Me.btnShowMsgTextTypes = New System.Windows.Forms.Button()
+        Me.chkShowXMessages = New System.Windows.Forms.CheckBox()
+        Me.chkShowSysMessages = New System.Windows.Forms.CheckBox()
+        Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.XmlHtmDisplay1 = New ADVL_Utilities_Library_1.XmlHtmDisplay(Me.components)
+        Me.XmlDisplay = New ADVL_Utilities_Library_1.XmlDisplay(Me.components)
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage3.SuspendLayout()
@@ -67,7 +70,7 @@ Partial Class frmMessages
         'btnExit
         '
         Me.btnExit.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnExit.Location = New System.Drawing.Point(676, 12)
+        Me.btnExit.Location = New System.Drawing.Point(657, 12)
         Me.btnExit.Name = "btnExit"
         Me.btnExit.Size = New System.Drawing.Size(64, 22)
         Me.btnExit.TabIndex = 18
@@ -81,6 +84,7 @@ Partial Class frmMessages
         Me.btnClearMessages.Size = New System.Drawing.Size(96, 22)
         Me.btnClearMessages.TabIndex = 19
         Me.btnClearMessages.Text = "Clear Messages"
+        Me.ToolTip1.SetToolTip(Me.btnClearMessages, "Clear all messages from the Messages tab")
         Me.btnClearMessages.UseVisualStyleBackColor = True
         '
         'btnClearInstructions
@@ -90,6 +94,7 @@ Partial Class frmMessages
         Me.btnClearInstructions.Size = New System.Drawing.Size(115, 22)
         Me.btnClearInstructions.TabIndex = 22
         Me.btnClearInstructions.Text = "Clear Instructions"
+        Me.ToolTip1.SetToolTip(Me.btnClearInstructions, "Clear all instructions from the XMessage Instructions tab")
         Me.btnClearInstructions.UseVisualStyleBackColor = True
         '
         'TabControl1
@@ -103,7 +108,7 @@ Partial Class frmMessages
         Me.TabControl1.Location = New System.Drawing.Point(12, 47)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(728, 365)
+        Me.TabControl1.Size = New System.Drawing.Size(709, 365)
         Me.TabControl1.TabIndex = 23
         '
         'TabPage1
@@ -112,10 +117,71 @@ Partial Class frmMessages
         Me.TabPage1.Location = New System.Drawing.Point(4, 22)
         Me.TabPage1.Name = "TabPage1"
         Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage1.Size = New System.Drawing.Size(720, 339)
+        Me.TabPage1.Size = New System.Drawing.Size(701, 339)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Messages"
         Me.TabPage1.UseVisualStyleBackColor = True
+        '
+        'TabPage3
+        '
+        Me.TabPage3.Controls.Add(Me.XmlDisplay)
+        Me.TabPage3.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage3.Name = "TabPage3"
+        Me.TabPage3.Size = New System.Drawing.Size(701, 339)
+        Me.TabPage3.TabIndex = 2
+        Me.TabPage3.Text = "XMessage Instructions"
+        Me.TabPage3.UseVisualStyleBackColor = True
+        '
+        'TabPage2
+        '
+        Me.TabPage2.Controls.Add(Me.btnShowXMsgTextTypes)
+        Me.TabPage2.Controls.Add(Me.btnShowMsgTextTypes)
+        Me.TabPage2.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage2.Name = "TabPage2"
+        Me.TabPage2.Size = New System.Drawing.Size(701, 339)
+        Me.TabPage2.TabIndex = 3
+        Me.TabPage2.Text = "Settings"
+        Me.TabPage2.UseVisualStyleBackColor = True
+        '
+        'btnShowXMsgTextTypes
+        '
+        Me.btnShowXMsgTextTypes.Location = New System.Drawing.Point(6, 34)
+        Me.btnShowXMsgTextTypes.Name = "btnShowXMsgTextTypes"
+        Me.btnShowXMsgTextTypes.Size = New System.Drawing.Size(235, 22)
+        Me.btnShowXMsgTextTypes.TabIndex = 1
+        Me.btnShowXMsgTextTypes.Text = "Show Named XMessage Text Settings"
+        Me.btnShowXMsgTextTypes.UseVisualStyleBackColor = True
+        '
+        'btnShowMsgTextTypes
+        '
+        Me.btnShowMsgTextTypes.Location = New System.Drawing.Point(6, 6)
+        Me.btnShowMsgTextTypes.Name = "btnShowMsgTextTypes"
+        Me.btnShowMsgTextTypes.Size = New System.Drawing.Size(235, 22)
+        Me.btnShowMsgTextTypes.TabIndex = 0
+        Me.btnShowMsgTextTypes.Text = "Show Named Message Text Settings"
+        Me.btnShowMsgTextTypes.UseVisualStyleBackColor = True
+        '
+        'chkShowXMessages
+        '
+        Me.chkShowXMessages.AutoSize = True
+        Me.chkShowXMessages.Location = New System.Drawing.Point(235, 16)
+        Me.chkShowXMessages.Name = "chkShowXMessages"
+        Me.chkShowXMessages.Size = New System.Drawing.Size(111, 17)
+        Me.chkShowXMessages.TabIndex = 24
+        Me.chkShowXMessages.Text = "Show XMessages"
+        Me.ToolTip1.SetToolTip(Me.chkShowXMessages, "Show the XMessages - used to exchange information between applications")
+        Me.chkShowXMessages.UseVisualStyleBackColor = True
+        '
+        'chkShowSysMessages
+        '
+        Me.chkShowSysMessages.AutoSize = True
+        Me.chkShowSysMessages.Location = New System.Drawing.Point(352, 16)
+        Me.chkShowSysMessages.Name = "chkShowSysMessages"
+        Me.chkShowSysMessages.Size = New System.Drawing.Size(141, 17)
+        Me.chkShowSysMessages.TabIndex = 25
+        Me.chkShowSysMessages.Text = "Show System Messages"
+        Me.ToolTip1.SetToolTip(Me.chkShowSysMessages, "Show the system generated XMessages")
+        Me.chkShowSysMessages.UseVisualStyleBackColor = True
         '
         'XmlHtmDisplay1
         '
@@ -123,7 +189,7 @@ Partial Class frmMessages
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.XmlHtmDisplay1.Font = New System.Drawing.Font("Arial", 10.0!)
-        Me.XmlHtmDisplay1.Location = New System.Drawing.Point(6, 6)
+        Me.XmlHtmDisplay1.Location = New System.Drawing.Point(3, 3)
         Me.XmlHtmDisplay1.Name = "XmlHtmDisplay1"
         TextSettings1.Bold = False
         TextSettings1.Color = System.Drawing.Color.Black
@@ -263,20 +329,10 @@ Partial Class frmMessages
         TextSettings15.PointSize = 10.0!
         XmlHtmDisplaySettings1.XValue = TextSettings15
         Me.XmlHtmDisplay1.Settings = XmlHtmDisplaySettings1
-        Me.XmlHtmDisplay1.Size = New System.Drawing.Size(708, 327)
+        Me.XmlHtmDisplay1.Size = New System.Drawing.Size(695, 333)
         Me.XmlHtmDisplay1.TabIndex = 20
         Me.XmlHtmDisplay1.Text = ""
         Me.XmlHtmDisplay1.WordWrap = False
-        '
-        'TabPage3
-        '
-        Me.TabPage3.Controls.Add(Me.XmlDisplay)
-        Me.TabPage3.Location = New System.Drawing.Point(4, 22)
-        Me.TabPage3.Name = "TabPage3"
-        Me.TabPage3.Size = New System.Drawing.Size(720, 339)
-        Me.TabPage3.TabIndex = 2
-        Me.TabPage3.Text = "XMessage Instructions"
-        Me.TabPage3.UseVisualStyleBackColor = True
         '
         'XmlDisplay
         '
@@ -342,45 +398,18 @@ Partial Class frmMessages
         XmlDisplaySettings1.Value = TextSettings21
         XmlDisplaySettings1.XmlLargeFileSizeLimit = 1000000
         Me.XmlDisplay.Settings = XmlDisplaySettings1
-        Me.XmlDisplay.Size = New System.Drawing.Size(714, 333)
+        Me.XmlDisplay.Size = New System.Drawing.Size(695, 333)
         Me.XmlDisplay.TabIndex = 0
         Me.XmlDisplay.Text = ""
         Me.XmlDisplay.WordWrap = False
-        '
-        'TabPage2
-        '
-        Me.TabPage2.Controls.Add(Me.btnShowXMsgTextTypes)
-        Me.TabPage2.Controls.Add(Me.btnShowMsgTextTypes)
-        Me.TabPage2.Location = New System.Drawing.Point(4, 22)
-        Me.TabPage2.Name = "TabPage2"
-        Me.TabPage2.Size = New System.Drawing.Size(720, 339)
-        Me.TabPage2.TabIndex = 3
-        Me.TabPage2.Text = "Settings"
-        Me.TabPage2.UseVisualStyleBackColor = True
-        '
-        'btnShowXMsgTextTypes
-        '
-        Me.btnShowXMsgTextTypes.Location = New System.Drawing.Point(6, 34)
-        Me.btnShowXMsgTextTypes.Name = "btnShowXMsgTextTypes"
-        Me.btnShowXMsgTextTypes.Size = New System.Drawing.Size(235, 22)
-        Me.btnShowXMsgTextTypes.TabIndex = 1
-        Me.btnShowXMsgTextTypes.Text = "Show Named XMessage Text Settings"
-        Me.btnShowXMsgTextTypes.UseVisualStyleBackColor = True
-        '
-        'btnShowMsgTextTypes
-        '
-        Me.btnShowMsgTextTypes.Location = New System.Drawing.Point(6, 6)
-        Me.btnShowMsgTextTypes.Name = "btnShowMsgTextTypes"
-        Me.btnShowMsgTextTypes.Size = New System.Drawing.Size(235, 22)
-        Me.btnShowMsgTextTypes.TabIndex = 0
-        Me.btnShowMsgTextTypes.Text = "Show Named Message Text Settings"
-        Me.btnShowMsgTextTypes.UseVisualStyleBackColor = True
         '
         'frmMessages
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(752, 424)
+        Me.ClientSize = New System.Drawing.Size(733, 424)
+        Me.Controls.Add(Me.chkShowSysMessages)
+        Me.Controls.Add(Me.chkShowXMessages)
         Me.Controls.Add(Me.TabControl1)
         Me.Controls.Add(Me.btnClearInstructions)
         Me.Controls.Add(Me.btnClearMessages)
@@ -393,6 +422,7 @@ Partial Class frmMessages
         Me.TabPage3.ResumeLayout(False)
         Me.TabPage2.ResumeLayout(False)
         Me.ResumeLayout(False)
+        Me.PerformLayout()
 
     End Sub
     Friend WithEvents btnExit As System.Windows.Forms.Button
@@ -406,4 +436,7 @@ Partial Class frmMessages
     Friend WithEvents btnShowMsgTextTypes As Windows.Forms.Button
     Friend WithEvents XmlHtmDisplay1 As XmlHtmDisplay
     Friend WithEvents btnShowXMsgTextTypes As Windows.Forms.Button
+    Friend WithEvents chkShowXMessages As Windows.Forms.CheckBox
+    Friend WithEvents ToolTip1 As Windows.Forms.ToolTip
+    Friend WithEvents chkShowSysMessages As Windows.Forms.CheckBox
 End Class

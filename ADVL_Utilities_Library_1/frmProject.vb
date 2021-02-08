@@ -14,7 +14,9 @@
     'Public SettingsLocn As ADVL_Utilities_Library_1.FileLocation 'The location used to store settings. 'UPDATE 29Jul18 - Replaced by ProjectLocn
     'Public ProjectLocn As ADVL_Utilities_Library_1.FileLocation 'The project location.
     Public ProjectLocn As New ADVL_Utilities_Library_1.FileLocation 'The project location.
-    Public ApplicationName As String 'The name of the application associated with the projects.
+
+    'NOTE: Application Name now extracted from ApplicationSummary (23Apr19)
+    'Public ApplicationName As String 'The name of the application associated with the projects.
 
     'Public SettingsLocn As New Location 'This is a directory or archive where settings are stored.
 
@@ -32,6 +34,7 @@
 
 
 #Region " Properties - All the properties used in this form and this application" '-----------------------------------------------------------------------------------------------------------
+
 
     Private _applicationDir As String = "" 'The path to the directory used to store application data.
     Public Property ApplicationDir As String
@@ -73,11 +76,17 @@
     Private Sub SaveFormSettings()
         'Save the form settings as an XML document.
         '
-        Dim RowNo As Integer
+        'Dim RowNo As Integer
+        'Dim SelProjNo As Integer
+        Dim SelRowNo As Integer
         If DataGridView1.SelectedRows.Count > 0 Then
-            RowNo = DataGridView1.SelectedRows(0).Index
+            'RowNo = DataGridView1.SelectedRows(0).Index
+            'SelProjNo = Val(DataGridView1.SelectedRows(0).Cells(0).Value)
+            SelRowNo = DataGridView1.SelectedRows(0).Index
         Else
-            RowNo = -1
+            'RowNo = -1
+            'SelProjNo = -1
+            SelRowNo = -1
         End If
 
         Dim Settings = <?xml version="1.0" encoding="utf-8"?>
@@ -88,12 +97,15 @@
                            <Top><%= Me.Top %></Top>
                            <Width><%= Me.Width %></Width>
                            <Height><%= Me.Height %></Height>
-                           <SelectedProjectNo><%= RowNo %></SelectedProjectNo>
+                           <SelectedProjectNo><%= SelRowNo %></SelectedProjectNo>
                            <!---->
                        </FormSettings>
-
+        ' <SelectedProjectNo><%= SelProjNo %></SelectedProjectNo>
+        '    <SelectedProjectNo><%= RowNo %></SelectedProjectNo>
         'Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
-        Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
+        'Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
+        Dim SettingsFileName As String = "FormSettings_" & ApplicationSummary.Name & "_" & Me.Text & ".xml"
+
         'SettingsLocn.SaveXmlData(SettingsFileName, Settings)
         ProjectLocn.SaveXmlData(SettingsFileName, Settings)
 
@@ -103,7 +115,8 @@
         'Read the form settings from an XML document.
 
         'Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
-        Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
+        'Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
+        Dim SettingsFileName As String = "FormSettings_" & ApplicationSummary.Name & "_" & Me.Text & ".xml"
 
         Dim Settings As System.Xml.Linq.XDocument
 
@@ -159,11 +172,44 @@
 
             ShowProjectInfo(SelectedProjectNo)
         End If
-
+        CheckFormPos()
         'Else
         ''Settings file not found.
         'End If
 
+    End Sub
+
+    Private Sub CheckFormPos()
+        'Check that the form can be seen on a screen.
+
+        Dim MinWidthVisible As Integer = 192 'Minimum number of X pixels visible. The form will be moved if this many form pixels are not visible.
+        Dim MinHeightVisible As Integer = 64 'Minimum number of Y pixels visible. The form will be moved if this many form pixels are not visible.
+
+        Dim FormRect As New System.Drawing.Rectangle(Me.Left, Me.Top, Me.Width, Me.Height)
+        Dim WARect As System.Drawing.Rectangle = System.Windows.Forms.Screen.GetWorkingArea(FormRect) 'The Working Area rectangle - the usable area of the screen containing the form.
+
+        ''Check if the top of the form is less than zero:
+        'If Me.Top < 0 Then Me.Top = 0
+
+        'Check if the top of the form is above the top of the Working Area:
+        If Me.Top < WARect.Top Then
+            Me.Top = WARect.Top
+        End If
+
+        'Check if the top of the form is too close to the bottom of the Working Area:
+        If (Me.Top + MinHeightVisible) > (WARect.Top + WARect.Height) Then
+            Me.Top = WARect.Top + WARect.Height - MinHeightVisible
+        End If
+
+        'Check if the left edge of the form is too close to the right edge of the Working Area:
+        If (Me.Left + MinWidthVisible) > (WARect.Left + WARect.Width) Then
+            Me.Left = WARect.Left + WARect.Width - MinWidthVisible
+        End If
+
+        'Check if the right edge of the form is too close to the left edge of the Working Area:
+        If (Me.Left + Me.Width - MinWidthVisible) < WARect.Left Then
+            Me.Left = WARect.Left - Me.Width + MinWidthVisible
+        End If
     End Sub
 
 #End Region 'Process XML Files --------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,17 +223,46 @@
 
         'Set up DataGridView1 to display a summary of each project:
         DataGridView1.Rows.Clear()
-        DataGridView1.ColumnCount = 3
-        DataGridView1.Columns(0).HeaderText = "Name"
-        DataGridView1.Columns(1).HeaderText = "Type"
-        DataGridView1.Columns(2).HeaderText = "Description"
+        'DataGridView1.ColumnCount = 3
+        DataGridView1.ColumnCount = 4
+        'DataGridView1.Columns(0).HeaderText = "Name"
+        'DataGridView1.Columns(1).HeaderText = "Type"
+        'DataGridView1.Columns(2).HeaderText = "Description"
+        'DataGridView1.Columns(3).HeaderText = "No"
+        DataGridView1.Columns(0).HeaderText = "No"
+        DataGridView1.Columns(1).HeaderText = "Name"
+        DataGridView1.Columns(2).HeaderText = "Type"
+        DataGridView1.Columns(3).HeaderText = "Description"
         DataGridView1.AutoResizeColumns()
+        DataGridView1.AllowUserToAddRows = False
+
+
+
+        'Set up DataGridView2 to display a summary of each recycled project:
+        DataGridView2.Rows.Clear()
+        'DataGridView2.ColumnCount = 3
+        DataGridView2.ColumnCount = 4
+        'DataGridView2.Columns(0).HeaderText = "Name"
+        'DataGridView2.Columns(1).HeaderText = "Type"
+        'DataGridView2.Columns(2).HeaderText = "Description"
+        'DataGridView2.Columns(3).HeaderText = "No"
+        DataGridView2.Columns(0).HeaderText = "No"
+        DataGridView2.Columns(1).HeaderText = "Name"
+        DataGridView2.Columns(2).HeaderText = "Type"
+        DataGridView2.Columns(3).HeaderText = "Description"
+        DataGridView2.AutoResizeColumns()
+        DataGridView2.AllowUserToAddRows = False
+
+        TabControl1.SelectTab("TabPage1")
+        'Project List Tab selected.
+        btnDelete.Text = "Recycle"
+        btnRestore.Enabled = False
+        chkDeleteData.Enabled = False
 
         ReadProjectList()
         'NOTE: ReadProjectDir must be called after the project has loaded. ApplicationDir is not set until then.
 
         'DataGridView1.Rows(SelectedProjectNo).Selected = True
-
 
     End Sub
 
@@ -205,7 +280,8 @@
         'Show the NewProject form:
         If IsNothing(NewProjectForm) Then
             NewProjectForm = New frmNewProject
-            NewProjectForm.ApplicationName = ApplicationName
+            'NewProjectForm.ApplicationName = ApplicationName
+            NewProjectForm.ApplicationName = ApplicationSummary.Name
             'NewProjectForm.SettingsLocn = SettingsLocn
             NewProjectForm.ProjectLocn = ProjectLocn
             NewProjectForm.Show()
@@ -229,7 +305,8 @@
         'Show the Add Project form:
         If IsNothing(AddProjectForm) Then
             AddProjectForm = New frmAddProject
-            AddProjectForm.ApplicationName = ApplicationName
+            'AddProjectForm.ApplicationName = ApplicationName
+            AddProjectForm.ApplicationName = ApplicationSummary.Name
             'AddProjectForm.SettingsLocn = SettingsLocn
             AddProjectForm.ProjectLocn = ProjectLocn
             AddProjectForm.Show()
@@ -261,16 +338,14 @@
     Private Sub btnSelect_Click(sender As Object, e As EventArgs) Handles btnSelect.Click
         'Select the project.
 
-        'If DataGridView1.SelectedRows(0).Index > -1 Then
         If DataGridView1.SelectedRows.Count > 0 Then
-            Dim RowNo As Integer = DataGridView1.SelectedRows(0).Index
+            Dim SelProjNo As Integer = Val(DataGridView1.SelectedRows(0).Cells(0).Value)
 
             'Check if the project file or directory is missing:
-            Select Case ProjectList(RowNo).Type
+            Select Case ProjectList(SelProjNo).Type
                 Case Project.Types.Archive
                     txtType.Text = "Archive"
-                    'If System.IO.File.Exists(ProjectList(RowNo).SettingsLocnPath) Then
-                    If System.IO.File.Exists(ProjectList(RowNo).Path) Then
+                    If System.IO.File.Exists(ProjectList(SelProjNo).Path) Then
                         'Archive found.
                     Else
                         RaiseEvent ErrorMessage("Project Archive not found!" & vbCrLf)
@@ -278,8 +353,7 @@
                     End If
                 Case Project.Types.Directory
                     txtType.Text = "Directory"
-                    'If System.IO.Directory.Exists(ProjectList(RowNo).SettingsLocnPath) Then
-                    If System.IO.Directory.Exists(ProjectList(RowNo).Path) Then
+                    If System.IO.Directory.Exists(ProjectList(SelProjNo).Path) Then
                         'Directory found.
                     Else
                         RaiseEvent ErrorMessage("Project Directory not found!" & vbCrLf)
@@ -287,8 +361,7 @@
                     End If
                 Case Project.Types.Hybrid
                     txtType.Text = "Hybrid"
-                    'If System.IO.Directory.Exists(ProjectList(RowNo).SettingsLocnPath) Then
-                    If System.IO.Directory.Exists(ProjectList(RowNo).Path) Then
+                    If System.IO.Directory.Exists(ProjectList(SelProjNo).Path) Then
                         'Directory found.
                     Else
                         RaiseEvent ErrorMessage("Project Directory not found!" & vbCrLf)
@@ -298,15 +371,14 @@
                     txtType.Text = "None"
             End Select
 
-            RaiseEvent Message("Project number: " & RowNo & " selected." & vbCrLf)
-            RaiseEvent Message("Project name: " & ProjectList(RowNo).Name & vbCrLf)
-            RaiseEvent Message("Project type: " & ProjectList(RowNo).Type.ToString & vbCrLf)
-            RaiseEvent Message("Project path: " & ProjectList(RowNo).Path & vbCrLf & vbCrLf)
-            RaiseEvent ProjectSelected(ProjectList(RowNo))
+            RaiseEvent Message("Project number: " & SelProjNo & " selected." & vbCrLf)
+            RaiseEvent Message("Project name: " & ProjectList(SelProjNo).Name & vbCrLf)
+            RaiseEvent Message("Project type: " & ProjectList(SelProjNo).Type.ToString & vbCrLf)
+            RaiseEvent Message("Project path: " & ProjectList(SelProjNo).Path & vbCrLf & vbCrLf)
+            RaiseEvent ProjectSelected(ProjectList(SelProjNo))
         Else
             RaiseEvent ErrorMessage("No project selected." & vbCrLf)
         End If
-
 
     End Sub
 
@@ -321,6 +393,8 @@
         ProjectList.Add(ProjectSummary) 'Add the project summary to the list.
         'NProjects += 1                  'Increment the number of projects
         UpdateProjectGrid()             'Update the list of projects displayed in DataGridView1
+
+        RaiseEvent NewProjectCreated(ProjectSummary.Path)
     End Sub
 
     Private Sub WriteProjectList()
@@ -331,7 +405,7 @@
                               <!--Project List File-->
                               <ProjectList>
                                   <FormatCode>ADVL_2</FormatCode>
-                                  <ApplicationName><%= ApplicationName %></ApplicationName>
+                                  <ApplicationName><%= ApplicationSummary.Name %></ApplicationName>
                                   <%= From item In ProjectList
                                       Select
                                       <Project>
@@ -341,9 +415,12 @@
                                           <Path><%= item.Path %></Path>
                                           <CreationDate><%= Format(item.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
                                           <AuthorName><%= item.AuthorName %></AuthorName>
+                                          <Status><%= item.Status %></Status>
                                       </Project>
                                   %>
                               </ProjectList>
+        '                                          <Status><%= item.Status %></Status> - ADDED 30Mar20 - Status is OK or Recycled - OK: the project is on the Project List, Recycled: on the Recycled List.
+        '     <ApplicationName><%= ApplicationName %></ApplicationName>
 
         'ProjectListXDoc.Save(ApplicationDir & "\Project_List.xml")
         'ProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
@@ -461,16 +538,16 @@
                 Case "Hybrid"
                     NewProject.Type = Project.Types.Hybrid
             End Select
-
             NewProject.Path = item.<Path>.Value
-
             NewProject.CreationDate = item.<CreationDate>.Value
-
             NewProject.AuthorName = item.<AuthorName>.Value
-
+            If item.<Status>.Value = Nothing Then
+                'The Project list file records do not contain the Status field.
+            Else
+                NewProject.Status = item.<Status>.Value
+            End If
             ProjectList.Add(NewProject)
         Next
-
         UpdateProjectGrid()
 
     End Sub
@@ -478,7 +555,8 @@
     Private Sub UpdateProjectGrid()
         'Update DataGridView1 - Show the Name, Type and Description of each project.
 
-        DataGridView1.Rows.Clear()
+        DataGridView1.Rows.Clear() 'Clear the list of Projects
+        DataGridView2.Rows.Clear() 'Clear the list of Recycled Projects
 
         Dim NProjects As Integer = ProjectList.Count
 
@@ -489,13 +567,31 @@
         Dim Index As Integer
 
         For Index = 0 To NProjects - 1
-            DataGridView1.Rows.Add()
-            DataGridView1.Rows(Index).Cells(0).Value = ProjectList(Index).Name
-            DataGridView1.Rows(Index).Cells(1).Value = ProjectList(Index).Type
-            DataGridView1.Rows(Index).Cells(2).Value = ProjectList(Index).Description
+            If ProjectList(Index).Status = "Recycled" Then
+                'Add the Project to the Recycled Project List:
+                'DataGridView2.Rows.Add()
+                'DataGridView2.Rows(Index).Cells(0).Value = ProjectList(Index).Name
+                'DataGridView2.Rows(Index).Cells(1).Value = ProjectList(Index).Type
+                'DataGridView2.Rows(Index).Cells(2).Value = ProjectList(Index).Description
+
+                'DataGridView2.Rows.Add(ProjectList(Index).Name, ProjectList(Index).Type, ProjectList(Index).Description, Index)
+
+                DataGridView2.Rows.Add(Index, ProjectList(Index).Name, ProjectList(Index).Type, ProjectList(Index).Description)
+            Else
+                'Add the Project to the Project List:
+                'DataGridView1.Rows.Add()
+                'DataGridView1.Rows(Index).Cells(0).Value = ProjectList(Index).Name
+                'DataGridView1.Rows(Index).Cells(1).Value = ProjectList(Index).Type
+                'DataGridView1.Rows(Index).Cells(2).Value = ProjectList(Index).Description
+
+                'DataGridView1.Rows.Add(ProjectList(Index).Name, ProjectList(Index).Type, ProjectList(Index).Description, Index)
+
+                DataGridView1.Rows.Add(Index, ProjectList(Index).Name, ProjectList(Index).Type, ProjectList(Index).Description)
+            End If
         Next
 
         DataGridView1.AutoResizeColumns()
+        DataGridView2.AutoResizeColumns()
 
     End Sub
 
@@ -545,9 +641,12 @@
     Private Sub DataGridView1_CellContentClick(sender As Object, e As Windows.Forms.DataGridViewCellEventArgs) Handles DataGridView1.CellContentClick
 
         Dim RowNo As Integer = e.RowIndex
+        If RowNo = -1 Then Exit Sub
+        Dim SelProjNo = Val(DataGridView1.SelectedRows(0).Cells(0).Value)
 
         DataGridView1.Rows(RowNo).Selected = True
-        ShowProjectInfo(RowNo)
+        'ShowProjectInfo(RowNo)
+        ShowProjectInfo(SelProjNo)
 
     End Sub
 
@@ -620,19 +719,70 @@
 
     End Sub
 
-    Private Sub btnRemove_Click(sender As Object, e As EventArgs) Handles btnRemove.Click
+    Private Sub btnRemove_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
         'Remove the selected project from the list.
 
-        Dim RowNo As Integer
+        'Dim RowNo As Integer
 
-        If DataGridView1.SelectedRows.Count > 0 Then
-            RowNo = DataGridView1.SelectedRows(0).Index
-            ProjectList.RemoveAt(RowNo)
-            UpdateProjectGrid()
+        If TabControl1.SelectedTab.Name = "TabPage1" Then
+            'Project List Tab selected.
+            If DataGridView1.SelectedRows.Count > 0 Then
+                'Recycle the selected project.
+                Dim SelProjNo As Integer = Val(DataGridView1.SelectedRows(0).Cells(0).Value)
+                ProjectList(SelProjNo).Status = "Recycled"
+                UpdateProjectGrid()
+            Else
+                RaiseEvent ErrorMessage("No project has been selected to Delete!" & vbCrLf)
+            End If
         Else
-            RaiseEvent ErrorMessage("No project has been selected for removal!" & vbCrLf)
+            'Recycled Tab selected.
+            Dim SelProjNo As Integer = Val(DataGridView2.SelectedRows(0).Cells(0).Value)
+            Dim SelProjName As String = ProjectList(SelProjNo).Name
+            Dim SelProjPath As String = ProjectList(SelProjNo).Path
+            If chkDeleteData.Checked Then DeleteProject(SelProjName, SelProjPath)
+            ProjectList.RemoveAt(SelProjNo)
+            UpdateProjectGrid()
+
         End If
+
+
+        'If DataGridView1.SelectedRows.Count > 0 Then
+        '    RowNo = DataGridView1.SelectedRows(0).Index
+        '    ProjectList.RemoveAt(RowNo)
+        '    UpdateProjectGrid()
+        'Else
+        '    RaiseEvent ErrorMessage("No project has been selected for removal!" & vbCrLf)
+        'End If
     End Sub
+
+    Private Sub DeleteProject(ByVal Name As String, ByVal Path As String)
+        'Delete the project with the specified Name at the specified Path.
+        RaiseEvent Message("Project name: " & Name & vbCrLf & "Path: " & Path & vbCrLf)
+        'RaiseEvent ErrorMessage("Delete Project Data code not yet complete!" & vbCrLf)
+
+        If MsgBox("Are you sure you want to delete the project data?", MsgBoxStyle.YesNoCancel, "Warning") = MsgBoxResult.Yes Then
+            RaiseEvent ErrorMessage("Delete Project Data code not yet complete!" & vbCrLf)
+        End If
+
+    End Sub
+
+    Private Sub btnRestore_Click(sender As Object, e As EventArgs) Handles btnRestore.Click
+        'Restore the selected project to the Project List.
+
+        If TabControl1.SelectedTab.Name = "TabPage1" Then
+            'Wrong tab selected. Only projects shown in the Recycled Project List can be recycled
+        Else
+            'Recycled tab selected
+            If DataGridView2.SelectedRows.Count > 0 Then
+                'Restore the selected project.
+                Dim SelProjNo As Integer = Val(DataGridView2.SelectedRows(0).Cells(0).Value)
+                ProjectList(SelProjNo).Status = "OK"
+                UpdateProjectGrid()
+            End If
+        End If
+
+    End Sub
+
 
     'Private Sub btnSelectDefault_Click(sender As Object, e As EventArgs)
 
@@ -665,6 +815,50 @@
         Else
             'The Default project is already on the list.
 
+        End If
+    End Sub
+
+    'Private Sub TabPage1_GotFocus(sender As Object, e As EventArgs) Handles TabPage1.GotFocus
+    '    'Project List Tab selected.
+    '    btnDelete.Text = "Recycle"
+    '    btnRestore.Enabled = False
+    '    chkDeleteData.Enabled = False
+
+    'End Sub
+
+    'Private Sub TabPage2_GotFocus(sender As Object, e As EventArgs) Handles TabPage2.GotFocus
+    '    'Recycled Tab selected.
+    '    btnDelete.Text = "Delete"
+    '    btnRestore.Enabled = True
+    '    chkDeleteData.Enabled = True
+
+    'End Sub
+
+    Private Sub TabControl1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles TabControl1.SelectedIndexChanged
+        'A tab has been selected:
+
+        If TabControl1.SelectedTab.Name = "TabPage1" Then
+            'Project List Tab selected.
+            btnDelete.Text = "Recycle"
+            btnRestore.Enabled = False
+            chkDeleteData.Enabled = False
+
+            btnSelect.Enabled = True
+            btnNew.Enabled = True
+            btnAdd.Enabled = True
+            btnSaveAs.Enabled = True
+            btnSelDefault.Enabled = True
+        Else
+            'Recycled Tab selected.
+            btnDelete.Text = "Delete"
+            btnRestore.Enabled = True
+            chkDeleteData.Enabled = True
+
+            btnSelect.Enabled = False
+            btnNew.Enabled = False
+            btnAdd.Enabled = False
+            btnSaveAs.Enabled = False
+            btnSelDefault.Enabled = False
         End If
     End Sub
 
@@ -723,6 +917,8 @@
     'Public Event CreateDefaultProject() '
     Public Event OpenDefaultProject() 'Raise an event to open the Default_Project.
     Public Event CreateDefaultProject() 'Raise an event to create the Default_Project (if it does not already exist).
+
+    Public Event NewProjectCreated(ByVal ProjectPath As String) 'Raise an event to indicate that a new project has been created at the specified path.
 
 
 

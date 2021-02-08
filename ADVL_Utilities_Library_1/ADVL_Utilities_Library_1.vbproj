@@ -86,6 +86,12 @@
     <Compile Include="frmMessages.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmNewDataNameModal.Designer.vb">
+      <DependentUpon>frmNewDataNameModal.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmNewDataNameModal.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmNewProject.Designer.vb">
       <DependentUpon>frmNewProject.vb</DependentUpon>
     </Compile>
@@ -156,6 +162,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmMessages.resx">
       <DependentUpon>frmMessages.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmNewDataNameModal.resx">
+      <DependentUpon>frmNewDataNameModal.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmNewProject.resx">
       <DependentUpon>frmNewProject.vb</DependentUpon>

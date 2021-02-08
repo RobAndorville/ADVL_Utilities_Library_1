@@ -60,13 +60,15 @@ Partial Class frmAddProject
         Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
         Me.Label12 = New System.Windows.Forms.Label()
         Me.chkSearchSubDirectories = New System.Windows.Forms.CheckBox()
+        Me.chkShowThisAppProjects = New System.Windows.Forms.CheckBox()
+        Me.txtThisAppName = New System.Windows.Forms.TextBox()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
         'btnExit
         '
         Me.btnExit.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnExit.Location = New System.Drawing.Point(714, 12)
+        Me.btnExit.Location = New System.Drawing.Point(692, 12)
         Me.btnExit.Name = "btnExit"
         Me.btnExit.Size = New System.Drawing.Size(64, 22)
         Me.btnExit.TabIndex = 20
@@ -101,7 +103,7 @@ Partial Class frmAddProject
         Me.GroupBox1.Controls.Add(Me.Label1)
         Me.GroupBox1.Location = New System.Drawing.Point(12, 40)
         Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Size = New System.Drawing.Size(766, 235)
+        Me.GroupBox1.Size = New System.Drawing.Size(744, 235)
         Me.GroupBox1.TabIndex = 25
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Project:"
@@ -112,7 +114,7 @@ Partial Class frmAddProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtComments.Location = New System.Drawing.Point(438, 100)
         Me.txtComments.Name = "txtComments"
-        Me.txtComments.Size = New System.Drawing.Size(322, 20)
+        Me.txtComments.Size = New System.Drawing.Size(300, 20)
         Me.txtComments.TabIndex = 25
         '
         'Label13
@@ -130,7 +132,7 @@ Partial Class frmAddProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtApplicationName.Location = New System.Drawing.Point(103, 204)
         Me.txtApplicationName.Name = "txtApplicationName"
-        Me.txtApplicationName.Size = New System.Drawing.Size(657, 20)
+        Me.txtApplicationName.Size = New System.Drawing.Size(635, 20)
         Me.txtApplicationName.TabIndex = 23
         '
         'Label11
@@ -148,7 +150,7 @@ Partial Class frmAddProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtDataRelLocnPath.Location = New System.Drawing.Point(300, 178)
         Me.txtDataRelLocnPath.Name = "txtDataRelLocnPath"
-        Me.txtDataRelLocnPath.Size = New System.Drawing.Size(460, 20)
+        Me.txtDataRelLocnPath.Size = New System.Drawing.Size(438, 20)
         Me.txtDataRelLocnPath.TabIndex = 19
         '
         'Label10
@@ -182,7 +184,7 @@ Partial Class frmAddProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtSettingsRelLocnPath.Location = New System.Drawing.Point(300, 152)
         Me.txtSettingsRelLocnPath.Name = "txtSettingsRelLocnPath"
-        Me.txtSettingsRelLocnPath.Size = New System.Drawing.Size(460, 20)
+        Me.txtSettingsRelLocnPath.Size = New System.Drawing.Size(438, 20)
         Me.txtSettingsRelLocnPath.TabIndex = 15
         '
         'Label8
@@ -221,7 +223,7 @@ Partial Class frmAddProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtAuthor.Location = New System.Drawing.Point(53, 126)
         Me.txtAuthor.Name = "txtAuthor"
-        Me.txtAuthor.Size = New System.Drawing.Size(707, 20)
+        Me.txtAuthor.Size = New System.Drawing.Size(685, 20)
         Me.txtAuthor.TabIndex = 9
         '
         'txtDescription
@@ -231,7 +233,7 @@ Partial Class frmAddProject
         Me.txtDescription.Location = New System.Drawing.Point(87, 45)
         Me.txtDescription.Multiline = True
         Me.txtDescription.Name = "txtDescription"
-        Me.txtDescription.Size = New System.Drawing.Size(673, 49)
+        Me.txtDescription.Size = New System.Drawing.Size(651, 49)
         Me.txtDescription.TabIndex = 8
         '
         'txtProjectName
@@ -240,7 +242,7 @@ Partial Class frmAddProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtProjectName.Location = New System.Drawing.Point(87, 19)
         Me.txtProjectName.Name = "txtProjectName"
-        Me.txtProjectName.Size = New System.Drawing.Size(673, 20)
+        Me.txtProjectName.Size = New System.Drawing.Size(651, 20)
         Me.txtProjectName.TabIndex = 7
         '
         'Label7
@@ -311,7 +313,7 @@ Partial Class frmAddProject
         Me.ListBox1.FormattingEnabled = True
         Me.ListBox1.Location = New System.Drawing.Point(12, 334)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(766, 134)
+        Me.ListBox1.Size = New System.Drawing.Size(744, 134)
         Me.ListBox1.TabIndex = 31
         '
         'btnFindFiles
@@ -338,7 +340,7 @@ Partial Class frmAddProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtSearchDirectory.Location = New System.Drawing.Point(170, 281)
         Me.txtSearchDirectory.Name = "txtSearchDirectory"
-        Me.txtSearchDirectory.Size = New System.Drawing.Size(607, 20)
+        Me.txtSearchDirectory.Size = New System.Drawing.Size(585, 20)
         Me.txtSearchDirectory.TabIndex = 34
         '
         'btnBrowse
@@ -370,7 +372,7 @@ Partial Class frmAddProject
         'ProgressBar2
         '
         Me.ProgressBar2.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.ProgressBar2.Location = New System.Drawing.Point(393, 485)
+        Me.ProgressBar2.Location = New System.Drawing.Point(371, 485)
         Me.ProgressBar2.Name = "ProgressBar2"
         Me.ProgressBar2.Size = New System.Drawing.Size(384, 23)
         Me.ProgressBar2.TabIndex = 38
@@ -397,11 +399,32 @@ Partial Class frmAddProject
         Me.chkSearchSubDirectories.Text = "Search SubDirectories"
         Me.chkSearchSubDirectories.UseVisualStyleBackColor = True
         '
+        'chkShowThisAppProjects
+        '
+        Me.chkShowThisAppProjects.AutoSize = True
+        Me.chkShowThisAppProjects.Location = New System.Drawing.Point(259, 311)
+        Me.chkShowThisAppProjects.Name = "chkShowThisAppProjects"
+        Me.chkShowThisAppProjects.Size = New System.Drawing.Size(211, 17)
+        Me.chkShowThisAppProjects.TabIndex = 41
+        Me.chkShowThisAppProjects.Text = "Only Show Projects for This Application"
+        Me.chkShowThisAppProjects.UseVisualStyleBackColor = True
+        '
+        'txtThisAppName
+        '
+        Me.txtThisAppName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtThisAppName.Location = New System.Drawing.Point(476, 309)
+        Me.txtThisAppName.Name = "txtThisAppName"
+        Me.txtThisAppName.Size = New System.Drawing.Size(279, 20)
+        Me.txtThisAppName.TabIndex = 42
+        '
         'frmAddProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(790, 515)
+        Me.ClientSize = New System.Drawing.Size(768, 515)
+        Me.Controls.Add(Me.txtThisAppName)
+        Me.Controls.Add(Me.chkShowThisAppProjects)
         Me.Controls.Add(Me.chkSearchSubDirectories)
         Me.Controls.Add(Me.Label12)
         Me.Controls.Add(Me.ProgressBar2)
@@ -460,4 +483,6 @@ Partial Class frmAddProject
     Friend WithEvents txtComments As System.Windows.Forms.TextBox
     Friend WithEvents Label13 As System.Windows.Forms.Label
     Friend WithEvents chkSearchSubDirectories As Windows.Forms.CheckBox
+    Friend WithEvents chkShowThisAppProjects As Windows.Forms.CheckBox
+    Friend WithEvents txtThisAppName As Windows.Forms.TextBox
 End Class

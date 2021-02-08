@@ -73,20 +73,20 @@
         End Set
     End Property
 
-    Private _dataFileInProjectDir As Boolean = True 'If True, the DataFile of a Hybrid Project will be placed in the Project Directory
-    Property DataFileInProjectDir As Boolean
-        Get
-            Return _dataFileInProjectDir
-        End Get
-        Set(value As Boolean)
-            _dataFileInProjectDir = value
-            If _dataFileInProjectDir = True Then
-                chkProjectDir.Checked = True
-            Else
-                chkProjectDir.Checked = False
-            End If
-        End Set
-    End Property
+    'Private _dataFileInProjectDir As Boolean = True 'If True, the DataFile of a Hybrid Project will be placed in the Project Directory
+    'Property DataFileInProjectDir As Boolean
+    '    Get
+    '        Return _dataFileInProjectDir
+    '    End Get
+    '    Set(value As Boolean)
+    '        _dataFileInProjectDir = value
+    '        If _dataFileInProjectDir = True Then
+    '            chkProjectDir.Checked = True
+    '        Else
+    '            chkProjectDir.Checked = False
+    '        End If
+    '    End Set
+    'End Property
 
 #End Region 'Properties ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -117,11 +117,11 @@
                            <ProjectFileDir><%= ProjectFileDir %></ProjectFileDir>
                            <HybridProjectDir><%= HybridProjectDir %></HybridProjectDir>
                            <DataFileDir><%= DataFileDir %></DataFileDir>
-                           <DataFileInProjectDir><%= DataFileInProjectDir %></DataFileInProjectDir>
                            <ProjectType><%= ProjectType %></ProjectType>
                            <!---->
                        </FormSettings>
 
+        '                           <DataFileInProjectDir><%= DataFileInProjectDir %></DataFileInProjectDir>
         'Dim SettingsName As String = ApplicationSummary.Name & "_" & "FormSettings_" & Me.Text & ".xml"
         'Dim SettingsFileName As String = "Formsettings_" & ApplicationName & "_" & Me.Text & ".xml"
         Dim SettingsFileName As String = "FormSettings_" & ApplicationName & "_" & Me.Text & ".xml"
@@ -198,16 +198,16 @@
             DataFileDir = Settings.<FormSettings>.<DataFileDir>.Value
         End If
 
-        If Settings.<FormSettings>.<DataFileInProjectDir>.Value = Nothing Then
-            'Form setting not saved.
-        Else
-            Select Case Settings.<FormSettings>.<DataFileInProjectDir>.Value
-                Case "true"
-                    DataFileInProjectDir = True
-                Case "false"
-                    DataFileInProjectDir = False
-            End Select
-        End If
+        'If Settings.<FormSettings>.<DataFileInProjectDir>.Value = Nothing Then
+        '    'Form setting not saved.
+        'Else
+        '    Select Case Settings.<FormSettings>.<DataFileInProjectDir>.Value
+        '        Case "true"
+        '            DataFileInProjectDir = True
+        '        Case "false"
+        '            DataFileInProjectDir = False
+        '    End Select
+        'End If
 
         If Settings.<FormSettings>.<ProjectType>.Value = Nothing Then
             'Form setting not saved.
@@ -224,12 +224,45 @@
                     ChangeProjectType()
             End Select
         End If
-
+        CheckFormPos()
 
         'Else
         ''Settings file not found.
         'End If
 
+    End Sub
+
+    Private Sub CheckFormPos()
+        'Check that the form can be seen on a screen.
+
+        Dim MinWidthVisible As Integer = 192 'Minimum number of X pixels visible. The form will be moved if this many form pixels are not visible.
+        Dim MinHeightVisible As Integer = 64 'Minimum number of Y pixels visible. The form will be moved if this many form pixels are not visible.
+
+        Dim FormRect As New System.Drawing.Rectangle(Me.Left, Me.Top, Me.Width, Me.Height)
+        Dim WARect As System.Drawing.Rectangle = System.Windows.Forms.Screen.GetWorkingArea(FormRect) 'The Working Area rectangle - the usable area of the screen containing the form.
+
+        ''Check if the top of the form is less than zero:
+        'If Me.Top < 0 Then Me.Top = 0
+
+        'Check if the top of the form is above the top of the Working Area:
+        If Me.Top < WARect.Top Then
+            Me.Top = WARect.Top
+        End If
+
+        'Check if the top of the form is too close to the bottom of the Working Area:
+        If (Me.Top + MinHeightVisible) > (WARect.Top + WARect.Height) Then
+            Me.Top = WARect.Top + WARect.Height - MinHeightVisible
+        End If
+
+        'Check if the left edge of the form is too close to the right edge of the Working Area:
+        If (Me.Left + MinWidthVisible) > (WARect.Left + WARect.Width) Then
+            Me.Left = WARect.Left + WARect.Width - MinWidthVisible
+        End If
+
+        'Check if the right edge of the form is too close to the left edge of the Working Area:
+        If (Me.Left + Me.Width - MinWidthVisible) < WARect.Left Then
+            Me.Left = WARect.Left - Me.Width + MinWidthVisible
+        End If
     End Sub
 
 #End Region 'Process XML Files ---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -245,6 +278,26 @@
 
     Private Sub frmNewProject_Load(sender As Object, e As EventArgs) Handles Me.Load
         rbProjectDir.Checked = True
+
+        'Set Up Hybrid Project options:
+        txtHPSettingsName.Text = "Settings"
+        cmbHPSettingsType.Items.Clear()
+        cmbHPSettingsType.Items.Add("Directory")
+        cmbHPSettingsType.Items.Add("Archive")
+        cmbHPSettingsType.SelectedIndex = 0
+
+        txtHPDataName.Text = "Data"
+        cmbHPDataType.Items.Clear()
+        cmbHPDataType.Items.Add("Directory")
+        cmbHPDataType.Items.Add("Archive")
+        cmbHPDataType.SelectedIndex = 1
+
+        txtHPSystemName.Text = "System"
+        cmbHPSystemType.Items.Clear()
+        cmbHPSystemType.Items.Add("Directory")
+        cmbHPSystemType.Items.Add("Archive")
+        cmbHPSystemType.SelectedIndex = 1
+
     End Sub
 
 
@@ -364,6 +417,72 @@
 
 
         ElseIf TabControl1.SelectedTab Is TabPage3 Then 'A new hybrid project will be created. ------------------------------------------------------------
+            'Dim ProjectPath As String = txtHPDirectoryPath.Text 'The new project directory will be created in this directory.
+            ''Check if the ProjectPath exists:
+            'If System.IO.Directory.Exists(ProjectPath) Then
+            '    'ProjectPath exists.
+            'Else
+            '    RaiseEvent CreateProjectError("The new project cannot be created. The specified directory does not exist: " & ProjectPath)
+            '    Exit Sub
+            'End If
+
+            'Dim NewProjectDirectoryName As String = txtHPDirectoryName.Text 'The name of the new project directory.
+            'Dim NewProjectDirectoryPath As String = ProjectPath & "\" & NewProjectDirectoryName
+            ''Check if the NewProjectDirectoryPath already exists:
+            'If System.IO.Directory.Exists(NewProjectDirectoryPath) Then
+            '    RaiseEvent CreateProjectError("The new project cannot be created. The specified new project directory already exists: " & NewProjectDirectoryPath)
+            '    Exit Sub
+            'Else
+            '    System.IO.Directory.CreateDirectory(NewProjectDirectoryPath) 'The new project directory has been created.
+            'End If
+
+            ''Create the Data File: --------------------------------------------------------------------------------------------------------------------------------
+            'Dim NewDataFileName As String 'The name of the new project file.
+            'Dim NewDataFilePath As String
+            'Dim DataFileDirectory As String = txtDataFileDirectory.Text 'The new project file will be created in this directory.
+            ''Check if the DataFileDirectory exists:
+            'If System.IO.Directory.Exists(DataFileDirectory) Then
+            '    'ProjectPath exists.
+            '    NewDataFileName = txPDataFileName.Text 'The name of the new project file.
+            '    NewDataFilePath = DataFileDirectory & "\" & NewDataFileName & ".AdvlData"
+            '    'Check if the NewDataFilePath already exists:
+            '    If System.IO.Directory.Exists(NewDataFilePath) Then
+            '        RaiseEvent CreateProjectError("The new project cannot be created. The specified new project file already exists: " & NewDataFilePath)
+            '        Exit Sub
+            '    Else
+            '        Dim Zip As New ZipComp
+            '        Zip.NewArchivePath = NewDataFilePath
+            '        Zip.CreateArchive() 'The new data file has been created.
+            '    End If
+            'Else
+            '    RaiseEvent CreateProjectError("The new data file cannot be created. The specified directory does not exist: " & DataFileDirectory)
+            '    DataFileDirectory = ""
+            '    NewDataFileName = ""
+            '    NewDataFilePath = ""
+            '    'The new hybrid project will be created without a data file.
+            'End If
+
+            'NewProject.Type = Project.Types.Hybrid 'ProjectInfo.Types.Hybrid
+            'NewProject.Path = NewProjectDirectoryPath '29Jul18
+            'NewProject.Name = txtProjectName.Text
+            'NewProject.Description = txtProjectDescription.Text
+            'NewProject.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")
+
+            ''Added 24Aug18:
+            'Dim IDString As String = NewProject.Name & " " & Format(NewProject.CreationDate, "d-MMM-yyyy H:mm:ss")
+            'NewProject.ID = IDString.GetHashCode
+
+            'NewProject.SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+            'NewProject.SettingsLocn.Path = NewProjectDirectoryPath
+            'NewProject.DataLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
+            'NewProject.DataLocn.Path = NewDataFilePath
+            'NewProject.Author.Name = txtAuthorName.Text
+            'NewProject.Author.Description = txtAuthorDescription.Text
+            'NewProject.Author.Contact = txtAuthorContact.Text
+            'NewProject.Usage.FirstUsed = NewProject.CreationDate
+            'NewProject.Usage.LastUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
+
+
             Dim ProjectPath As String = txtHPDirectoryPath.Text 'The new project directory will be created in this directory.
             'Check if the ProjectPath exists:
             If System.IO.Directory.Exists(ProjectPath) Then
@@ -383,56 +502,142 @@
                 System.IO.Directory.CreateDirectory(NewProjectDirectoryPath) 'The new project directory has been created.
             End If
 
-            'Create the Data File: --------------------------------------------------------------------------------------------------------------------------------
-            Dim NewDataFileName As String 'The name of the new project file.
-            Dim NewDataFilePath As String
-            Dim DataFileDirectory As String = txtDataFileDirectory.Text 'The new project file will be created in this directory.
-            'Check if the DataFileDirectory exists:
-            If System.IO.Directory.Exists(DataFileDirectory) Then
-                'ProjectPath exists.
-                NewDataFileName = txtDataFileName.Text 'The name of the new project file.
-                NewDataFilePath = DataFileDirectory & "\" & NewDataFileName & ".AdvlData"
-                'Check if the NewDataFilePath already exists:
-                If System.IO.Directory.Exists(NewDataFilePath) Then
-                    RaiseEvent CreateProjectError("The new project cannot be created. The specified new project file already exists: " & NewDataFilePath)
-                    Exit Sub
-                Else
-                    'System.IO.Directory.CreateDirectory(NewProjectFilePath) 'The new project directory has been created.
-                    Dim Zip As New ZipComp
-                    Zip.NewArchivePath = NewDataFilePath
-                    Zip.CreateArchive() 'The new data file has been created.
-                End If
-            Else
-                RaiseEvent CreateProjectError("The new data file cannot be created. The specified directory does not exist: " & DataFileDirectory)
-                'Exit Sub
-                DataFileDirectory = ""
-                NewDataFileName = ""
-                NewDataFilePath = ""
-                'The new hybrid project will be created without a data file.
-            End If
+            'OK to create the new Hybrid project:
+            'Dim NewProject As New ADVL_Utilities_Library_1.Project 'This object stores information about the selected project. THIS IS DECLARED AT THE START OF THE FORM CODE!
 
-            NewProject.Type = Project.Types.Hybrid 'ProjectInfo.Types.Hybrid
-            NewProject.Path = NewProjectDirectoryPath '29Jul18
+            NewProject.Type = Project.Types.Hybrid
+            NewProject.Path = NewProjectDirectoryPath
+            'NewProject.RelativePath = txtHybridProjectRelativePath.Text
             NewProject.Name = txtProjectName.Text
             NewProject.Description = txtProjectDescription.Text
             NewProject.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")
 
-            'Added 24Aug18:
             Dim IDString As String = NewProject.Name & " " & Format(NewProject.CreationDate, "d-MMM-yyyy H:mm:ss")
             NewProject.ID = IDString.GetHashCode
 
-            NewProject.SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
-            NewProject.SettingsLocn.Path = NewProjectDirectoryPath
-            NewProject.DataLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
-            NewProject.DataLocn.Path = NewDataFilePath
+            'Set up the settings location:
+            If Trim(txtHPSettingsName.Text) = "" Then
+                txtHPSettingsName.Text = "Settings"
+            End If
+            If cmbHPSettingsType.SelectedItem.ToString = "Directory" Then
+                'Set up the Settings relative location:
+                NewProject.SettingsRelLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.SettingsRelLocn.Path = "\" & Trim(txtHPSettingsName.Text)
+                'Set up the Settings location:
+                NewProject.SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.SettingsLocn.Path = NewProjectDirectoryPath & NewProject.SettingsRelLocn.Path
+                'Create the Settings Directory:
+                System.IO.Directory.CreateDirectory(NewProject.SettingsLocn.Path)
+            ElseIf cmbHPSettingsType.SelectedItem.ToString = "Archive" Then
+                'Set up the Settings relative location:
+                NewProject.SettingsRelLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
+                NewProject.SettingsRelLocn.Path = "\" & Trim(txtHPSettingsName.Text) & ".zip"
+                'Set up the Settings location:
+                NewProject.SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
+                NewProject.SettingsLocn.Path = NewProjectDirectoryPath & NewProject.SettingsRelLocn.Path
+                'Create the Settings Archive:
+                Dim Zip As New ADVL_Utilities_Library_1.ZipComp
+                Zip.NewArchivePath = NewProject.SettingsLocn.Path
+                Zip.CreateArchive() 'The new project file has been created.
+            Else 'Unknown settings location type.
+                'Message.AddWarning("Unknown settings location type: " & cmbHPSettingsType.SelectedItem.ToString & vbCrLf)
+                RaiseEvent CreateProjectError("Unknown settings location type: " & cmbHPSettingsType.SelectedItem.ToString & vbCrLf)
+                'Message.AddWarning("A settings directory location will be created." & vbCrLf)
+                RaiseEvent CreateProjectError("A settings directory location will be created." & vbCrLf)
+                'Set up the Settings relative location:
+                NewProject.SettingsRelLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.SettingsRelLocn.Path = "\" & Trim(txtHPSettingsName.Text)
+                'Set up the Settings location:
+                NewProject.SettingsLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.SettingsLocn.Path = NewProjectDirectoryPath & NewProject.SettingsRelLocn.Path
+                'Create the Settings Directory:
+                System.IO.Directory.CreateDirectory(NewProject.SettingsLocn.Path)
+            End If
+
+            'Set up the Data Location:
+            If Trim(txtHPDataName.Text) = "" Then
+                txtHPDataName.Text = "Data"
+            End If
+            If cmbHPDataType.SelectedItem.ToString = "Directory" Then
+                'Set up the Data relative location:
+                NewProject.DataRelLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.DataRelLocn.Path = "\" & Trim(txtHPDataName.Text)
+                'Set up the Data location:
+                NewProject.DataLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.DataLocn.Path = NewProjectDirectoryPath & NewProject.DataRelLocn.Path
+                'Create the Data Directory:
+                System.IO.Directory.CreateDirectory(NewProject.DataLocn.Path)
+            ElseIf cmbHPDataType.SelectedItem.ToString = "Archive" Then
+                'Set up the Data relative location:
+                NewProject.DataRelLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
+                NewProject.DataRelLocn.Path = "\" & Trim(txtHPDataName.Text) & ".zip"
+                'Set up the Data location:
+                NewProject.DataLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
+                NewProject.DataLocn.Path = NewProjectDirectoryPath & NewProject.DataRelLocn.Path
+                'Create the Data Archive:
+                Dim Zip As New ADVL_Utilities_Library_1.ZipComp
+                Zip.NewArchivePath = NewProject.DataLocn.Path
+                Zip.CreateArchive() 'The new project file has been created.
+            Else 'Unknown Data location type.
+                'Message.AddWarning("Unknown settings location type: " & cmbHPDataType.SelectedItem.ToString & vbCrLf)
+                RaiseEvent CreateProjectError("Unknown settings location type: " & cmbHPDataType.SelectedItem.ToString & vbCrLf)
+                'Message.AddWarning("A settings directory location will be created." & vbCrLf)
+                RaiseEvent CreateProjectError("A settings directory location will be created." & vbCrLf)
+                'Set up the Data relative location:
+                NewProject.DataRelLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.DataRelLocn.Path = "\" & Trim(txtHPDataName.Text)
+                'Set up the Data location:
+                NewProject.DataLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.DataLocn.Path = NewProjectDirectoryPath & NewProject.DataRelLocn.Path
+                'Create the Data Directory:
+                System.IO.Directory.CreateDirectory(NewProject.DataLocn.Path)
+            End If
+
+            'Set up the System Location:
+            If Trim(txtHPSystemName.Text) = "" Then
+                txtHPSystemName.Text = "System"
+            End If
+            If cmbHPSystemType.SelectedItem.ToString = "Directory" Then
+                'Set up the System relative location:
+                NewProject.SystemRelLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.SystemRelLocn.Path = "\" & Trim(txtHPSystemName.Text)
+                'Set up the System location:
+                NewProject.SystemLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.SystemLocn.Path = NewProjectDirectoryPath & NewProject.SystemRelLocn.Path
+                'Create the System Directory:
+                System.IO.Directory.CreateDirectory(NewProject.SystemLocn.Path)
+            ElseIf cmbHPSystemType.SelectedItem.ToString = "Archive" Then
+                'Set up the System relative location:
+                NewProject.SystemRelLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
+                NewProject.SystemRelLocn.Path = "\" & Trim(txtHPSystemName.Text) & ".zip"
+                'Set up the System location:
+                NewProject.SystemLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Archive
+                NewProject.SystemLocn.Path = NewProjectDirectoryPath & NewProject.SystemRelLocn.Path
+                'Create the System Archive:
+                Dim Zip As New ADVL_Utilities_Library_1.ZipComp
+                Zip.NewArchivePath = NewProject.SystemLocn.Path
+                Zip.CreateArchive() 'The new project file has been created.
+            Else 'Unknown System location type.
+                'Message.AddWarning("Unknown settings location type: " & cmbHPSystemType.SelectedItem.ToString & vbCrLf)
+                RaiseEvent CreateProjectError("Unknown settings location type: " & cmbHPSystemType.SelectedItem.ToString & vbCrLf)
+                'Message.AddWarning("A settings directory location will be created." & vbCrLf)
+                RaiseEvent CreateProjectError("A settings directory location will be created." & vbCrLf)
+                'Set up the System relative location:
+                NewProject.SystemRelLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.SystemRelLocn.Path = "\" & Trim(txtHPSystemName.Text)
+                'Set up the System location:
+                NewProject.SystemLocn.Type = ADVL_Utilities_Library_1.FileLocation.Types.Directory
+                NewProject.SystemLocn.Path = NewProjectDirectoryPath & NewProject.SystemRelLocn.Path
+                'Create the System Directory:
+                System.IO.Directory.CreateDirectory(NewProject.SystemLocn.Path)
+            End If
+
             NewProject.Author.Name = txtAuthorName.Text
             NewProject.Author.Description = txtAuthorDescription.Text
             NewProject.Author.Contact = txtAuthorContact.Text
-            'NewProject.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")
-            'NewProject.LastUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
-            'NewProject.Usage.FirstUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
             NewProject.Usage.FirstUsed = NewProject.CreationDate
             NewProject.Usage.LastUsed = Format(Now, "d-MMM-yyyy H:mm:ss")
+
         Else
             'A valid project type was not selected.
             Exit Sub
@@ -588,12 +793,39 @@
 
         NewProjectSummary.CreationDate = Format(Now, "d-MMM-yyyy H:mm:ss")
 
+
+
+
         RaiseEvent NewProjectCreated(NewProjectSummary) 'Send the NewProjectSummary to the Project form.
 
         'Close the New Project form:
         SaveFormSettings() 'Save the form settings.
         Me.Close()
 
+    End Sub
+
+    Private Sub cmbHPSettingsType_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbHPSettingsType.SelectedIndexChanged
+        If cmbHPSettingsType.SelectedItem.ToString = "Archive" Then
+            Label74.Text = ".zip"
+        Else '
+            Label74.Text = ""
+        End If
+    End Sub
+
+    Private Sub cmbHPDataType_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbHPDataType.SelectedIndexChanged
+        If cmbHPDataType.SelectedItem.ToString = "Archive" Then
+            Label73.Text = ".zip"
+        Else '
+            Label73.Text = ""
+        End If
+    End Sub
+
+    Private Sub cmbHPSystemType_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbHPSystemType.SelectedIndexChanged
+        If cmbHPSystemType.SelectedItem.ToString = "Archive" Then
+            Label75.Text = ".zip"
+        Else '
+            Label75.Text = ""
+        End If
     End Sub
 
 
@@ -639,17 +871,17 @@
         ProjectDir = FolderBrowserDialog1.SelectedPath
     End Sub
 
-    Private Sub chkProjectDir_CheckedChanged(sender As Object, e As EventArgs) Handles chkProjectDir.CheckedChanged
-        If chkProjectDir.Checked Then
-            _dataFileInProjectDir = True
-            txtDataFileDirectory.Enabled = False
-            btnFindDataFileDir.Enabled = False
-        Else
-            _dataFileInProjectDir = True
-            txtDataFileDirectory.Enabled = True
-            btnFindDataFileDir.Enabled = True
-        End If
-    End Sub
+    'Private Sub chkProjectDir_CheckedChanged(sender As Object, e As EventArgs)
+    '    If chkProjectDir.Checked Then
+    '        _dataFileInProjectDir = True
+    '        txtDataFileDirectory.Enabled = False
+    '        btnFindDataFileDir.Enabled = False
+    '    Else
+    '        _dataFileInProjectDir = True
+    '        txtDataFileDirectory.Enabled = True
+    '        btnFindDataFileDir.Enabled = True
+    '    End If
+    'End Sub
 
     Private Sub btnFindProjFileDir_Click(sender As Object, e As EventArgs) Handles btnFindProjFileDir.Click
         'Select a directory to store the new project file.
@@ -665,7 +897,7 @@
         HybridProjectDir = FolderBrowserDialog1.SelectedPath
     End Sub
 
-    Private Sub btnFindDataFileDir_Click(sender As Object, e As EventArgs) Handles btnFindDataFileDir.Click
+    Private Sub btnFindDataFileDir_Click(sender As Object, e As EventArgs)
         'Select a directory to store the new hybrid project.
         FolderBrowserDialog1.SelectedPath = DataFileDir
         FolderBrowserDialog1.ShowDialog()
@@ -680,6 +912,8 @@
 
     Public Event CreateProjectError(ByVal ErrorMessage As String) 'Raise an event if there is an error while creating a new project.
     Public Event NewProjectCreated(ByVal ProjectSummary As ADVL_Utilities_Library_1.ProjectSummary) 'Raise an event to indicate that a new project has been created.
+
+
 
 #End Region 'Events -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
