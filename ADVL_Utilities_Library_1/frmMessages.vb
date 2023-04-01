@@ -1,4 +1,6 @@
-﻿Public Class frmMessages
+﻿Imports System.Windows.Forms
+
+Public Class frmMessages
 
 #Region " Variable Declarations - All the variables used in this form and this application." '-----------------------------------------------------------------------------------------------
 
@@ -112,6 +114,8 @@
 
         Dim Settings As System.Xml.Linq.XDocument
 
+        If SettingsLocn Is Nothing Then Exit Sub 'This can occur when attempting to write a message before the Message form is set up.
+
         SettingsLocn.ReadXmlData(SettingsFileName, Settings)
         'ProjectLocn.ReadXmlData(SettingsFileName, Settings)
         Debug.Print("RestoreFormSettings")
@@ -201,6 +205,9 @@
         'RestoreFormSettings()
         'Me.Text = ApplicationName & " Messages"
         Me.Text = ApplicationName & " - Messages"
+
+        btnCopyHtmlMarkup.Enabled = False
+
         RestoreFormSettings() 'Move this to after Me.Text is changed - otherwise the wrong settings file name is used!
 
         'Set up the XML Display:
@@ -361,6 +368,44 @@
         End If
     End Sub
 
+    Private Sub btnCopyHtmlMarkup_Click(sender As Object, e As EventArgs) Handles btnCopyHtmlMarkup.Click
+        'Copy the selected XML code to the Clipboard as Html markup.
+
+        Dim SelText As String = XmlDisplay.SelectedText
+        If SelText.Trim = "" Then
+            RaiseEvent ErrorMessage("No XML code has been selected." & vbCrLf)
+        Else
+            Dim SelHtml As String = XmlDisplay.XmlToHtml(SelText, False)
+            If SelHtml = "" Then
+                RaiseEvent ErrorMessage("Generated HTML code is blank!" & vbCrLf)
+            Else
+                Clipboard.SetText(SelHtml, TextDataFormat.Text)
+            End If
+        End If
+    End Sub
+
+    Private Sub TabControl1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles TabControl1.SelectedIndexChanged
+        'The SelectedIndex of TabControl1 has changed.
+        If TabControl1.SelectedIndex = 0 Then 'Messages tab selected.
+            btnCopyHtmlMarkup.Enabled = False
+        ElseIf TabControl1.SelectedIndex = 1 Then 'XMessage Instructions tab selected.
+            btnCopyHtmlMarkup.Enabled = True
+        ElseIf TabControl1.SelectedIndex = 2 Then 'Settings tab selected.
+            btnCopyHtmlMarkup.Enabled = False
+        End If
+    End Sub
+
+    Private Sub btnCopyText_Click(sender As Object, e As EventArgs) Handles btnCopyText.Click
+        'Copy the selected text.
+        If TabControl1.SelectedIndex = 0 Then 'Messages tab selected.
+            Clipboard.SetText(XmlHtmDisplay1.SelectedText, TextDataFormat.Text)
+        ElseIf TabControl1.SelectedIndex = 1 Then 'XMessage Instructions tab selected.
+            Clipboard.SetText(XmlDisplay.SelectedText, TextDataFormat.Text)
+        ElseIf TabControl1.SelectedIndex = 2 Then 'Settings tab selected.
+
+        End If
+    End Sub
+
 #End Region 'Form Methods ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -373,6 +418,10 @@
     Event XShowTextTypes()
     Event ShowXMessages(ByVal Show As Boolean)
     Event ShowSysMessages(ByVal Show As Boolean)
+
+
+
+
 
 
 

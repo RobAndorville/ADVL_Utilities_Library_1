@@ -205,7 +205,6 @@ Public Class XmlHtmDisplay
         'Debug.Print("Starting XmlHtmDisplay.XmlToRtf")
 
         If xmlDoc Is Nothing Then
-            'RaiseEvent Message("xmlDoc is nothing" & vbCrLf)
             RaiseEvent ErrorMessage("xmlDoc is nothing" & vbCrLf)
             Exit Function
         End If
@@ -387,10 +386,15 @@ Public Class XmlHtmDisplay
         'If ShowDecl is true, show the XMK declaration line.
         'Debug.Print("Starting XmlHtmDisplay.XmlToRtf - xml string version")
 
+        'RaiseEvent Message("Running XmlToRtf()" & vbCrLf)
+
         Dim xmlDoc As New System.Xml.XmlDocument
 
         Try
             xmlDoc.LoadXml(xmlText)
+
+
+
         Catch ex As Exception
             RaiseEvent ErrorMessage("Problem converting text to XML: " & vbCrLf & ex.Message & vbCrLf)
         End Try
@@ -400,6 +404,10 @@ Public Class XmlHtmDisplay
             RaiseEvent ErrorMessage("xmlDoc is nothing" & vbCrLf)
             Exit Function
         End If
+
+        'RaiseEvent Message("xmlDoc = " & vbCrLf & xmlDoc.ToString & vbCrLf) 'FOR TESTING *************************************************************
+        'RaiseEvent Message("xmlDoc = " & vbCrLf & xmlDoc.Value & vbCrLf) 'FOR TESTING *************************************************************
+        'RaiseEvent Message("xmlDoc = " & vbCrLf & xmlDoc.InnerXml.ToString & vbCrLf) 'FOR TESTING *************************************************************
 
         Try
             ' The Rtf contains 2 parts, header and content. The colortbl is a part of
@@ -468,6 +476,108 @@ Public Class XmlHtmDisplay
 
     End Function
 
+    'TRYING to write an XmlToRtf function that works when displaying an element containg a RegEx: <FileNameRegEx>(?<FileNameMatch>[\w\d]+)\.</FileNameRegex>
+    'CURRENTLY the RegEx above does not appear correctly when displayed in an XmlHtmDisplay.
+    'Public Function XmlToRtfAlt(ByRef xmlText As String, ByVal ShowDecl As Boolean) As String
+    '    'Version of the XmlToRtf function that processes an xml string instead of an XmlDocument.
+    '    'Return the RTF code corresponding to the XML string.
+    '    'If ShowDecl is true, show the XMK declaration line.
+    '    'Debug.Print("Starting XmlHtmDisplay.XmlToRtf - xml string version")
+
+    '    Dim XDoc As New System.Xml.Linq.XDocument
+
+    '    Try
+    '        'xmlDoc.LoadXml(xmlText)
+    '        XDoc = System.Xml.Linq.XDocument.Parse(xmlText)
+    '    Catch ex As Exception
+    '        RaiseEvent ErrorMessage("Problem converting text to XML: " & vbCrLf & ex.Message & vbCrLf)
+    '    End Try
+
+    '    If XDoc Is Nothing Then
+    '        RaiseEvent ErrorMessage("XDoc is nothing" & vbCrLf)
+    '        Exit Function
+    '    End If
+
+
+    '    Try
+    '        ' The Rtf contains 2 parts, header and content. The colortbl is a part of
+    '        ' the header, and the {1} will be replaced with the content.
+
+    '        Dim rtfFormat As String = "{{\rtf1\ansi\ansicpg1252\deff0\deflang1033\deflangfe2052" _
+    '                                  & "{{\fonttbl{{{0}}}}}" _
+    '                                  & "{{\colortbl ;{1}}}" _
+    '                                  & "\viewkind4\uc1\pard\lang1033" _
+    '                                  & Settings.RtfTextSettings(Settings.XTag) _
+    '                                  & "{2}}}"
+
+    '        'NOTE: TO USE Settings.RtfHeader in a Format statement, "{" characters should be replaced by "{{" characters.
+
+    '        Dim xmlRtfContent As New StringBuilder()
+
+    '        Dim I As Integer
+    '        Dim J As Integer
+    '        'For I = 0 To xmlDoc.ChildNodes().Count - 1
+    '        'For I = 0 To XDoc.DescendantNodes().Count - 1
+    '        For I = 0 To XDoc.Nodes().Count - 1
+    '            'If xmlDoc.ChildNodes(I).Attributes Is Nothing Then
+    '            '    'RaiseEvent Message("No attributes." & vbCrLf)
+    '            'End If
+
+    '            'Select Case xmlDoc.ChildNodes(I).NodeType
+    '            'Select Case XDoc.DescendantNodes(I).NodeType
+    '            Select Case XDoc.Nodes(I).NodeType
+    '                Case Xml.XmlNodeType.XmlDeclaration
+    '                    Dim XDec As System.Xml.XmlDeclaration
+    '                    'XDec = xmlDoc.ChildNodes(I)
+    '                    'XDec = XDoc.DescendantNodes(I).Value
+    '                    XDec = XDoc.Nodes(I).ElementsAfterSelf(0)
+
+    '                    'If Settings.ShowDeclaration = True Then
+    '                    If ShowDecl = True Then
+    '                        ' The constants in XMLViewerSettings are used to specify the order 
+    '                        ' in colortbl of the Rtf.
+    '                        xmlRtfContent.AppendFormat(
+    '                       "{0} <?{1} xml {2} version\cf{0} =\cf0 ""{3} {4}\cf0 "" " _
+    '                       & "{2} encoding{0} =\cf0 ""{3} {5}\cf0 ""{0} ?>\par",
+    '                       Settings.RtfTextSettings(Settings.XTag),
+    '                       Settings.RtfTextSettings(Settings.XElement),
+    '                       Settings.RtfTextSettings(Settings.XAttributeKey),
+    '                       Settings.RtfTextSettings(Settings.XAttributeValue),
+    '                       XDec.Version,
+    '                       XDec.Encoding)
+    '                    End If
+
+    '                Case Xml.XmlNodeType.Comment
+    '                    xmlRtfContent.AppendFormat(
+    '                    "{0}{1} <!--{2} {3}{1} -->\par",
+    '                    "",
+    '                    Settings.RtfTextSettings(Settings.XTag),
+    '                    Settings.RtfTextSettings(Settings.XComment),
+    '                    'xmlDoc.ChildNodes(I).Value)
+    '                    'XDoc.DescendantNodes(I).ElementsAfterSelf)
+    '                    XDoc.Nodes(I).ElementsAfterSelf(0)
+
+    '                Case Xml.XmlNodeType.Element
+    '                    'This should be the root element!
+    '                    ' Get the Rtf of the root element.
+
+    '                    'Dim rootRtfContent As String = ProcessNode(xmlDoc.ChildNodes(I), 0, Settings)
+    '                    'Dim rootRtfContent As String = ProcessNode(XDoc.DescendantNodes(I), 0, Settings)
+    '                    'Dim rootRtfContent As String = ProcessNode(XDoc.Nodes(I), 0, Settings)
+    '                    Dim rootRtfContent As String = ProcessNodeAlt(XDoc.Nodes(I), 0, Settings)
+    '                    xmlRtfContent.Append(rootRtfContent)
+    '            End Select
+    '        Next
+
+    '        Return String.Format(rtfFormat, Settings.RtfFontTableFormatString(), Settings.RtfColorTableFormatString(), xmlRtfContent.ToString())
+
+    '    Catch ex As Exception
+    '        RaiseEvent ErrorMessage("XmlToRtf error: " & ex.Message & vbCrLf)
+    '    End Try
+
+
+    'End Function
+
     'Private Function ProcessNode(ByVal myNode As System.Xml.XmlNode, ByVal level As Integer, ByRef Settings As XmlDisplaySettings) As String
     Private Function ProcessNode(ByVal myNode As System.Xml.XmlNode, ByVal level As Integer, ByRef Settings As XmlHtmDisplaySettings) As String
         ' This viewer does not support the Xml file that has a Namespace.
@@ -517,6 +627,18 @@ Public Class XmlHtmDisplay
                 childElementsRtfContent.Append(childElementRtfContent)
             End If
 
+            'Process CDATA node:
+        ElseIf myNode.NodeType = Xml.XmlNodeType.CDATA Then
+
+            Dim charIndent As New String(" "c, Settings.XIndentSpaces * (level + 1)) 'The characters are displayed with an extra indent.
+
+            elementRtfFormat = String.Format("{0}{1} <![CDATA[\line {4}{2} {3}{1} \line{0}]]>\par",
+              indent,
+              Settings.RtfTextSettings(Settings.XTag),
+              Settings.RtfTextSettings(Settings.XValue),
+              myNode.Value.Trim().Replace("\", "\\").Replace(vbCrLf, "\line " & charIndent),
+              charIndent)
+
         ElseIf myNode.NodeType = Xml.XmlNodeType.Element Then
             'RaiseEvent Message("ProcessNode: Location 3" & vbCrLf)
 
@@ -540,6 +662,12 @@ Public Class XmlHtmDisplay
                           "{0} {1}",
                           Settings.RtfTextSettings(Settings.XValue),
                           myNode.ChildNodes(0).Value.Trim().Replace("\", "\\").Replace(vbCrLf, "\line "))
+                        'Beep()
+
+                        'myNode.ChildNodes(0).Value.Trim().Replace("\", "\\").Replace(vbCrLf, "\line "))
+                        'myNode.ChildNodes(0).Value.Trim().Replace("\", "\\").Replace(vbCrLf, "\line ").Replace("<", " <"))
+                        'myNode.ChildNodes(0).Value.Trim().Replace("\", "\\").Replace(vbCrLf, "\line ").Replace("<", "\<"))
+                        'myNode.ChildNodes(0).Value.Trim().Replace("\", "\\").Replace(vbCrLf, "\line ").Replace("<", "&lt;").Replace(">", "&gt;")) 'Doesnt work: <FileNameRegEx>(?&lt;FileNameMatch&gt;[\w\d]+)\.</FileNameRegEx>
                         'NOTE: "\\" is used to display a "\" in rich text format. "\line " is used for a new line in rich text format.
                         'The Replace functions in the last line apply these changes to produce the correct rich text format.
 
@@ -601,6 +729,987 @@ Public Class XmlHtmDisplay
         Return String.Format(elementRtfFormat, attributesRtfContent, childElementsRtfContent)
 
     End Function
+
+    ''The alternative version of ProcessNode: uses System.Xml.Linq.XDocument foramt instead of System.Xml.XmlDocument
+    ''Private Function ProcessNodeAlt(ByVal myNode As System.Xml.XmlNode, ByVal level As Integer, ByRef Settings As XmlHtmDisplaySettings) As String
+    'Private Function ProcessNodeAlt(ByVal myNode As System.Xml.Linq.XNode, ByVal level As Integer, ByRef Settings As XmlHtmDisplaySettings) As String
+    '    ' This viewer does not support the Xml file that has a Namespace.
+
+    '    'If myNode.NodeType = Xml.XmlNodeType.Element Then
+    '    '    If Not String.IsNullOrEmpty(myNode.NamespaceURI) Then
+    '    '        Throw New ApplicationException(
+    '    '            "The Xml viewer does not support the Xml file that has Namespace.")
+    '    '    End If
+    '    'End If
+
+    '    Dim elementRtfFormat As String = String.Empty
+    '    Dim childElementsRtfContent As New StringBuilder()
+    '    Dim attributesRtfContent As New StringBuilder()
+
+    '    'Set the indent spaces.
+    '    Dim indent As New String(" "c, Settings.XIndentSpaces * level)
+
+    '    If myNode.NodeType = Xml.XmlNodeType.XmlDeclaration Then '-------------------------------------------------------------1
+    '        'NOTE: ProcessElement should not find any XML Declarations!
+    '    ElseIf myNode.NodeType = Xml.XmlNodeType.Comment Then
+    '        elementRtfFormat = String.Format("{0}{1} <!--{2} {3}{1} -->\par",
+    '                      indent,
+    '                      Settings.RtfTextSettings(Settings.XTag),
+    '                      Settings.RtfTextSettings(Settings.XComment),
+    '                      myNode.ElementsAfterSelf(0))
+    '        '      myNode.Value)
+
+    '        'If myNode.NextSibling Is Nothing Then
+    '        If myNode.NextNode Is Nothing Then
+    '        Else
+    '            'Dim childElementRtfContent As String = ProcessNode(myNode.NextSibling, level, Settings)
+    '            Dim childElementRtfContent As String = ProcessNodeAlt(myNode.NextNode, level, Settings)
+    '            childElementsRtfContent.Append(childElementRtfContent)
+    '        End If
+
+    '        'Process CDATA node:
+    '    ElseIf myNode.NodeType = Xml.XmlNodeType.CDATA Then
+
+    '        Dim charIndent As New String(" "c, Settings.XIndentSpaces * (level + 1)) 'The characters are displayed with an extra indent.
+
+    '        elementRtfFormat = String.Format("{0}{1} <![CDATA[\line {4}{2} {3}{1} \line{0}]]>\par",
+    '          indent,
+    '          Settings.RtfTextSettings(Settings.XTag),
+    '          Settings.RtfTextSettings(Settings.XValue),
+    '          myNode.ElementsAfterSelf(0).ToString.Trim().Replace("\", "\\").Replace(vbCrLf, "\line " & charIndent),
+    '          charIndent)
+    '        '              myNode.Value.Trim().Replace("\", "\\").Replace(vbCrLf, "\line " & charIndent),
+    '    ElseIf myNode.NodeType = Xml.XmlNodeType.Element Then
+    '        'RaiseEvent Message("ProcessNode: Location 3" & vbCrLf)
+
+    '        'If the element has child elements or value, then add the element to the Rtf.
+    '        '{{0}} will be replaced with the attributes and {{1}} will be replaced
+    '        'with the child elements or value.
+    '        'If myNode.HasChildNodes Then 'One or more child nodes. --------------------------------------------------------------
+    '        If myNode.NodesAfterSelf.Count > 0 Then 'One or more child nodes. --------------------------------------------------------------
+    '            'If myNode.ChildNodes.Count = 1 Then '-------------------------------------------------------------------------------
+    '            If myNode.NodesAfterSelf.Count = 1 Then '-------------------------------------------------------------------------------
+    '                'If myNode.ChildNodes(0).NodeType = Xml.XmlNodeType.Text Then '-----------------------------------------------------
+    '                If myNode.NodesAfterSelf(0).NodeType = Xml.XmlNodeType.Text Then '-----------------------------------------------------
+    '                    elementRtfFormat = String.Format("{0}{1} <{2} {3}{{0}}{1} >" & "{{1}}" & "{1} </{2} {3}{1} >\par",
+    '                      indent,
+    '                      Settings.RtfTextSettings(Settings.XTag),
+    '                      Settings.RtfTextSettings(Settings.XElement),
+    '                      myNode.Name)
+    '                    'myNode.Name)
+
+    '                    childElementsRtfContent.AppendFormat(
+    '                      "{0} {1}",
+    '                      Settings.RtfTextSettings(Settings.XValue),
+    '                      myNode.ChildNodes(0).Value.Trim().Replace("\", "\\").Replace(vbCrLf, "\line "))
+    '                    'NOTE: "\\" is used to display a "\" in rich text format. "\line " is used for a new line in rich text format.
+    '                    'The Replace functions in the last line apply these changes to produce the correct rich text format.
+
+    '                Else 'Non-text child node.
+
+    '                    'TESTING CODE TO HANDLE A NON-TEXT NODE: =======================================================================================
+    '                    elementRtfFormat = String.Format("{0}{1} <{2} {3}{{0}}{1} >\par" & "{{1}}" & "{0}{1} </{2} {3}{1} >\par",
+    '                          indent,
+    '                          Settings.RtfTextSettings(Settings.XTag),
+    '                          Settings.RtfTextSettings(Settings.XElement),
+    '                          myNode.Name)
+    '                    'Dim childElementRtfContent As String = ProcessNode(myNode.ChildNodes(0), level + 1, Settings)
+    '                    Dim childElementRtfContent As String = ProcessNode(myNode.ChildNodes(0), level + 1, Settings)
+    '                    childElementsRtfContent.Append(childElementRtfContent)
+    '                    'END OF TEST CODE ==============================================================================================================
+
+    '                End If '-----------------------------------------------------------------------------------------------------------
+    '            Else 'Two or more child nodes.
+    '                elementRtfFormat = String.Format("{0}{1} <{2} {3}{{0}}{1} >\par" & "{{1}}" & "{0}{1} </{2} {3}{1} >\par",
+    '                      indent,
+    '                      Settings.RtfTextSettings(Settings.XTag),
+    '                      Settings.RtfTextSettings(Settings.XElement),
+    '                      myNode.Name)
+    '                For Each Node In myNode.ChildNodes
+    '                    Dim childElementRtfContent As String = ProcessNode(Node, level + 1, Settings)
+    '                    childElementsRtfContent.Append(childElementRtfContent)
+    '                Next
+
+    '            End If '------------------------------------------------------------------------------------------------------------
+    '        Else
+    '            elementRtfFormat = String.Format("{0}{1} <{2} {3}{{0}}{1} />\par",
+    '                                 indent,
+    '                                 Settings.RtfTextSettings(Settings.XTag),
+    '                                 Settings.RtfTextSettings(Settings.XElement),
+    '                                 myNode.Name)
+    '        End If '-------------------------------------------------------------------------------------------------------------
+    '        ' Construct the Rtf of the attributes.
+    '        If myNode.Attributes.Count > 0 Then
+    '            'For Each attribute As XAttribute In myNode.Attributes
+    '            For Each attribute As Xml.XmlAttribute In myNode.Attributes
+    '                Dim attributeRtfContent As String =
+    '                    String.Format(" {0} {3}{1} =\cf0 ""{2} {4}\cf0 """,
+    '                                  Settings.RtfTextSettings(Settings.XAttributeKey),
+    '                                  Settings.RtfTextSettings(Settings.XTag),
+    '                                  Settings.RtfTextSettings(Settings.XAttributeValue),
+    '                                  attribute.Name,
+    '                                  attribute.Value)
+
+    '                attributesRtfContent.Append(attributeRtfContent)
+    '            Next attribute
+    '            attributesRtfContent.Append(" ")
+    '        Else
+    '            'RaiseEvent Message("No Attributes. " & vbCrLf & vbCrLf)
+    '        End If
+
+    '    End If '---------------------------------------------------------------------------------------------------------------
+
+    '    Return String.Format(elementRtfFormat, attributesRtfContent, childElementsRtfContent)
+    'End Function
+
+
+    Public Function FixXmlText(XmlText As String) As String
+        'Fix an XML string so that it can be loaded correcly using the LoadXml method of a System.Xml.XmlDocument
+        'Replace "<" in an element value with "&lt;"
+        'Replace ">" in an element value with "&gt;"
+
+        'XML Terminology:
+        'XML declaration <?xml version="1.0" encoding="UTF-8"?>
+        'Comments begin with <!-- and end with -->.
+        'Start-tag <Element>
+        'End-tag </Element>
+        'Empty-element tag (Element />
+        'Content  The characters between the start-tag and end-tag, if any, are the element's content, and may contain markup, including other elements, which are called child elements.
+        'Predefined entities:
+        '&lt; represents "<";
+        '&gt; represents ">";
+        '&amp; represents "&";
+        '&apos; represents "'";
+        '&quot; represents '"'.
+
+        Dim FixedXmlText As New System.Text.StringBuilder
+        Dim StartPos As Integer
+        Dim EndPos As Integer
+        Dim ScanPos As Integer = 0
+        Dim LastPos As Integer = XmlText.Length
+
+        If XmlText.Trim.StartsWith("<?xml") Then
+            StartPos = XmlText.IndexOf("<?xml")
+            EndPos = XmlText.IndexOf("?>", StartPos)
+            FixedXmlText.Append(XmlText.Substring(StartPos, EndPos - StartPos + 2))
+            ScanPos = EndPos + 2
+        End If
+        FixedXmlText.Append(ProcessContent(XmlText, ScanPos, LastPos))
+        Return FixedXmlText.ToString
+    End Function
+
+
+    Private Function ProcessContent(ByRef XmlText As String, FromIndex As Integer, ToIndex As Integer) As String
+        'Process the XML content in the XmlText string between FromIndex and ToIndex.
+        'THIS VERSION SEARCHES FOR MATCHING End-Tags
+        '
+        'Content alternatives:
+        'Content only
+        '<!---->                                        One or more comments
+        '<Element />                                    One or more empty element tags
+        '<Element></Element>                            One or more empty elements
+        '<Element>Content</Element>                     One or more elements containing content
+        '<Element>                                      One or more elements containing child elements
+        '  <ChildElement>ChildContent</ChildElement>
+        '</Element>
+
+        Dim StartScan As Integer = FromIndex 'The start of the current content scan
+        Dim ScanIndex As Integer = FromIndex 'The current scan position
+        Dim LtCharIndex As Integer 'The index position of the next < character
+        Dim GtCharIndex As Integer 'The index position of the next > character
+        Dim FixedXmlText As New System.Text.StringBuilder 'This is used to build the fixed XML text for the content if it contains XML tags
+        Dim StartTagText As String = "" 'The text of a found Start-tag. The text may include attributes following the name.
+        Dim EndNameIndex As Integer 'The index position of the end of the StartTagName. If the StartTagText contains attributes, the StartTagName will be followed by a space then the attributes.
+        Dim StartTagName As String = "" 'The name of a found Start-tag
+        Dim EndTagIndex As Integer 'The index of an End-tag
+        Dim StartTagCount As Integer = 1 'The nesting level of the StartTag
+        Dim EndTagCount As Integer = 1 'The nesting level of the EndTag
+        Dim StartSearch As Integer 'StartSearch index used for counting other Start-Tags named StartTagName
+        Dim NextSearch As Integer 'Search for the next Start-Tag named StartTagName
+        Dim SearchIndex As Integer
+        Dim Match As Boolean
+        Dim TagLevelMatch As Boolean 'If True, the Start-Tag and End-Tag have matching levels.
+        Dim SearchEndTagFrom As Integer 'The index to start the End-tag search from
+        Dim ElementFound As Boolean = False 'True if an Element or a Comment was found.
+        Dim EndSearch As Boolean 'If True, End the Search to find the End-Tag
+
+        'While ScanIndex <= ToIndex
+        While ScanIndex < ToIndex
+            'Find the first pair of < > characters
+            LtCharIndex = XmlText.IndexOf("<", ScanIndex) 'Find the start of the next Element
+            If LtCharIndex = -1 Then '< char not found
+                If ToIndex - ScanIndex = 2 Then
+                    If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+                        Exit While
+                    End If
+                End If
+                'The characters between FromIndex and ToIndex are Content
+                'NOTE: StartScan and FromIndex should be the same here: StartScan only advances if the Content contains one or more comments or elements.
+                Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+                FixedXmlText.Append(Content)
+                ScanIndex = ToIndex + 1
+            ElseIf LtCharIndex >= ToIndex Then
+                'Check if the remaining characters are CrLf:
+                If ToIndex - ScanIndex = 2 Then
+                    If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+                        Exit While
+                    End If
+                End If
+                'Check if the remaining characters are blank:
+                If XmlText.Substring(ScanIndex, ToIndex - ScanIndex).Trim = "" Then
+                    Exit While
+                End If
+                'Check if the remaining characters with blanks removed are CrLf:
+                'Check if the remaining characters are blank:
+                If XmlText.Substring(ScanIndex, ToIndex - ScanIndex).Trim = vbCrLf Then
+                    Exit While
+                End If
+                'The characters between FromIndex and ToIndex are Content
+                'NOTE: StartScan and FromIndex should be the same here
+                Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+                FixedXmlText.Append(Content)
+                ScanIndex = ToIndex + 1
+            Else
+                'The < character is within the Content range
+                'Search for a > character
+                GtCharIndex = XmlText.IndexOf(">", LtCharIndex + 1)
+                If GtCharIndex = -1 Then '> char not found
+                    If ToIndex - ScanIndex = 2 Then
+                        If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+                            Exit While
+                        End If
+                    End If
+                    'The characters between FromIndex and ToIndex are Content
+                    'NOTE: StartScan and FromIndex should be the same here
+                    Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+                    FixedXmlText.Append(Content)
+                    ScanIndex = ToIndex + 1
+                ElseIf GtCharIndex > ToIndex Then
+                    If ToIndex - ScanIndex = 2 Then
+                        If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+                            Exit While
+                        End If
+                    End If
+                    'The characters between FromIndex and ToIndex are Content
+                    'NOTE: StartScan and FromIndex should be the same here
+                    Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+                    FixedXmlText.Append(Content)
+                    ScanIndex = ToIndex + 1
+                Else
+                    'A start-tagChar and end-tagChar <> pair has been found.
+                    'The <> characters will contain a comment, an element name or be part of the element content.
+                    If XmlText.Substring(LtCharIndex, 4) = "<!--" Then 'This is the start of a comment
+                        If XmlText.Substring(GtCharIndex - 2, 3) = "-->" Then 'This is the end of a comment ---------------------  <--Comment-->  ---------------------------------
+                            FixedXmlText.Append(XmlText.Substring(LtCharIndex, GtCharIndex - LtCharIndex + 1) & vbCrLf) 'Add the Comment to the Fixed XML Text
+                            ScanIndex = GtCharIndex + 1
+                            StartScan = GtCharIndex + 1
+                        Else
+                            'This is not a comment.
+                            'The whole content must be the content of a single element
+                            'The characters between FromIndex and ToIndex are Content
+                            'NOTE: StartScan and FromIndex should be the same here
+                            Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+                            FixedXmlText.Append(Content)
+                            ScanIndex = ToIndex + 1
+                        End If
+                    Else 'This is a start-tag, empty element or content of a single element
+                        If XmlText.Chars(GtCharIndex - 1) = "/" Then 'This is an empty element
+                            FixedXmlText.Append(XmlText.Substring(LtCharIndex, GtCharIndex - LtCharIndex + 1))
+                            ScanIndex = GtCharIndex + 1
+                            StartScan = GtCharIndex + 1
+                        Else
+                            StartTagCount = 1
+                            EndTagCount = 0
+                            StartSearch = GtCharIndex + 1
+                            EndSearch = False
+                            While StartTagCount > EndTagCount And EndSearch = False
+                                'Continue searching for StartTag-EndTag tag pairs with the name StartTagName until matching tags are found (StartTagCount = EndTagCount).
+                                StartTagText = XmlText.Substring(LtCharIndex + 1, GtCharIndex - LtCharIndex - 1) 'This is the text of the Start-tag
+                                EndNameIndex = StartTagText.IndexOf(" ")
+                                If EndNameIndex = -1 Then 'There is no space in StartTagText so it contains no attributes.
+                                    StartTagName = StartTagText
+                                Else
+                                    StartTagName = StartTagText.Substring(0, EndNameIndex)
+                                End If
+                                'Find the matching End-tag - The matching End-tag must have a matching TagName and a matching level.
+                                TagLevelMatch = False
+                                SearchEndTagFrom = GtCharIndex + 1
+                                While TagLevelMatch = False
+                                    EndTagIndex = XmlText.IndexOf("</" & StartTagName & ">", SearchEndTagFrom)
+                                    If EndTagIndex = -1 Then 'There is no matching End-tag
+                                        'This is not an element.
+                                        'The whole content must be the content of a single element
+                                        'The characters between FromIndex and ToIndex are Content
+                                        'NOTE: StartScan and FromIndex should be the same here
+                                        Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+                                        FixedXmlText.Append(Content)
+                                        ScanIndex = ToIndex + 1
+                                        EndSearch = True 'End the search for the End-Tag
+                                        Exit While 'There is no matching End-tag!
+                                    ElseIf EndTagIndex > ToIndex - StartTagName.Length - 1 Then 'The matching tag is outside of the Content
+                                        'This is not an element.
+                                        'The whole content must be the content of a single element
+                                        'The characters between FromIndex and ToIndex are Content
+                                        'NOTE: StartScan and FromIndex should be the same here
+                                        Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+                                        FixedXmlText.Append(Content)
+                                        ScanIndex = ToIndex + 1
+                                        EndSearch = True 'End the search for the End-Tag
+                                        Exit While 'There is no matching End-tag withing the Content range.
+                                    Else 'Matching End-tag found at EndTagIndex. 
+                                        EndTagCount += 1 'Increment the End Tag Count
+                                        'Search for any other Start-Tags named StartTagName between LtCharIndex and EndTagIndex
+                                        Match = True
+                                        NextSearch = StartSearch 'Search for <StartTagName> (without attributes)
+                                        While Match = True 'Search for Start-Tags of the form: <StartTagName>
+                                            SearchIndex = XmlText.IndexOf("<" & StartTagName & ">", NextSearch, EndTagIndex - NextSearch)
+                                            If SearchIndex = -1 Then
+                                                Match = False
+                                            Else
+                                                NextSearch = SearchIndex + StartTagName.Length
+                                                StartTagCount += 1
+                                            End If
+                                        End While
+                                        Match = True
+                                        NextSearch = StartSearch 'Set NextSearch back to StartSearch to search the same chars for <StartTagName ...(with attributes)
+                                        While Match = True 'Search for Start-Tags of the form: <StartTagName ...> (Start-Tag with attributes)
+                                            SearchIndex = XmlText.IndexOf("<" & StartTagName & " ", NextSearch, EndTagIndex - NextSearch)
+                                            If SearchIndex = -1 Then
+                                                Match = False
+                                            Else
+                                                NextSearch = SearchIndex + StartTagName.Length
+                                                StartTagCount += 1
+                                            End If
+                                        End While
+                                        StartSearch = EndTagIndex + 1 'All Start-Tags named StartTagName have been found to EndTagIndex : Update StartSearch - If more searches are needed, they will start from here.
+                                        If StartTagCount = EndTagCount Then
+                                            TagLevelMatch = True
+                                            FixedXmlText.Append("<" & StartTagText & ">" & ProcessContent(XmlText, GtCharIndex + 1, EndTagIndex) & "</" & StartTagName & ">" & vbCrLf)
+                                            ScanIndex = EndTagIndex + StartTagName.Length + 3
+                                            ElementFound = True
+                                        Else
+                                            SearchEndTagFrom = EndTagIndex + StartTagName.Length + 3
+                                        End If
+                                    End If
+                                End While
+                            End While
+                        End If
+                    End If
+                End If
+            End If
+        End While
+        If ElementFound Then
+            Return vbCrLf & FixedXmlText.ToString
+        Else
+            Return FixedXmlText.ToString
+        End If
+    End Function
+
+    'Private Function ProcessContent(ByRef XmlText As String, FromIndex As Integer, ToIndex As Integer) As String
+    '    'Process the XML content in the XmlText string between FromIndex and ToIndex.
+    '    'THIS VERSION SEARCHES FOR MATCHING End-Tags
+    '    '
+    '    'Content alternatives:
+    '    'Content only
+    '    '<!---->                                        One or more comments
+    '    '<Element />                                    One or more empty element tags
+    '    '<Element></Element>                            One or more empty elements
+    '    '<Element>Content</Element>                     One or more elements containing content
+    '    '<Element>                                      One or more elements containing child elements
+    '    '  <ChildElement>ChildContent</ChildElement>
+    '    '</Element>
+
+    '    'NOTE: The commented-out Message code was used for testing the function within the ADVL_Import_1 application
+
+    '    Dim StartScan As Integer = FromIndex 'The start of the current content scan
+    '    Dim ScanIndex As Integer = FromIndex 'The current scan position
+    '    Dim LtCharIndex As Integer 'The index position of the next < character
+    '    Dim GtCharIndex As Integer 'The index position of the next > character
+    '    Dim FixedXmlText As New System.Text.StringBuilder 'This is used to build the fixed XML text for the content if it contains XML tags
+    '    Dim StartTagText As String = "" 'The text of a found Start-tag. The text may include attributes following the name.
+    '    Dim EndNameIndex As Integer 'The index position of the end of the StartTagName. If the StartTagText contains attributes, the StartTagName will be followed by a space then the attributes.
+    '    Dim StartTagName As String = "" 'The name of a found Start-tag
+    '    Dim EndTagIndex As Integer 'The index of an End-tag
+    '    Dim StartTagCount As Integer = 1 'The nesting level of the StartTag
+    '    Dim EndTagCount As Integer = 1 'The nesting level of the EndTag
+    '    Dim StartSearch As Integer 'StartSearch index used for counting other Start-Tags named StartTagName
+    '    Dim NextSearch As Integer 'Search for the next Start-Tag named StartTagName
+    '    Dim SearchIndex As Integer
+    '    Dim Match As Boolean
+    '    Dim TagLevelMatch As Boolean 'If True, the Start-Tag and End-Tag have matching levels.
+    '    Dim SearchEndTagFrom As Integer 'The index to start the End-tag search from
+    '    Dim ElementFound As Boolean = False 'True if an Element or a Comment was found.
+
+    '    While ScanIndex <= ToIndex
+    '        'Find the first pair of < > characters
+    '        LtCharIndex = XmlText.IndexOf("<", ScanIndex) 'Find the start of the next Element
+    '        If LtCharIndex = -1 Then '< char not found
+    '            If ToIndex - ScanIndex = 2 Then
+    '                If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+    '                    'Message.Add("At end of line. Exit While" & vbCrLf)
+    '                    'FixedXmlText.Append(vbCrLf)
+    '                    Exit While
+    '                End If
+    '            End If
+    '            'The characters between FromIndex and ToIndex are Content
+    '            'NOTE: StartScan and FromIndex should be the same here: StartScan only advances if the Content contains one or more comments or elements.
+    '            Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '            FixedXmlText.Append(Content)
+    '            'Message.Add("< char not found. Content string returned: " & Content & " ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '            ScanIndex = ToIndex + 1
+    '        ElseIf LtCharIndex >= ToIndex Then
+    '            'Check if the remaining characters are CrLf:
+    '            If ToIndex - ScanIndex = 2 Then
+    '                If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+    '                    Exit While
+    '                End If
+    '            End If
+    '            'Check if the remaining characters are blank:
+    '            If XmlText.Substring(ScanIndex, ToIndex - ScanIndex).Trim = "" Then
+    '                'Message.Add("The remaining characters are blank." & vbCrLf)
+    '                Exit While
+    '            End If
+    '            'Check if the remaining characters with blanks removed are CrLf:
+    '            'Check if the remaining characters are blank:
+    '            If XmlText.Substring(ScanIndex, ToIndex - ScanIndex).Trim = vbCrLf Then
+    '                'Message.Add("The remaining characters with blanks removed are CrLf." & vbCrLf)
+    '                Exit While
+    '            End If
+    '            'The characters between FromIndex and ToIndex are Content
+    '            'NOTE: StartScan and FromIndex should be the same here
+    '            Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '            FixedXmlText.Append(Content)
+    '            'Message.Add("< char not found within Content range. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " FromIndex = " & FromIndex & " ToIndex = " & ToIndex & " LtCharIndex = " & LtCharIndex & vbCrLf)
+    '            'Message.Add("String between ScanIndex and ToIndex: " & XmlText.Substring(ScanIndex, ToIndex - ScanIndex) & vbCrLf)
+    '            ScanIndex = ToIndex + 1
+    '        Else
+    '            'The < character is within the Content range
+    '            'Search for a > character
+    '            GtCharIndex = XmlText.IndexOf(">", LtCharIndex + 1)
+    '            If GtCharIndex = -1 Then '> char not found
+    '                If ToIndex - ScanIndex = 2 Then
+    '                    If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+    '                        Exit While
+    '                    End If
+    '                End If
+    '                'The characters between FromIndex and ToIndex are Content
+    '                'NOTE: StartScan and FromIndex should be the same here
+    '                Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                FixedXmlText.Append(Content)
+    '                'Message.Add("> char not found. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                ScanIndex = ToIndex + 1
+    '            ElseIf GtCharIndex > ToIndex Then
+    '                If ToIndex - ScanIndex = 2 Then
+    '                    If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+    '                        Exit While
+    '                    End If
+    '                End If
+    '                'The characters between FromIndex and ToIndex are Content
+    '                'NOTE: StartScan and FromIndex should be the same here
+    '                Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                FixedXmlText.Append(Content)
+    '                'Message.Add("> char not found within Content range. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                ScanIndex = ToIndex + 1
+    '            Else
+    '                'A start-tagChar and end-tagChar <> pair has been found.
+    '                'The <> characters will contain a comment, an element name or be part of the element content.
+    '                If XmlText.Substring(LtCharIndex, 4) = "<!--" Then 'This is the start of a comment
+    '                    If XmlText.Substring(GtCharIndex - 2, 3) = "-->" Then 'This is the end of a comment -------------------------------------------------------------  <--Comment-->  --------------------------------------------------------------
+    '                        FixedXmlText.Append(XmlText.Substring(LtCharIndex, GtCharIndex - LtCharIndex + 1) & vbCrLf) 'Add the Comment to the Fixed XML Text
+    '                        ScanIndex = GtCharIndex + 1
+    '                        StartScan = GtCharIndex + 1
+    '                        'Message.Add("Comment found and returned: " & XmlText.Substring(LtCharIndex, GtCharIndex - LtCharIndex + 1) & " ScanIndex = " & ScanIndex & vbCrLf)
+    '                    Else
+    '                        'This is not a comment.
+    '                        'The whole content must be the content of a single element
+    '                        'The characters between FromIndex and ToIndex are Content
+    '                        'NOTE: StartScan and FromIndex should be the same here
+    '                        Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                        FixedXmlText.Append(Content)
+    '                        'Message.Add("Comment not found. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                        ScanIndex = ToIndex + 1
+    '                    End If
+    '                Else 'This is a start-tag, empty element or content of a single element
+    '                    If XmlText.Chars(GtCharIndex - 1) = "/" Then 'This is an empty element
+    '                        FixedXmlText.Append(XmlText.Substring(LtCharIndex, GtCharIndex - LtCharIndex + 1))
+    '                        ScanIndex = GtCharIndex + 1
+    '                        StartScan = GtCharIndex + 1
+    '                        'Message.Add("Empty element found and returned. ScanIndex = " & ScanIndex & vbCrLf)
+    '                    Else
+    '                        StartTagCount = 1
+    '                        EndTagCount = 0
+    '                        StartSearch = GtCharIndex + 1
+    '                        While StartTagCount > EndTagCount
+    '                            'Continue searching for Start-End tag pairs with the name StartTagName until matching tags are found (StartTagCount = EndTagCount).
+    '                            StartTagText = XmlText.Substring(LtCharIndex + 1, GtCharIndex - LtCharIndex - 1) 'This is the text of the Start-tag
+    '                            EndNameIndex = StartTagText.IndexOf(" ")
+    '                            If EndNameIndex = -1 Then 'There is no space in StartTagText so it contains no attributes.
+    '                                StartTagName = StartTagText
+    '                            Else
+    '                                StartTagName = StartTagText.Substring(0, EndNameIndex)
+    '                            End If
+    '                            'Message.Add("StartTagName = " & StartTagName & vbCrLf)
+
+    '                            'Find the matching End-tag - The matching End-tag must have a matching TagName and a matching level.
+    '                            TagLevelMatch = False
+    '                            SearchEndTagFrom = GtCharIndex + 1
+    '                            While TagLevelMatch = False
+    '                                'Message.Add("Searching for End-tag: " & "</" & StartTagName & ">" & vbCrLf)
+    '                                EndTagIndex = XmlText.IndexOf("</" & StartTagName & ">", SearchEndTagFrom)
+    '                                If EndTagIndex = -1 Then 'There is no matching End-tag
+    '                                    'This is not an element.
+    '                                    'The whole content must be the content of a single element
+    '                                    'The characters between FromIndex and ToIndex are Content
+    '                                    'NOTE: StartScan and FromIndex should be the same here
+    '                                    Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                                    FixedXmlText.Append(Content)
+    '                                    'Message.Add("Start-tag with no end-tag. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                                    ScanIndex = ToIndex + 1
+    '                                ElseIf EndTagIndex > ToIndex - StartTagName.Length - 1 Then 'The matching tag is outside of the Content
+    '                                    'This is not an element.
+    '                                    'The whole content must be the content of a single element
+    '                                    'The characters between FromIndex and ToIndex are Content
+    '                                    'NOTE: StartScan and FromIndex should be the same here
+    '                                    Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                                    FixedXmlText.Append(Content)
+    '                                    'Message.Add("Start-tag with no end-tag within Content range. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                                    ScanIndex = ToIndex + 1
+    '                                Else 'Matching End-tag found at EndTagIndex. 
+    '                                    EndTagCount += 1 'Increment the End Tag Count
+    '                                    'Search for any other Start-Tags named StartTagName between LtCharIndex and EndTagIndex
+    '                                    Match = True
+    '                                    NextSearch = StartSearch 'Search for <StartTagName> (without attributes)
+    '                                    While Match = True 'Search for Start-Tags of the form: <StartTagName>
+    '                                        SearchIndex = XmlText.IndexOf("<" & StartTagName & ">", NextSearch, EndTagIndex - NextSearch)
+    '                                        If SearchIndex = -1 Then
+    '                                            Match = False
+    '                                        Else
+    '                                            NextSearch = SearchIndex + StartTagName.Length
+    '                                            StartTagCount += 1
+    '                                        End If
+    '                                    End While
+    '                                    Match = True
+    '                                    NextSearch = StartSearch 'Set NextSearch back to StartSearch to search the same chars for <StartTagName ...(with attributes)
+    '                                    While Match = True 'Search for Start-Tags of the form: <StartTagName ...> (Start-Tag with attributes)
+    '                                        SearchIndex = XmlText.IndexOf("<" & StartTagName & " ", NextSearch, EndTagIndex - NextSearch)
+    '                                        If SearchIndex = -1 Then
+    '                                            Match = False
+    '                                        Else
+    '                                            NextSearch = SearchIndex + StartTagName.Length
+    '                                            StartTagCount += 1
+    '                                        End If
+    '                                    End While
+    '                                    StartSearch = EndTagIndex + 1 'All Start-Tags named StartTagName have been found to EndTagIndex : Update StartSearch - If more searches are needed, they will start from here.
+
+    '                                    If StartTagCount = EndTagCount Then
+    '                                        'Message.Add("TagLevelMatch is True." & vbCrLf)
+    '                                        TagLevelMatch = True
+    '                                        'Message.Add("Processing Content of <" & StartTagName & "> FromIndex: " & GtCharIndex + 1 & " ToIndex: " & EndTagIndex & vbCrLf)
+    '                                        FixedXmlText.Append("<" & StartTagText & ">" & ProcessContent(XmlText, GtCharIndex + 1, EndTagIndex) & "</" & StartTagName & ">" & vbCrLf)
+    '                                        ScanIndex = EndTagIndex + StartTagName.Length + 3
+    '                                        ElementFound = True
+    '                                    Else
+    '                                        'Message.Add("TagLevelMatch is False. Search for next matching End-tag." & vbCrLf)
+    '                                        SearchEndTagFrom = EndTagIndex + StartTagName.Length + 3
+    '                                    End If
+    '                                End If
+    '                            End While
+    '                        End While
+    '                    End If
+    '                End If
+    '            End If
+    '        End If
+    '    End While
+    '    If ElementFound Then
+    '        Return vbCrLf & FixedXmlText.ToString
+    '    Else
+    '        Return FixedXmlText.ToString
+    '    End If
+    'End Function
+
+
+
+
+
+
+    'Private Function ProcessContent(ByRef XmlText As String, FromIndex As Integer, ToIndex As Integer) As String
+    '    'Process the XML content in the XmlText string between FromIndex and ToIndex.
+    '    'NOTE: THis code was originally written and tested in the ADVL_Import_1 application.
+    '    '
+    '    'Content alternatives:
+    '    'Content only
+    '    '<!---->                                        One or more comments
+    '    '<Element />                                    One or more empty element tags
+    '    '<Element></Element>                            One or more empty elements
+    '    '<Element>Content</Element>                     One or more elements containing content
+    '    '<Element>                                      One or more elements containing child elements
+    '    '  <ChildElement>ChildContent</ChildElement>
+    '    '</Element>
+
+    '    Dim StartScan As Integer = FromIndex 'The start of the current content scan
+    '    Dim ScanIndex As Integer = FromIndex 'The current scan position
+    '    Dim LtCharIndex As Integer 'The index position of the next < character
+    '    Dim GtCharIndex As Integer 'The index position of the next > character
+    '    Dim FixedXmlText As New System.Text.StringBuilder 'This is used to build the fixed XML text for the content if it contains XML tags
+    '    Dim StartTagName As String = "" 'The name of a found Start-tag
+    '    Dim EndTagIndex As Integer 'The index of an End-tag
+
+    '    'Message.Add("ProcessContent: FromIndex = " & FromIndex & " ToIndex = " & ToIndex & vbCrLf)
+
+    '    While ScanIndex <= ToIndex
+    '        'Find the first pair of < > characters
+    '        LtCharIndex = XmlText.IndexOf("<", ScanIndex) 'Find the start of the next Element
+    '        If LtCharIndex = -1 Then '< char not found
+    '            If ToIndex - ScanIndex = 2 Then
+    '                If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+    '                    'Message.Add("At end of line." & vbCrLf)
+    '                    FixedXmlText.Append(vbCrLf)
+    '                    Exit While
+    '                End If
+    '            End If
+    '            'The characters between FromIndex and ToIndex are Content
+    '            'NOTE: StartScan and FromIndex should be the same here: StartScan only advances if the Content contains one or more comments or elements.
+    '            Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '            FixedXmlText.Append(Content)
+    '            'Message.Add("< char not found. Content string returned: " & Content & " ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '            ScanIndex = ToIndex + 1
+    '        ElseIf LtCharIndex >= ToIndex Then
+    '            If ToIndex - ScanIndex = 2 Then
+    '                If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+    '                    'Message.Add("At end of line." & vbCrLf)
+    '                    FixedXmlText.Append(vbCrLf)
+    '                    Exit While
+    '                End If
+    '            End If
+    '            'The characters between FromIndex and ToIndex are Content
+    '            'NOTE: StartScan and FromIndex should be the same here
+    '            Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '            FixedXmlText.Append(Content)
+    '            'Message.Add("< char not found within Content range. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '            ScanIndex = ToIndex + 1
+    '        Else
+    '            'The < character is within the Content range
+    '            'Search for a > character
+    '            GtCharIndex = XmlText.IndexOf(">", LtCharIndex + 1)
+    '            If GtCharIndex = -1 Then '> char not found
+    '                If ToIndex - ScanIndex = 2 Then
+    '                    If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+    '                        'Message.Add("At end of line." & vbCrLf)
+    '                        FixedXmlText.Append(vbCrLf)
+    '                        Exit While
+    '                    End If
+    '                End If
+    '                'The characters between FromIndex and ToIndex are Content
+    '                'NOTE: StartScan and FromIndex should be the same here
+    '                Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                FixedXmlText.Append(Content)
+    '                'Message.Add("> char not found. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                ScanIndex = ToIndex + 1
+    '            ElseIf GtCharIndex > ToIndex Then
+    '                If ToIndex - ScanIndex = 2 Then
+    '                    If XmlText.Substring(ScanIndex, 2) = vbCrLf Then
+    '                        'Message.Add("At end of line." & vbCrLf)
+    '                        FixedXmlText.Append(vbCrLf)
+    '                        Exit While
+    '                    End If
+    '                End If
+    '                'The characters between FromIndex and ToIndex are Content
+    '                'NOTE: StartScan and FromIndex should be the same here
+    '                Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                FixedXmlText.Append(Content)
+    '                'Message.Add("> char not found within Content range. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                ScanIndex = ToIndex + 1
+    '            Else
+    '                'A start-tag and end-tag pair has been found.
+    '                'The <> characters will contain a comment, an element name or be part of the element content.
+    '                If XmlText.Substring(LtCharIndex, 4) = "<!--" Then 'This is the start of a comment
+    '                    If XmlText.Substring(GtCharIndex - 2, 3) = "-->" Then 'This is the end of a comment
+    '                        FixedXmlText.Append(vbCrLf & XmlText.Substring(LtCharIndex, GtCharIndex - LtCharIndex + 1)) 'Add the Comment to the Fixed XML Text
+    '                        ScanIndex = GtCharIndex + 1
+    '                        StartScan = GtCharIndex + 1
+    '                        'Message.Add("Comment found and returned: " & XmlText.Substring(LtCharIndex, GtCharIndex - LtCharIndex + 1) & " ScanIndex = " & ScanIndex & vbCrLf)
+    '                    Else
+    '                        'This is not a comment.
+    '                        'The whole content must be the content of a single element
+    '                        'The characters between FromIndex and ToIndex are Content
+    '                        'NOTE: StartScan and FromIndex should be the same here
+    '                        Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                        FixedXmlText.Append(Content)
+    '                        'Message.Add("Comment not found. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                        ScanIndex = ToIndex + 1
+    '                    End If
+    '                Else 'This is a start-tag, empty element or content of a single element
+    '                    If XmlText.Chars(GtCharIndex - 1) = "/" Then 'This is an empty element
+    '                        FixedXmlText.Append(XmlText.Substring(LtCharIndex, GtCharIndex - LtCharIndex + 1))
+    '                        ScanIndex = GtCharIndex + 1
+    '                        StartScan = GtCharIndex + 1
+    '                        'Message.Add("Empty element found and returned. ScanIndex = " & ScanIndex & vbCrLf)
+    '                    Else
+    '                        StartTagName = XmlText.Substring(LtCharIndex + 1, GtCharIndex - LtCharIndex - 1) 'This is the name of the Start-tag
+    '                        'Find the matching End-tag
+    '                        'Message.Add("Searching for End-tag: " & "</" & StartTagName & ">" & vbCrLf)
+    '                        EndTagIndex = XmlText.IndexOf("</" & StartTagName & ">", GtCharIndex + 1)
+    '                        If EndTagIndex = -1 Then 'There is no matching End-tag
+    '                            'This is not an element.
+    '                            'The whole content must be the content of a single element
+    '                            'The characters between FromIndex and ToIndex are Content
+    '                            'NOTE: StartScan and FromIndex should be the same here
+    '                            Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                            FixedXmlText.Append(Content)
+    '                            'Message.Add("Start-tag with no end-tag. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                            ScanIndex = ToIndex + 1
+    '                        ElseIf EndTagIndex > ToIndex - StartTagName.Length - 1 Then 'The matching tag is outside of the Content
+    '                            'This is not an element.
+    '                            'The whole content must be the content of a single element
+    '                            'The characters between FromIndex and ToIndex are Content
+    '                            'NOTE: StartScan and FromIndex should be the same here
+    '                            Dim Content As String = XmlText.Substring(FromIndex, ToIndex - FromIndex).Replace("<", "&lt;").Replace(">", "&gt;")
+    '                            FixedXmlText.Append(Content)
+    '                            'Message.Add("Start-tag with no end-tag within Content range. Content string returned: " & Content & "  ScanIndex = " & ScanIndex & " ToIndex = " & ToIndex & vbCrLf)
+    '                            ScanIndex = ToIndex + 1
+    '                        Else 'Matching End-tag found.
+    '                            'Message.Add("Processing Content of <" & StartTagName & "> FromIndex: " & GtCharIndex + 1 & " ToIndex: " & EndTagIndex & vbCrLf)
+    '                            FixedXmlText.Append(vbCrLf & "<" & StartTagName & ">" & ProcessContent(XmlText, GtCharIndex + 1, EndTagIndex) & "</" & StartTagName & ">")
+    '                            ScanIndex = EndTagIndex + StartTagName.Length + 3
+    '                            'Message.Add("<" & StartTagName & "> " & "Start-tag and end-tag Found and processed. Content returned. ScanIndex = " & ScanIndex & vbCrLf)
+    '                        End If
+    '                    End If
+    '                End If
+    '            End If
+    '        End If
+    '    End While
+    '    Return FixedXmlText.ToString
+    'End Function
+
+
+
+
+
+    Public Function XmlToHtml(ByRef xmlText As String, ByVal ShowDecl As Boolean) As String
+        'Converts the XML code to HTML code to display the formatted XML on a web page.
+        'The HTML code can be pasted into a HTML document to display the formatted XML data on the web page.
+        'If ShowDecl is true, show the XMK declaration line.
+
+        'XML Display Settings:
+        Dim StartXComment As String = "<Span style=""color:Gray"">"
+        Dim EndXComment As String = "</Span>"
+        Dim StartXTag As String = "<Span style=""color:Blue"">"
+        Dim EndXTag As String = "</Span>"
+        Dim StartXElement As String = "<Span style=""color:DarkRed"">"
+        Dim EndXElement As String = "</Span>"
+        Dim StartXAttribKey As String = "<Span style=""color:Red"">"
+        Dim EndXAttribKey As String = "</Span>"
+        Dim StartXAttribVal As String = "<Span style=""color:Blue"">"
+        Dim EndXAttribVal As String = "</Span>"
+        Dim StartXValue As String = "<Span style=""color:Black""><b>"
+        Dim EndXValue As String = "</b></Span>"
+
+        Dim xmlDoc As New System.Xml.XmlDocument
+
+        Try
+            xmlDoc.LoadXml(xmlText)
+        Catch ex As Exception
+            RaiseEvent ErrorMessage("Problem converting text to XML: " & vbCrLf & ex.Message & vbCrLf)
+        End Try
+
+        Try
+            Dim HtmlString As New StringBuilder()
+
+            Dim I As Integer
+            Dim J As Integer
+            For I = 0 To xmlDoc.ChildNodes().Count - 1
+                If xmlDoc.ChildNodes(I).Attributes Is Nothing Then
+
+                End If
+
+                Select Case xmlDoc.ChildNodes(I).NodeType
+                    Case Xml.XmlNodeType.XmlDeclaration
+                        Dim XDec As System.Xml.XmlDeclaration
+                        XDec = xmlDoc.ChildNodes(I)
+
+                        If ShowDecl = True Then
+                            HtmlString.Append(StartXTag & "&lt;?" & EndXTag & StartXElement & "xml" & EndXElement & StartXAttribKey & " version" & EndXAttribKey & StartXTag & "=" & EndXTag & StartXAttribVal & """" & XDec.Version & """" & EndXAttribVal)
+                            HtmlString.Append(StartXAttribKey & " encoding" & EndXAttribKey & StartXTag & "=" & EndXTag & StartXAttribVal & """" & XDec.Encoding & """" & EndXAttribVal & StartXTag & "?&gt;" & EndXTag & "</br>" & vbCrLf)
+                        End If
+
+                    Case Xml.XmlNodeType.Comment
+                        HtmlString.Append(StartXTag & "&lt;!--" & EndXTag & StartXComment & xmlDoc.ChildNodes(I).Value & EndXComment & StartXTag & "--&gt;" & EndXTag & "</br>" & vbCrLf)
+
+                    Case Xml.XmlNodeType.Element
+                        'This should be the root element!
+                        ' Get the Html of the root element.
+                        'Dim rootHtmlContent As String = ProcessXmlNodeToHtml(xmlDoc.ChildNodes(I), 0, Settings)
+                        Dim rootHtmlContent As String = ProcessXmlNodeToHtml(xmlDoc.ChildNodes(I), 0)
+                        HtmlString.Append(rootHtmlContent)
+
+                End Select
+            Next
+            Return HtmlString.ToString
+        Catch ex As Exception
+            RaiseEvent ErrorMessage("XmlToHtml error: " & ex.Message & vbCrLf)
+        End Try
+    End Function
+
+    'Private Function ProcessXmlNodeToHtml(ByVal myNode As System.Xml.XmlNode, ByVal level As Integer, ByRef Settings As XmlHtmDisplaySettings) As String
+    Private Function ProcessXmlNodeToHtml(ByVal myNode As System.Xml.XmlNode, ByVal level As Integer) As String
+        'This function does not support an XML file that has a Namespace.
+        '
+        'XML Display Settings:
+
+        'Select the number of indent spaces:
+        'Dim XIndent As String = "&nbsp;" '1 space
+        'Dim XIndent As String = "&ensp;" '2 spaces
+        'Dim XIndent As String = "&ensp; " '3 spaces
+        'Dim XIndent As String = "&emsp;" '4 spaces
+        Dim XIndent As String = "&emsp; " '5 spaces
+        'Dim XIndent As String = "&ensp;&ensp;" '6 spaces
+        'Dim XIndent As String = "&ensp;&ensp; " '7 spaces
+        'Dim XIndent As String = "&emsp;&emsp;" '8 spaces
+        'Dim XIndent As String = "&emsp;&emsp; " '9 spaces
+        'Dim XIndent As String = "&emsp; &emsp; " '10 spaces
+
+        Dim StartXComment As String = "<Span style=""color:Gray"">"
+        Dim EndXComment As String = "</Span>"
+        Dim StartXTag As String = "<Span style=""color:Blue"">"
+        Dim EndXTag As String = "</Span>"
+        Dim StartXElement As String = "<Span style=""color:DarkRed"">"
+        Dim EndXElement As String = "</Span>"
+        Dim StartXAttribKey As String = "<Span style=""color:Red"">"
+        Dim EndXAttribKey As String = "</Span>"
+        Dim StartXAttribVal As String = "<Span style=""color:Blue"">"
+        Dim EndXAttribVal As String = "</Span>"
+        Dim StartXValue As String = "<Span style=""color:Black""><b>"
+        Dim EndXValue As String = "</b></Span>"
+
+        If myNode.NodeType = Xml.XmlNodeType.Element Then
+            If Not String.IsNullOrEmpty(myNode.NamespaceURI) Then
+                Throw New ApplicationException(
+                    "The Xml to Html processor does not support an Xml file that has Namespace.")
+            End If
+        End If
+
+        Dim elementHtmlFormat As String = String.Empty
+        Dim childElementsHtmlContent As New StringBuilder()
+        Dim attributesHtmlContent As New StringBuilder()
+
+        'Set the indent spaces.
+        Dim indent As String = Replace(Space(level), " ", XIndent)
+
+        If myNode.NodeType = Xml.XmlNodeType.XmlDeclaration Then
+            'NOTE: ProcessXmlNodeToHtml should not find any XML Declarations!
+
+        ElseIf myNode.NodeType = Xml.XmlNodeType.Comment Then
+            elementHtmlFormat = indent & StartXTag & "&lt;!--" & EndXTag & StartXComment & myNode.Value & EndXComment & StartXTag & "--&gt;" & EndXTag & "</br>" & vbCrLf
+
+        ElseIf myNode.NodeType = Xml.XmlNodeType.CDATA Then
+            Dim charIndent As String = Replace(Space((level + 1)), " ", XIndent)
+            elementHtmlFormat = indent & StartXTag & "&lt;![CDATA[" & EndXTag & vbCrLf & charIndent & StartXValue & myNode.Value.Trim().Replace("\", "\\") & vbCrLf & indent & StartXTag & "]]&gt;" & EndXTag & "</br>" & vbCrLf
+
+        ElseIf myNode.NodeType = Xml.XmlNodeType.Element Then
+            If myNode.HasChildNodes Then 'One or more child nodes. 
+                If myNode.ChildNodes.Count = 1 Then
+                    If myNode.ChildNodes(0).NodeType = Xml.XmlNodeType.Text Then
+                        elementHtmlFormat = indent & StartXTag & "&lt;" & EndXTag & StartXElement & myNode.Name & EndXElement & "{0}" & StartXTag & "&gt;" & EndXTag & "{1}" & StartXTag & "&lt;/" & EndXTag & StartXElement & myNode.Name & EndXElement & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf
+                        childElementsHtmlContent.Append(StartXValue & myNode.ChildNodes(0).Value.Trim().Replace(vbCrLf, "<br>") & EndXValue)
+                    Else 'Non-text child node
+                        elementHtmlFormat = indent & StartXTag & "&lt;" & EndXTag & StartXElement & myNode.Name & EndXElement & "{0}" & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf &
+                        "{1}" & indent & StartXTag & "&lt;/" & EndXTag & StartXElement & myNode.Name & EndXElement & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf
+                        'Dim childElementHtmlContent As String = ProcessXmlNodeToHtml(myNode.ChildNodes(0), level + 1, Settings)
+                        Dim childElementHtmlContent As String = ProcessXmlNodeToHtml(myNode.ChildNodes(0), level + 1)
+                        childElementsHtmlContent.Append(childElementHtmlContent)
+                    End If
+                Else 'Two or more child nodes.
+                    elementHtmlFormat = indent & StartXTag & "&lt;" & EndXTag & StartXElement & myNode.Name & EndXElement & "{0}" & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf &
+                            "{1}" & indent & StartXTag & "&lt;/" & EndXTag & StartXElement & myNode.Name & EndXElement & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf
+                    For Each Node In myNode.ChildNodes
+                        'Dim childElementHtmlContent As String = ProcessXmlNodeToHtml(Node, level + 1, Settings)
+                        Dim childElementHtmlContent As String = ProcessXmlNodeToHtml(Node, level + 1)
+                        childElementsHtmlContent.Append(childElementHtmlContent)
+                    Next
+                End If
+            Else
+                elementHtmlFormat = indent & StartXTag & "&lt;" & EndXTag & StartXElement & myNode.Name & EndXElement & "{0}" & StartXTag & "/&gt;" & EndXTag & "</br>" & vbCrLf
+            End If
+            'Construct the Html of the attributes.
+            If myNode.Attributes.Count > 0 Then
+                For Each attribute As Xml.XmlAttribute In myNode.Attributes
+                    Dim attributeHtmlContent As String = StartXAttribKey & attribute.Name & EndXAttribKey & StartXTag & "=" & EndXTag & """" & StartXAttribVal & attribute.Value & EndXAttribVal & """"
+                    attributesHtmlContent.Append(attributeHtmlContent)
+                Next attribute
+            End If
+        End If
+        Return String.Format(elementHtmlFormat, attributesHtmlContent, childElementsHtmlContent)
+    End Function
+
+
+    'NOTE: Now using pre-defined formatting strings defined within the method.
+    'Private Function StartXTag() As String
+    '    Dim StartBold As String = ""
+    '    If Settings.XTag.Bold = True Then StartBold = "<b>"
+    '    'Return "<Span style=""color:" & Settings.XTag.Color.ToString & """>" & StartBold
+    '    Return "<Span style=""color:" & Settings.XTag.Color.Name & """>" & StartBold
+    'End Function
+    'Private Function EndXTag() As String
+    '    Dim EndBold As String = ""
+    '    If Settings.XTag.Bold = True Then EndBold = "</b>"
+    '    Return EndBold & "</Span>"
+    'End Function
+
+    'Private Function StartXElement() As String
+    '    Dim StartBold As String = ""
+    '    If Settings.XElement.Bold = True Then StartBold = "<b>"
+    '    Return "<Span style=""color:" & Settings.XElement.Color.Name & """>" & StartBold
+    'End Function
+    'Private Function EndXElement() As String
+    '    Dim EndBold As String = ""
+    '    If Settings.XElement.Bold = True Then EndBold = "</b>"
+    '    Return EndBold & "</Span>"
+    'End Function
+
+    'Private Function StartXAttribKey() As String
+    '    Dim StartBold As String = ""
+    '    If Settings.XAttributeKey.Bold = True Then StartBold = "<b>"
+    '    Return "<Span style=""color:" & Settings.XAttributeKey.Color.Name & """>" & StartBold
+    'End Function
+    'Private Function EndXAttribKey() As String
+    '    Dim EndBold As String = ""
+    '    If Settings.XAttributeKey.Bold = True Then EndBold = "</b>"
+    '    Return EndBold & "</Span>"
+    'End Function
+
+    'Private Function StartXAttribVal() As String
+    '    Dim StartBold As String = ""
+    '    If Settings.XAttributeValue.Bold = True Then StartBold = "<b>"
+    '    Return "<Span style=""color:" & Settings.XAttributeValue.Color.Name & """>" & StartBold
+    'End Function
+    'Private Function EndXAttribVal() As String
+    '    Dim EndBold As String = ""
+    '    If Settings.XAttributeValue.Bold = True Then EndBold = "</b>"
+    '    Return EndBold & "</Span>"
+    'End Function
+
+    'Private Function StartXValue() As String
+    '    Dim StartBold As String = ""
+    '    If Settings.XValue.Bold = True Then StartBold = "<b>"
+    '    Return "<Span style=""color:" & Settings.XValue.Color.Name & """>" & StartBold
+    'End Function
+    'Private Function EndXValue() As String
+    '    Dim EndBold As String = ""
+    '    If Settings.XValue.Bold = True Then EndBold = "</b>"
+    '    Return EndBold & "</Span>"
+    'End Function
+
+    'Private Function StartXComment() As String
+    '    Dim StartBold As String = ""
+    '    If Settings.XComment.Bold = True Then StartBold = "<b>"
+    '    Return "<Span style=""color:" & Settings.XComment.Color.Name & """>" & StartBold
+    'End Function
+    'Private Function EndXComment() As String
+    '    Dim EndBold As String = ""
+    '    If Settings.XComment.Bold = True Then EndBold = "</b>"
+    '    Return EndBold & "</Span>"
+    'End Function
+
 
     Public Function HmlToRtf(ByRef htmText As String) As String
         'Return the RTF code corresponding to the HTML string.

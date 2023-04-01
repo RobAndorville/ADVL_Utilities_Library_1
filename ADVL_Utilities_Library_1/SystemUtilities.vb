@@ -17,6 +17,7 @@
 '--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Imports System
 Imports System.IO.Compression
 Imports System.Windows.Forms
 'Note: to access .ZipFile, use Project \ Add Reference \ Assemblies \  Framework \ System.IO.Compression
@@ -379,10 +380,14 @@ Public Class ZipComp '----------------------------------------------------------
                 Using archive As ZipArchive = ZipFile.Open(ArchivePath, ZipArchiveMode.Read)
                     Dim entry As ZipArchiveEntry = archive.GetEntry(TextFileName)
                     'Dim bytesToGet(entry.Length) As Byte
-                    Dim bytesToGet(entry.Length - 1) As Byte
+                    Dim bytesToGet(entry.Length - 1) As Byte 'THIS WORKS - Temp Disable for testing
                     entry.Open.Read(bytesToGet, 0, entry.Length)
                     'entry.Open.Read(bytesToGet, 0, entry.Length - 1)
+
+
                     GetText = System.Text.Encoding.UTF8.GetString(bytesToGet)
+
+
                     'GetText start with <!---->
                 End Using
             Catch ex As Exception
@@ -972,41 +977,45 @@ Public Class XSequence '--------------------------------------------------------
     Private Sub ExtractPropSeq(ByRef XSeq As System.Xml.XmlDocument)
         'Extracts the property sequence from an XML Sequence file
 
-        ClearPropSeq() 'Clear the Property Sequence array.
+        Try
+            ClearPropSeq() 'Clear the Property Sequence array.
 
-        Dim node As System.Xml.XmlNode
-        node = XSeq.DocumentElement
+            Dim node As System.Xml.XmlNode
+            node = XSeq.DocumentElement
 
-        Dim CurrentPath As String = ""
-        Dim OldPath As String
-        Dim NodeNo As Integer
-        Dim NodeVal As String
+            Dim CurrentPath As String = ""
+            Dim OldPath As String
+            Dim NodeNo As Integer
+            Dim NodeVal As String
 
-        Dim I As Integer 'Loop index
+            Dim I As Integer 'Loop index
 
-        CurrentPath = node.Name
-        NodeNo = 1
-        If node.ChildNodes.Count = 0 Then
-            NodeVal = node.Value
-            AppendPropSeqItem(CurrentPath, NodeVal, 0)
-        Else
-            For I = 1 To node.ChildNodes.Count
-                If node.ChildNodes(I - 1).NodeType = System.Xml.XmlNodeType.Element Then
-                    OldPath = CurrentPath
-                    CurrentPath = CurrentPath & ":" & node.ChildNodes(I - 1).Name
-                    NodeNo = NodeNo + 1
-                    ScanChildNodes(node.ChildNodes(I - 1), NodeNo, CurrentPath)
-                    CurrentPath = OldPath
-                Else
-                    NodeNo = NodeNo + 1
-                    ScanChildNodes(node.ChildNodes(I - 1), NodeNo, CurrentPath)
-                End If
-            Next
-        End If
+            CurrentPath = node.Name
+            NodeNo = 1
+            If node.ChildNodes.Count = 0 Then
+                NodeVal = node.Value
+                AppendPropSeqItem(CurrentPath, NodeVal, 0)
+            Else
+                For I = 1 To node.ChildNodes.Count
+                    If node.ChildNodes(I - 1).NodeType = System.Xml.XmlNodeType.Element Then
+                        OldPath = CurrentPath
+                        CurrentPath = CurrentPath & ":" & node.ChildNodes(I - 1).Name
+                        NodeNo = NodeNo + 1
+                        ScanChildNodes(node.ChildNodes(I - 1), NodeNo, CurrentPath)
+                        CurrentPath = OldPath
+                    Else
+                        NodeNo = NodeNo + 1
+                        ScanChildNodes(node.ChildNodes(I - 1), NodeNo, CurrentPath)
+                    End If
+                Next
+            End If
 
-        'Add End_Of_Sequence item:
-        AppendPropSeqItem("End_Of_Sequence", "", 0)
+            'Add End_Of_Sequence item:
+            AppendPropSeqItem("End_Of_Sequence", "", 0)
 
+        Catch ex As Exception
+            RaiseEvent ErrorMsg(ex.Message & vbCrLf)
+        End Try
         'For Debugging:
         'Debug.Print("")
         'Debug.Print("ExtractPropSeq(XSeq)")
@@ -2229,7 +2238,12 @@ Public Class FileLocation '-----------------------------------------------------
                 Dim Zip As New ZipComp
                 Zip.ArchivePath = Path
                 If Zip.EntryExists(DataName) Then
-                    XmlDoc = XDocument.Parse(Zip.GetText(DataName))
+                    Try
+                        XmlDoc = XDocument.Parse(Zip.GetText(DataName))
+                    Catch ex As Exception
+                        RaiseEvent ErrorMessage(ex.Message)
+                    End Try
+
                 Else
                     XmlDoc = Nothing
                 End If
@@ -2286,28 +2300,31 @@ Public Class FileLocation '-----------------------------------------------------
     Public Sub ReadXmlDocData(ByVal DataFileName As String, ByRef XmlDoc As System.Xml.XmlDocument)
         'Version of the ReadXmlData that outputs the data into an XmlDocument (instead of and XDocument).
 
-        Select Case Type
-            Case FileLocation.Types.Directory
-                'Read the Xml data document in the directory at DataLocn.Path
-                If System.IO.File.Exists(Path & "\" & DataFileName) Then
-                    'XmlDoc = XDocument.Load(DataLocn.Path & "\" & DataFileName)
-                    XmlDoc.Load(Path & "\" & DataFileName)
-                Else
-                    XmlDoc = Nothing
-                End If
+        If IsNothing(XmlDoc) Then
+            RaiseEvent ErrorMessage("ReadXmlDocData error: The XmlDocument is blank." & vbCrLf)
+        Else
+            Select Case Type
+                Case FileLocation.Types.Directory
+                    'Read the Xml data document in the directory at DataLocn.Path
+                    If System.IO.File.Exists(Path & "\" & DataFileName) Then
+                        'XmlDoc = XDocument.Load(DataLocn.Path & "\" & DataFileName)
+                        XmlDoc.Load(Path & "\" & DataFileName)
+                    Else
+                        XmlDoc = Nothing
+                    End If
 
-            Case FileLocation.Types.Archive
-                'Read the Xml Ddata document in the archive at DataLocn.Path
-                Dim Zip As New ZipComp
-                Zip.ArchivePath = Path
-                If Zip.EntryExists(DataFileName) Then
-                    XmlDoc.LoadXml(Zip.GetText(DataFileName))
-                Else
-                    XmlDoc = Nothing
-                End If
-                Zip = Nothing
-        End Select
-
+                Case FileLocation.Types.Archive
+                    'Read the Xml Ddata document in the archive at DataLocn.Path
+                    Dim Zip As New ZipComp
+                    Zip.ArchivePath = Path
+                    If Zip.EntryExists(DataFileName) Then
+                        XmlDoc.LoadXml(Zip.GetText(DataFileName))
+                    Else
+                        XmlDoc = Nothing
+                    End If
+                    Zip = Nothing
+            End Select
+        End If
     End Sub
 
 
@@ -4419,21 +4436,27 @@ Public Class Project '----------------------------------------------------------
                 End If
 
             Case FileLocation.Types.Archive
-                'Read the Xml Ddata document in the archive at DataLocn.Path
+                'Read the Xml data document in the archive at DataLocn.Path
                 Dim Zip As New ZipComp
                 Zip.ArchivePath = DataLocn.Path
                 If Zip.EntryExists(DataFileName) Then
-                    XmlDoc = XDocument.Parse(Zip.GetText(DataFileName))
+                    Dim XmlStr As String = Zip.GetText(DataFileName)
+                    Dim BOM As String = System.Text.Encoding.UTF8.GetString(System.Text.Encoding.UTF8.GetPreamble)
+                    If XmlStr.StartsWith(BOM, StringComparison.Ordinal) Then 'REMOVE THE BOM!!!
+                        XmlDoc = XDocument.Parse(XmlStr.Remove(0, BOM.Length)) 'Otherwise this erro is raised: System.Xml.XmlException: 'Data at the root level is invalid. Line 1, position 1.'
+                    Else
+                        XmlDoc = XDocument.Parse(XmlStr)
+                    End If
+                    'XmlDoc = XDocument.Parse(XmlStr)
                 Else
                     XmlDoc = Nothing
                 End If
                 Zip = Nothing
         End Select
-
     End Sub
 
     Public Sub ReadXmlDocData(ByVal DataFileName As String, ByRef XmlDoc As System.Xml.XmlDocument)
-        'Version of the ReadXmlData that outputs the data into an XmlDocument (instead of and XDocument).
+        'Version of the ReadXmlData that outputs the data into an XmlDocument (instead of an XDocument).
 
         Select Case DataLocn.Type
             Case FileLocation.Types.Directory
@@ -4513,7 +4536,9 @@ Public Class Project '----------------------------------------------------------
                     'Save the data XML document in the archive at DataLocn.Path
                     Dim Zip As New ZipComp
                     Zip.ArchivePath = DataLocn.Path
-                    Zip.AddText(DataFileName, XmlDoc.ToString)
+                    'Zip.AddText(DataFileName, XmlDoc.ToString)
+                    Zip.AddText(DataFileName, "<?xml version=""1.0"" encoding=""utf-8""?>" & vbCrLf & XmlDoc.ToString) '14 Mar 2021 - XML files saved to archives were not including the XML header!
+
             End Select
         End If
     End Sub
@@ -4680,33 +4705,36 @@ Public Class Project '----------------------------------------------------------
     Public Function GetDataFileList(ByVal DataFileExtension As String, ByRef FilenameList As ArrayList)
         'Returns a list of data files with the specified extension.
 
-        'Select Case Type
-        Select Case DataLocn.Type
+        If IsNothing(FilenameList) Then
+            RaiseEvent ErrorMessage("The filename array list = Nothing" & vbCrLf)
+        Else
+            'Select Case Type
+            Select Case DataLocn.Type
             'Case Types.Archive
-            Case FileLocation.Types.Archive
-                'The data files are stored in an archive file.
-                Dim Zip As New ZipComp
-                Zip.ArchivePath = DataLocn.Path
+                Case FileLocation.Types.Archive
+                    'The data files are stored in an archive file.
+                    Dim Zip As New ZipComp
+                    Zip.ArchivePath = DataLocn.Path
 
                 'Case Types.Directory
-            Case FileLocation.Types.Directory
-                'The data files are stored in a directory.
-                FilenameList.Clear()
-                For Each foundFile As String In IO.Directory.GetFiles(DataLocn.Path, "*." & DataFileExtension)
-                    'FilenameList.Add(foundFile)
-                    FilenameList.Add(IO.Path.GetFileName(foundFile))
-                Next
+                Case FileLocation.Types.Directory
+                    'The data files are stored in a directory.
+                    FilenameList.Clear()
+                    For Each foundFile As String In IO.Directory.GetFiles(DataLocn.Path, "*." & DataFileExtension)
+                        'FilenameList.Add(foundFile)
+                        FilenameList.Add(IO.Path.GetFileName(foundFile))
+                    Next
 
-                'Case Types.None
-                '    'The data files are stored in the application directory.
-                '    FilenameList.Clear()
-                '    For Each foundFile As String In IO.Directory.GetFiles(DataLocn.Path, "*." & DataFileExtension)
-                '        'FilenameList.Add(foundFile)
-                '        FilenameList.Add(IO.Path.GetFileName(foundFile))
-                '    Next
+                    'Case Types.None
+                    '    'The data files are stored in the application directory.
+                    '    FilenameList.Clear()
+                    '    For Each foundFile As String In IO.Directory.GetFiles(DataLocn.Path, "*." & DataFileExtension)
+                    '        'FilenameList.Add(foundFile)
+                    '        FilenameList.Add(IO.Path.GetFileName(foundFile))
+                    '    Next
 
-        End Select
-
+            End Select
+        End If
     End Function
 
     'Public Function ReadData(ByVal DataName) As String
@@ -6038,6 +6066,161 @@ Public Class Project '----------------------------------------------------------
         End If
     End Sub
 
+    Public Sub AddProjectToList(ByVal ProjectPath As String)
+        'Add the Project at ProjectPath to the Project List.
+
+        If ProjectPath.EndsWith(".AdvlProject") Then
+            'The Project to add is an Archive project.
+            'To Do:
+        Else
+            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ProjectPath & "\Project_Info_ADVL_2.xml")
+            Dim Summary As New ProjectSummary
+
+            If ProjectInfoXDoc Is Nothing Then
+                RaiseEvent ErrorMessage("No project information was found. The project was not added to the list." & vbCrLf)
+            Else
+                If ProjectInfoXDoc.<Project>.<Application>.<Name>.Value <> Application.Name Then
+                    RaiseEvent ErrorMessage("The Project Application Name is: " & ProjectInfoXDoc.<Project>.<Application>.<Name>.Value & vbCrLf)
+                    RaiseEvent ErrorMessage("This does not match the current Application Name: " & Application.Name & vbCrLf)
+                Else
+                    Select Case ProjectInfoXDoc.<Project>.<Type>.Value
+                        Case "Directory"
+                            Summary.AuthorName = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
+                            Summary.CreationDate = ProjectInfoXDoc.<Project>.<CreationDate>.Value
+                            Summary.Description = ProjectInfoXDoc.<Project>.<Description>.Value
+                            Summary.Name = ProjectInfoXDoc.<Project>.<Name>.Value
+                            Summary.Path = ProjectPath
+                            Summary.Type = Project.Types.Directory
+                            AddProject(Summary)
+
+                        Case "Hybrid"
+                            Summary.AuthorName = ProjectInfoXDoc.<Project>.<Author>.<Name>.Value
+                            Summary.CreationDate = ProjectInfoXDoc.<Project>.<CreationDate>.Value
+                            Summary.Description = ProjectInfoXDoc.<Project>.<Description>.Value
+                            Summary.Name = ProjectInfoXDoc.<Project>.<Name>.Value
+                            Summary.Path = ProjectPath
+                            Summary.Type = Project.Types.Hybrid
+                            AddProject(Summary)
+
+                        Case Else
+
+                    End Select
+                End If
+            End If
+        End If
+    End Sub
+
+    Private Sub AddProject(ByRef Summary As ADVL_Utilities_Library_1.ProjectSummary)
+        'Add the Project summary information to the project list.
+
+        Dim ProjectList As New List(Of ADVL_Utilities_Library_1.ProjectSummary) 'List of projects
+
+        'Read the Project list:
+        If System.IO.File.Exists(ApplicationDir & "\Project_List_ADVL_2.xml") Then 'The latest ADVL_2 format version of the Project List file exists.
+            Dim ProjectListXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\Project_List_ADVL_2.xml")
+            'ReadProjectListAdvl_2(ProjectListXDoc)
+            Dim ProjectFound As Boolean = False 'True if the Project to be added was found in the list.
+            Dim Projects = From item In ProjectListXDoc.<ProjectList>.<Project>
+            For Each item In Projects
+                Dim NewProject As New ADVL_Utilities_Library_1.ProjectSummary
+                NewProject.Name = item.<Name>.Value
+                NewProject.Description = item.<Description>.Value
+                Select Case item.<Type>.Value
+                    Case "None"
+                        NewProject.Type = Project.Types.None
+                    Case "Directory"
+                        NewProject.Type = Project.Types.Directory
+                    Case "Archive"
+                        NewProject.Type = Project.Types.Archive
+                    Case "Hybrid"
+                        NewProject.Type = Project.Types.Hybrid
+                End Select
+                NewProject.Path = item.<Path>.Value
+                If Summary.Path = NewProject.Path Then ProjectFound = True 'The Project to be added is already in the list.
+                NewProject.CreationDate = item.<CreationDate>.Value
+                NewProject.AuthorName = item.<AuthorName>.Value
+                If item.<Status>.Value = Nothing Then
+                    'The Project list file records do not contain the Status field.
+                Else
+                    NewProject.Status = item.<Status>.Value
+                End If
+                ProjectList.Add(NewProject)
+            Next
+
+            If ProjectFound Then
+                RaiseEvent ErrorMessage("The project is already in the list." & vbCrLf)
+            Else
+                'Add the new project to the list:
+                ProjectList.Add(Summary)
+
+                'Write the Project list:
+                Dim UpdatedProjectListXDoc = <?xml version="1.0" encoding="utf-8"?>
+                                             <!---->
+                                             <!--Project List File-->
+                                             <ProjectList>
+                                                 <FormatCode>ADVL_2</FormatCode>
+                                                 <ApplicationName><%= Application.Name %></ApplicationName>
+                                                 <%= From item In ProjectList
+                                                     Select
+                                              <Project>
+                                                  <Name><%= item.Name %></Name>
+                                                  <Description><%= item.Description %></Description>
+                                                  <Type><%= item.Type %></Type>
+                                                  <Path><%= item.Path %></Path>
+                                                  <CreationDate><%= Format(item.CreationDate, "d-MMM-yyyy H:mm:ss") %></CreationDate>
+                                                  <AuthorName><%= item.AuthorName %></AuthorName>
+                                                  <Status><%= item.Status %></Status>
+                                              </Project>
+                                                 %>
+                                             </ProjectList>
+
+                UpdatedProjectListXDoc.Save(ApplicationDir & "\Project_List_ADVL_2.xml")
+            End If
+        Else
+            'Message.AddWarning("The project list was not found. The project was not added." & vbCrLf)
+            RaiseEvent ErrorMessage("The project list was not found. The project was not added." & vbCrLf)
+            'To Do: Handle case where list not found. Create a new list?
+        End If
+    End Sub
+
+    Public Sub SelectProject(ByVal ProjectPath As String)
+        'Select the project at path ProjectPath.
+
+        If ProjectPath.EndsWith(".AdvlProject") Then
+            'The Project to add is an Archive project.
+            'To Do:
+            Path = ProjectPath
+            Type = Types.Archive
+            ReadProjectInfoFile()
+
+        Else
+            Dim ProjectInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ProjectPath & "\Project_Info_ADVL_2.xml")
+            If ProjectInfoXDoc Is Nothing Then
+                RaiseEvent ErrorMessage("No project information was found. The project was not selected." & vbCrLf)
+            Else
+                Path = ProjectPath
+                Select Case ProjectInfoXDoc.<Project>.<Type>.Value
+                    Case "Directory"
+                        Type = Types.Directory
+                        ReadProjectInfoFile()
+
+                    Case "Hybrid"
+                        Type = Types.Hybrid
+                        ReadProjectInfoFile()
+
+                    Case "None"
+                        Type = Types.None
+                        ReadProjectInfoFile()
+
+                    Case Else
+                        RaiseEvent ErrorMessage("Unknown project type: " & ProjectInfoXDoc.<Project>.<Type>.Value & vbCrLf)
+
+                End Select
+            End If
+        End If
+
+    End Sub
+
     Private Sub ProjectForm_OpenDefaultProject() Handles ProjectForm.OpenDefaultProject
         'OpenDefaultProject()
         UseDefaultProject()
@@ -6385,24 +6568,68 @@ Public Class Message '----------------------------------------------------------
 
     End Sub
 
+    'Public Sub SetBoldStyle()
+    '    'Set the message text to Bold:
+    '    FontStyle = Drawing.FontStyle.Bold
+    'End Sub
+
     Public Sub SetBoldStyle()
         'Set the message text to Bold:
-        FontStyle = Drawing.FontStyle.Bold
+        FontStyle = FontStyle Or Drawing.FontStyle.Bold
     End Sub
+
+    Public Sub SetNotBoldStyle()
+        'Set the message text to Bold:
+        'FontStyle = FontStyle Or Not Drawing.FontStyle.Bold
+        FontStyle = FontStyle Xor Drawing.FontStyle.Bold
+    End Sub
+
+    'Public Sub SetItalicStyle()
+    '    'Set the message text to Italic:
+    '    FontStyle = Drawing.FontStyle.Italic
+    'End Sub
 
     Public Sub SetItalicStyle()
         'Set the message text to Italic:
-        FontStyle = Drawing.FontStyle.Italic
+        FontStyle = FontStyle Or Drawing.FontStyle.Italic
     End Sub
+
+    Public Sub SetNotItalicStyle()
+        'Set the message text to Italic:
+        'FontStyle = FontStyle Or Not Drawing.FontStyle.Italic
+        FontStyle = FontStyle Xor Drawing.FontStyle.Italic
+    End Sub
+
+    'Public Sub SetUnderlineStyle()
+    '    'Set the message text to Underline:
+    '    FontStyle = Drawing.FontStyle.Underline
+    'End Sub
 
     Public Sub SetUnderlineStyle()
         'Set the message text to Underline:
-        FontStyle = Drawing.FontStyle.Underline
+        FontStyle = FontStyle Or Drawing.FontStyle.Underline
     End Sub
+
+    Public Sub SetNotUnderlineStyle()
+        'Set the message text to Underline:
+        'FontStyle = FontStyle Or Not Drawing.FontStyle.Underline
+        FontStyle = FontStyle Xor Drawing.FontStyle.Underline
+    End Sub
+
+    'Public Sub SetStrikeoutStyle()
+    '    'Set the message text to Underline:
+    '    FontStyle = Drawing.FontStyle.Strikeout
+    'End Sub
 
     Public Sub SetStrikeoutStyle()
         'Set the message text to Underline:
-        FontStyle = Drawing.FontStyle.Strikeout
+        FontStyle = FontStyle Or Drawing.FontStyle.Strikeout
+    End Sub
+
+    Public Sub SetNotStrikeoutStyle()
+        'Set the message text to Underline:
+        'FontStyle = FontStyle Or Not Drawing.FontStyle.Strikeout
+        FontStyle = FontStyle Xor Drawing.FontStyle.Strikeout
     End Sub
 
     'A list of text fonts. Used to set the MessageFontName property.
@@ -6413,6 +6640,7 @@ Public Class Message '----------------------------------------------------------
         Lucida_Sans_Typewriter
         OCR_A_Extended
         Times_New_Roman
+        Courier_New
     End Enum
 
     Public Sub SetFontName(ByVal Name As FontList)
@@ -6430,6 +6658,10 @@ Public Class Message '----------------------------------------------------------
                 FontName = "OCR A Extended"
             Case FontList.Times_New_Roman
                 FontName = "Times New Roman"
+            Case FontList.Courier_New
+                FontName = "Courier New"
+            Case Else
+                RaiseEvent ErrorMessage("Unknown font name: " & Name & vbCrLf)
         End Select
     End Sub
 
@@ -6454,6 +6686,9 @@ Public Class Message '----------------------------------------------------------
 
     Public Sub Add(ByVal StrMsg As String)
         'Add a message to the Message form:
+
+        If SettingsLocn Is Nothing Then Exit Sub 'This can occur when attempting to write a message before the Message form is set up.
+
 
         If IsNothing(MessageForm) Then
             MessageForm = New frmMessages
@@ -7510,7 +7745,23 @@ Public Class ApplicationInfo '--------------------------------------------------
         'Returns True if the Application Info File exists in the Application Directory.
         'Return System.IO.File.Exists(ApplicationDir & "\" & "Application_Info.xml")
         'Return System.IO.File.Exists(ApplicationDir & "\" & "Application.xml")
-        Return System.IO.File.Exists(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
+
+        'Return System.IO.File.Exists(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
+
+        'UPDATE 26May21: Need to also check if the file has been corrupted.
+        'Return False if the file can not be opened.
+        If System.IO.File.Exists(ApplicationDir & "\" & "Application_Info_ADVL_2.xml") Then 'File Found
+            Try
+                Dim AppInfoXDoc As System.Xml.Linq.XDocument = XDocument.Load(ApplicationDir & "\" & "Application_Info_ADVL_2.xml")
+                Return True
+            Catch ex As Exception
+                RaiseEvent ErrorMessage("The Application Information file can not be read: " & vbCrLf & ex.Message & vbCrLf)
+                Return False
+            End Try
+        Else
+            Return False
+        End If
+
     End Function
 
 
@@ -8533,10 +8784,12 @@ Public Class ApplicationInfo '--------------------------------------------------
         AppInfoForm.txtExecutablePath.Text = ExecutablePath
         AppInfoForm.txtDescription.Text = Description
         AppInfoForm.txtCreationDate.Text = CreationDate
+        AppInfoForm.txtVersion.Text = Version.Number
         AppInfoForm.txtMajor.Text = Version.Major
         AppInfoForm.txtMinor.Text = Version.Minor
         AppInfoForm.txtBuild.Text = Version.Build
         AppInfoForm.txtRevision.Text = Version.Revision
+        AppInfoForm.txtSource.Text = Version.Source
         AppInfoForm.txtAuthorName.Text = Author.Name
         AppInfoForm.rtbAuthorDesc.Text = Author.Description
         AppInfoForm.txtAuthorContact.Text = Author.Contact
@@ -8801,6 +9054,29 @@ Public Class Version '----------------------------------------------------------
 
 
 #Region " Properties - Properties used to store version information." '----------------------------------------------------------------------------------------------------------------------
+
+    Private _source As String 'The source of the Application Version information. This is either Publish or Assembly.
+    'The Publish value is set on the Publish section of the Application properties. (Double-click MyProject on Solution Explorer in Visual Studio.)
+    'The Assembly value is set on the Application section of the Application properties. Click the Assembly Information button to view and edit the data.
+    'The Assembly version number is only shown when the Publish number is not available.
+    'Both numbers should be set when the Application is published. (Note that Publish Revision number may be set to increment automatically with each publish.)
+    Property Source As String
+        Get
+            Return _source
+        End Get
+        Set(value As String)
+            _source = value
+        End Set
+    End Property
+    Private _number As String 'The Application Version number. This is a string containing the Major, Minor, Build and Revision numbers.
+    Property Number As String
+        Get
+            Return _number
+        End Get
+        Set(value As String)
+            _number = value
+        End Set
+    End Property
 
     Private _major As Integer = 1 '
     Property Major As Integer

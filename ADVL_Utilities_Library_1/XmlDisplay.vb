@@ -426,6 +426,160 @@ Public Class XmlDisplay
 
     End Function
 
+    Public Function XmlToHtml(ByRef xmlText As String, ByVal ShowDecl As Boolean) As String
+        'Converts the XML code to HTML code to display the formatted XML on a web page.
+        'The HTML code can be pasted into a HTML document to display the formatted XML data on the web page.
+        'If ShowDecl is true, show the XML declaration line.
+
+        'XML Display Settings:
+        Dim StartXComment As String = "<Span style=""color:Gray"">"
+        Dim EndXComment As String = "</Span>"
+        Dim StartXTag As String = "<Span style=""color:Blue"">"
+        Dim EndXTag As String = "</Span>"
+        Dim StartXElement As String = "<Span style=""color:DarkRed"">"
+        Dim EndXElement As String = "</Span>"
+        Dim StartXAttribKey As String = "<Span style=""color:Red"">"
+        Dim EndXAttribKey As String = "</Span>"
+        Dim StartXAttribVal As String = "<Span style=""color:Blue"">"
+        Dim EndXAttribVal As String = "</Span>"
+        Dim StartXValue As String = "<Span style=""color:Black""><b>"
+        Dim EndXValue As String = "</b></Span>"
+
+        Dim xmlDoc As New System.Xml.XmlDocument
+
+        Try
+            xmlDoc.LoadXml(xmlText)
+        Catch ex As Exception
+            RaiseEvent ErrorMessage("Problem converting text to XML: " & vbCrLf & ex.Message & vbCrLf)
+        End Try
+
+        Try
+            Dim HtmlString As New StringBuilder()
+
+            Dim I As Integer
+            Dim J As Integer
+            For I = 0 To xmlDoc.ChildNodes().Count - 1
+                If xmlDoc.ChildNodes(I).Attributes Is Nothing Then
+
+                End If
+
+                Select Case xmlDoc.ChildNodes(I).NodeType
+                    Case Xml.XmlNodeType.XmlDeclaration
+                        Dim XDec As System.Xml.XmlDeclaration
+                        XDec = xmlDoc.ChildNodes(I)
+
+                        If ShowDecl = True Then
+                            HtmlString.Append(StartXTag & "&lt;?" & EndXTag & StartXElement & "xml" & EndXElement & StartXAttribKey & " version" & EndXAttribKey & StartXTag & "=" & EndXTag & StartXAttribVal & """" & XDec.Version & """" & EndXAttribVal)
+                            HtmlString.Append(StartXAttribKey & " encoding" & EndXAttribKey & StartXTag & "=" & EndXTag & StartXAttribVal & """" & XDec.Encoding & """" & EndXAttribVal & StartXTag & "?&gt;" & EndXTag & "</br>" & vbCrLf)
+                        End If
+
+                    Case Xml.XmlNodeType.Comment
+                        HtmlString.Append(StartXTag & "&lt;!--" & EndXTag & StartXComment & xmlDoc.ChildNodes(I).Value & EndXComment & StartXTag & "--&gt;" & EndXTag & "</br>" & vbCrLf)
+
+                    Case Xml.XmlNodeType.Element
+                        'This should be the root element!
+                        ' Get the Html of the root element.
+                        Dim rootHtmlContent As String = ProcessXmlNodeToHtml(xmlDoc.ChildNodes(I), 0)
+                        HtmlString.Append(rootHtmlContent)
+
+                End Select
+            Next
+            Return HtmlString.ToString
+        Catch ex As Exception
+            RaiseEvent ErrorMessage("XmlToHtml error: " & ex.Message & vbCrLf)
+        End Try
+    End Function
+
+    'Private Function ProcessXmlNodeToHtml(ByVal myNode As System.Xml.XmlNode, ByVal level As Integer, ByRef Settings As XmlHtmDisplaySettings) As String
+    Private Function ProcessXmlNodeToHtml(ByVal myNode As System.Xml.XmlNode, ByVal level As Integer) As String
+        'This function does not support an XML file that has a Namespace.
+        '
+        'XML Display Settings:
+
+        'Select the number of indent spaces:
+        'Dim XIndent As String = "&nbsp;" '1 space
+        'Dim XIndent As String = "&ensp;" '2 spaces
+        'Dim XIndent As String = "&ensp; " '3 spaces
+        'Dim XIndent As String = "&emsp;" '4 spaces
+        Dim XIndent As String = "&emsp; " '5 spaces
+        'Dim XIndent As String = "&ensp;&ensp;" '6 spaces
+        'Dim XIndent As String = "&ensp;&ensp; " '7 spaces
+        'Dim XIndent As String = "&emsp;&emsp;" '8 spaces
+        'Dim XIndent As String = "&emsp;&emsp; " '9 spaces
+        'Dim XIndent As String = "&emsp; &emsp; " '10 spaces
+
+        Dim StartXComment As String = "<Span style=""color:Gray"">"
+        Dim EndXComment As String = "</Span>"
+        Dim StartXTag As String = "<Span style=""color:Blue"">"
+        Dim EndXTag As String = "</Span>"
+        Dim StartXElement As String = "<Span style=""color:DarkRed"">"
+        Dim EndXElement As String = "</Span>"
+        Dim StartXAttribKey As String = "<Span style=""color:Red"">"
+        Dim EndXAttribKey As String = "</Span>"
+        Dim StartXAttribVal As String = "<Span style=""color:Blue"">"
+        Dim EndXAttribVal As String = "</Span>"
+        Dim StartXValue As String = "<Span style=""color:Black""><b>"
+        Dim EndXValue As String = "</b></Span>"
+
+        If myNode.NodeType = Xml.XmlNodeType.Element Then
+            If Not String.IsNullOrEmpty(myNode.NamespaceURI) Then
+                Throw New ApplicationException(
+                    "The Xml to Html processor does not support an Xml file that has Namespace.")
+            End If
+        End If
+
+        Dim elementHtmlFormat As String = String.Empty
+        Dim childElementsHtmlContent As New StringBuilder()
+        Dim attributesHtmlContent As New StringBuilder()
+
+        'Set the indent spaces.
+        Dim indent As String = Replace(Space(level), " ", XIndent)
+
+        If myNode.NodeType = Xml.XmlNodeType.XmlDeclaration Then
+            'NOTE: ProcessXmlNodeToHtml should not find any XML Declarations!
+
+        ElseIf myNode.NodeType = Xml.XmlNodeType.Comment Then
+            elementHtmlFormat = indent & StartXTag & "&lt;!--" & EndXTag & StartXComment & myNode.Value & EndXComment & StartXTag & "--&gt;" & EndXTag & "</br>" & vbCrLf
+
+        ElseIf myNode.NodeType = Xml.XmlNodeType.CDATA Then
+            Dim charIndent As String = Replace(Space((level + 1)), " ", XIndent)
+            elementHtmlFormat = indent & StartXTag & "&lt;![CDATA[" & EndXTag & vbCrLf & charIndent & StartXValue & myNode.Value.Trim().Replace("\", "\\") & vbCrLf & indent & StartXTag & "]]&gt;" & EndXTag & "</br>" & vbCrLf
+
+        ElseIf myNode.NodeType = Xml.XmlNodeType.Element Then
+            If myNode.HasChildNodes Then 'One or more child nodes. 
+                If myNode.ChildNodes.Count = 1 Then
+                    If myNode.ChildNodes(0).NodeType = Xml.XmlNodeType.Text Then
+                        elementHtmlFormat = indent & StartXTag & "&lt;" & EndXTag & StartXElement & myNode.Name & EndXElement & "{0}" & StartXTag & "&gt;" & EndXTag & "{1}" & StartXTag & "&lt;/" & EndXTag & StartXElement & myNode.Name & EndXElement & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf
+                        childElementsHtmlContent.Append(StartXValue & myNode.ChildNodes(0).Value.Trim().Replace(vbCrLf, "<br>") & EndXValue)
+                    Else 'Non-text child node
+                        elementHtmlFormat = indent & StartXTag & "&lt;" & EndXTag & StartXElement & myNode.Name & EndXElement & "{0}" & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf &
+                        "{1}" & indent & StartXTag & "&lt;/" & EndXTag & StartXElement & myNode.Name & EndXElement & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf
+                        Dim childElementHtmlContent As String = ProcessXmlNodeToHtml(myNode.ChildNodes(0), level + 1)
+                        childElementsHtmlContent.Append(childElementHtmlContent)
+                    End If
+                Else 'Two or more child nodes.
+                    elementHtmlFormat = indent & StartXTag & "&lt;" & EndXTag & StartXElement & myNode.Name & EndXElement & "{0}" & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf &
+                            "{1}" & indent & StartXTag & "&lt;/" & EndXTag & StartXElement & myNode.Name & EndXElement & StartXTag & "&gt;" & EndXTag & "</br>" & vbCrLf
+                    For Each Node In myNode.ChildNodes
+                        Dim childElementHtmlContent As String = ProcessXmlNodeToHtml(Node, level + 1)
+                        childElementsHtmlContent.Append(childElementHtmlContent)
+                    Next
+                End If
+            Else
+                elementHtmlFormat = indent & StartXTag & "&lt;" & EndXTag & StartXElement & myNode.Name & EndXElement & "{0}" & StartXTag & "/&gt;" & EndXTag & "</br>" & vbCrLf
+            End If
+            'Construct the Html of the attributes.
+            If myNode.Attributes.Count > 0 Then
+                For Each attribute As Xml.XmlAttribute In myNode.Attributes
+                    Dim attributeHtmlContent As String = StartXAttribKey & attribute.Name & EndXAttribKey & StartXTag & "=" & EndXTag & """" & StartXAttribVal & attribute.Value & EndXAttribVal & """"
+                    attributesHtmlContent.Append(attributeHtmlContent)
+                Next attribute
+            End If
+
+        End If
+        Return String.Format(elementHtmlFormat, attributesHtmlContent, childElementsHtmlContent)
+    End Function
+
     Private Sub Settings_ErrorMessage(Message As String) Handles Settings.ErrorMessage
         RaiseEvent ErrorMessage(Message)
     End Sub
